@@ -3,7 +3,7 @@
 
  function menu($clear){
      if (!empty($clear)) {
-         system($clear);
+         shell_exec($clear);
      }
      echo("\033[33;40m                                                                                    \033[0m\n");
      echo("\033[33;40m    ▄▄▄▄▄   █    ████▄ █ ▄▄  █ ▄▄ ▀▄    ▄     ▄█▄    █    ▄█ ▄███▄      ▄     ▄▄▄▄▀ \033[0m\n");
@@ -108,7 +108,14 @@ menu($clear = "clear");
              echo "ch\n";
              break;
          case "m":
-             menu($clear = "clear");
+            $cl = '';
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
+            {
+                menu('cls');
+            }else
+            {
+                menu('clear');
+            }
              break;
          case "q":
              echo "\033[33;40mGood bye!\033[0m\n";
