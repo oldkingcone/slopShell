@@ -79,7 +79,6 @@ function opts()
 }
 
 
-menu($clear = "clear");
  $run = true;
  while ($run) {
      print("\033[33;40mPlease select your choice: \n->");
@@ -108,7 +107,6 @@ menu($clear = "clear");
              echo "ch\n";
              break;
          case "m":
-            $cl = '';
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
             {
                 menu('cls');
