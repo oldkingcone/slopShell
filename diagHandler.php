@@ -3,6 +3,29 @@
 # to the db so you can reference them with the client script.
 define('DBCONN', pg_connect("host=127.0.0.1 port=5432 user=sloppy_main dbname=sloppy_bots"));
 
+function fresh_deploy(){
+    require_once "includes/db/postgres_checker.php";
+    try {
+        # place this file in a writable directory, im going with /tmp/ for now.
+        # this will only be called if the deployment is fresh. and if this file is still located in /tmp/
+        $fp = fopen("/tmp/diag_php.pid", "a");
+        if (empty(fread($fp, 1))){
+            $rRun = new postgres_checker();
+            if ($rRun->checkDB() != false){
+                echo("DB is running, executing a create db function.");
+                if ($rRun->createDB() != false) {
+                    fwrite($fp, "running");
+                    fclose($fp);
+                }else{
+                    echo("CRITICAL, I CANNOT CONTINUE, THE DB WAS NOT CREATED, ANY NEW HOSTS WILL NOT BE SAVED.");
+                }
+            }
+
+        }
+    }catch (Exception $ee){
+
+    }
+}
 
 function addNewHost($rhost, $uri, $action){
     if (!empty($rhost) && !empty($uri) && !empty($action)){

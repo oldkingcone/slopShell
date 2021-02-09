@@ -6,7 +6,7 @@ class postgres_checker
     public $connectionString;
     public $er;
 
-    function createDB(){
+    public function createDB(){
         $this->connectionString = pg_connect("host=localhost port=5432 user=postgres dbname=sloppy_bots");
         try {
             pg_exec($this->connectionString, "CREATE DATABASE sloppy_bots");
@@ -24,13 +24,14 @@ class postgres_checker
         }
     }
 
-    function checkDB(){
+    public function checkDB(){
         # the idea for this, is to check to see if the db returns 1 record. if it does not, we will call create db, or start db.
         $this->connectionString = pg_connect("host=localhost port=5432 user=sloppy_main dbname=sloppy_bots");
         try {
             pg_exec($this->connectionString, 'SELECT id FROM sloppy_bots WHERE id IS 1');
+            return true;
         }catch (Exception $ee) {
-
+            return false;
         }
     }
 }
