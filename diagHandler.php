@@ -38,6 +38,12 @@ function addNewHost($rhost, $uri, $action){
     }
 }
 
+
+if (!file_exists(sys_get_temp_dir()."diag_php.pid")){
+    fresh_deploy();
+}
+
+
 if (!empty($_SERVER["REQUEST_METHOD"])) {
     $outLog = './lots/cookie.log';
     echo "Diag information collected!";
