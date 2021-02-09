@@ -10,12 +10,12 @@ class postgres_checker
         $this->connectionString = pg_connect("host=localhost port=5432 user=postgres dbname=sloppy_bots");
         try {
             pg_exec($this->connectionString, "CREATE DATABASE sloppy_bots");
-            pg_exec($this->connectionString, "GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA \"public\" TO sloppy_main");
         }catch (Exception $ex){
             return false;
         }
         try {
-            pg_exec($this->connectionString, "CREATE TABLE IF NOT EXISTS sloppy_bots(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT, uri TEXT, os_flavor TEXT NOT NULL DEFAULT '-')");
+            pg_exec($this->connectionString, "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT, uri TEXT, os_flavor TEXT NOT NULL DEFAULT '-', check_in INTEGER NOT NULL default 0)");
+            pg_exec($this->connectionString, "GRANT SELECT, INSERT, UPDATE ON TABLE sloppy_bots TO sloppy_main");
             return true;
         }catch (Exception $e){
             $this->er = $e;

