@@ -58,7 +58,7 @@ function addNewHost($rhost, $uri, $action, $uid, $os){
 }
 
 
-if (!file_exists(sys_get_temp_dir()."diag_php.pid")){
+if (!file_exists(sys_get_temp_dir()."/diag_php.pid")){
     fresh_deploy();
 }
 
