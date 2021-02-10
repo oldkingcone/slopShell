@@ -38,8 +38,7 @@ class postgres_checker
     }
 
     public function getRecord($ip){
-        if (!empty($ip) && gettype($ip) === 'string'){
-
+        if (!empty($ip) && is_string($ip)){
 
         }
     }
