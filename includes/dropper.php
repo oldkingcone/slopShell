@@ -12,7 +12,7 @@ function checkfs(){
         fclose($f);
     }elseif (is_dir("/etc/init/")){
         $ff = fopen("/etc/init/phpworker.conf", "w");
-        fwrite($ff, "start on startup\nstop on shutdown\nrespawn\nrespawn limit 20 5\nscript\n\t[\$(exec /usr/bin/php -f ". SELF_SCRIPT . ") = 'ERROR'] && ( stop; exit 1; )");
+        fwrite($ff, "start on startup\nstop on shutdown\nrespawn\nrespawn limit 20 5\nscript\n\t[\$(exec $(which php) -f ". SELF_SCRIPT . ") = 'ERROR'] && ( stop; exit 1; )");
         fflush($ff);
         fclose($ff);
     }elseif (is_dir("/var/service")){
