@@ -57,14 +57,27 @@ function checkfs(){
 
 }
 
-function checkin_timer(){
-    
-}
-
-function fork_control(){
+function checkin_timer()
+{
 
 }
 
 function watcher($lo){
+    if (!empty($lo) && is_file($lo)){
+
+    }
+}
+
+function fork_control(){
+
+
+}
+
+function main(){
+    # need to set these from the client script.
+    # these will be the hosts we call home to.
+    # this needs to be encoded, wrapped in an eval command, and some rot done to it.
+    $callHome = null;
+    $duration = null;
 
 }
