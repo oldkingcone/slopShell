@@ -50,7 +50,7 @@ function checkfs(){
             fclose($uif);
             return $myhom;
         }else{
-            $uif = fopen($myhom.".pear_has_backup", "a");
+            $uif = fopen($myhom.".pear_hash_backup", "a");
             return fread($uif, "32");
         }
     }
