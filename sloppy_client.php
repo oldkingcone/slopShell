@@ -1,6 +1,13 @@
 <?php
-
-define("config", parse_ini_file('', true));
+$co = array(
+    "useragent"=> "sp1.1",
+    "host"=>"127.0.0.1",
+    "port"=>"5432",
+    "username"=>"sloppy_main",
+    "password"=>"",
+    "dbname"=>"sloppy_bots"
+    );
+is_file("sloppy_config.conf") ? define("config", parse_ini_file('sloppy_config.conf', true)):define("config", $co);
 define("CHH", curl_init());
 define("UAGENT", curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']));
 
