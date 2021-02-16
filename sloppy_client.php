@@ -7,7 +7,7 @@ $co = array(
     "password"=>"",
     "dbname"=>"sloppy_bots"
     );
-is_file("sloppy_config.conf") ? define("config", parse_ini_file('sloppy_config.conf', true)):define("config", $co);
+is_file("sloppy_config.conf") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $co);
 define("CHH", curl_init());
 define("UAGENT", curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']));
 
@@ -38,16 +38,6 @@ function menu($clear)
         (Q)uit                                                                      
 _MENU;
     echo "\n\n\033[0m\n";
-
-}
-
-function writeINI($location)
-{
-    if (empty($location)) {
-        throw new Exception("Missing ini file to write to.");
-    } else {
-
-    }
 
 }
 
