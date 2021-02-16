@@ -1,6 +1,8 @@
 <?php
 
 $config = parse_ini_file('', true);
+define("CHH", curl_init());
+define("UAGENT", curl_setopt(CHH, CURLOPT_USERAGENT, $config['useragent']));
 
 function menu($clear)
 {
@@ -42,12 +44,10 @@ function writeINI($location)
 
 }
 
-function sys($host, $userA)
+function sys($host)
 {
     if (!empty($host) && !empty($userA)) {
-        $chh = curl_init();
-        curl_setopt($chh, CURLOPT_USERAGENT, $userA);
-        $syst = curl_exec($chh, $host);
+        $syst = curl_exec(CHH, $host);
     } else {
         print("[ !! ] Host was empty... [ !! ]");
     }
@@ -63,11 +63,11 @@ function rev($host, $shell, $port, $method)
             $usePort = $port;
         }
         if (isset($shell) or $method){
-            echo "Setting custom options: \n";
+            echo "[ !! ] Setting custom options: \n";
             echo "Shell: ".$shell."\n";
-            echo "Method: ". $method."\n";
+            echo "Method: ". $method."\n[ !! ]";
         }
-        echo "Trying: " . $host . " on " . $usePort . "\n";
+        echo "[ ++ ] Trying: " . $host . " on " . $usePort . "[ ++ ]\n";
     }
 
 }
@@ -102,6 +102,17 @@ function opts()
 
 }
 
+function queryDB($host){
+    # place holder for the query db function. this will check what information we have about a host, and which options to set.
+    # so Example would be a windows based host, it will preset windows options for you when you execute rev, or you can set your own.
+    # work in progress.
+    # @todo
+    if (!empty($host)){
+        return 1;
+    }
+    return 0;
+}
+
 
 menu($clear = "clear");
 $run = true;
@@ -114,7 +125,12 @@ while ($run) {
             echo "S\n";
             break;
         case "r":
-            echo "r\n";
+            $h = readline("Please tell me the host.\n->");
+            $p = readline("Which port shall we use?\n->");
+            echo queryDB($h);
+            if (!empty($h) && !empty($p)){
+                rev($h, $p, );
+            }
             break;
         case "c":
             echo "c\n";
