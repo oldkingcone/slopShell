@@ -143,13 +143,11 @@ while ($run) {
             break;
         case "r":
             $h = readline("Please tell me the host.\n->");
-            $p = readline("Which port shall we use?\n->");
-            if (queryDB($h) ? "win":"lin")
-                echo queryDB($h);
-            else
-                echo "Host is not in the db quite yet. Looks like you need to pwn more.";
+            $p = readline("\nWhich port shall we use?\n->");
+            $o = !empty(queryDB($h)) | 0 ? "win":"lin";
+            echo $o;
             if (!empty($h) && !empty($p)){
-                rev($host=$h,"default", $port=$p, $os=queryDB($h));
+                rev($host=$h,"default", $port=$p, $o);
             }
             break;
         case "c":
