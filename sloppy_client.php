@@ -3,7 +3,7 @@ $cof = array(
     "useragent"=> "sp1.1",
     "host"=>"127.0.0.1",
     "port"=>"5432",
-    "username"=>"sloppy_main",
+    "username"=>"postgres",
     "password"=>"",
     "dbname"=>"sloppy_bots"
     );
@@ -44,7 +44,7 @@ _MENU;
 function sys($host, $uri)
 {
     if (!empty($host) && !empty($userA)) {
-        curl_setopt(CHH, CURLOPT_URL,                "$host/$uri?qs=csS");
+        curl_setopt(CHH, CURLOPT_URL,                "$host/$uri?qs=cqS");
         curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
