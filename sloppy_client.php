@@ -338,7 +338,7 @@ while ($run) {
                         check($h, queryDB($h, "ch"), "n");
                         break;
                     case "y":
-                        echo "Executing batch job!";
+                        echo "Executing batch job!\n";
                         check($h, queryDB($h, "ch"), "y");
                         break;
                     default:
