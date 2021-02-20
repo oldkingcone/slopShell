@@ -41,8 +41,6 @@ function checkfs(){
             fflush($ffe);
             fclose($ffe);
         }
-
-        $uuid = substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32);
         $myhom = "\$HOME/.local/.backup/.pear/";
         if (!is_dir($myhom)) {
             shell_exec("mkdir -p $myhom");

