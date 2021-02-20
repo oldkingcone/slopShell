@@ -71,3 +71,6 @@ I as the maintainer, am in no way responsible for the misuse of this product. Th
 
 
 If you have enjoyed this script, its is obligatory that you follow me and throw a star on this repo... because future editions will have more features(or bugs) depending on how you look at it.
+
+
+[![BuyMeACoffee](https://img.shields.io/badge/BuyMeACoffee-Or%20Book-yellowgreen?style=plastic)](https://www.buymeacoffee.com/oldkingcone)
