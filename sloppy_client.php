@@ -141,12 +141,6 @@ function clo($host, $repo, $uri)
 
 }
 
-function up()
-{
-
-
-}
-
 function aHo($host)
 {
     if (!empty($host)){
@@ -229,11 +223,6 @@ function check($host, $path, $batch)
         }
 
     }
-
-}
-
-function opts()
-{
 
 }
 
