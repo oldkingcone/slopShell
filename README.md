@@ -15,6 +15,20 @@ Since I derped, and forgot to talk about usage. Here goes.
 For this shell to work, you need 2 things, a victim that allows php file upload(yourself, in an educational environment) and a way to send http requests to this webshell. 
 
 ---
+# Setup
+
+Ok, so here we go folks, there was an itch I had to write something in PHP so this is it. This webshell has a few bells and whistles, and more are added everyday. You will need a pgsql server running that you control. However you implement that is on you.
+
+Debian: `apt install -y postgresql php php-pear && python -m pip install proxybroker --user`
+
+RHEL Systems: `dnf -y -b install postgresql-server postgresql php php-pear && python -m pip install proxybroker --user`
+
+WIN: `install the php msi, and make sure you have an active postgresql server that you can connect to running somewhere. figure it out.`
+
+
+Once you have these set up properly and can confirm that they are running. A command I would encourge using is with `pg_ctl` you can create the DB that way, or at least init it and start it. Then all the db queries will work fine.
+
+---
 ## How to interact.
 
 Firstly, you need to choose a valid User-Agent to use, this is kind of like a first layer of protection against your webshell being accidentally stumbled upon by anyone but you. I went with sp/1.1 as its a non typical user-agent used. This can cause red flags in a pentest, and your access or script to be blocked or deleted. So, be smart about it. Code obfuscation wouldnt hurt, I did not add that in because thats on you to decide. To use the shell, there are some presets to aid you in your pen test and traversal of the machine. I did not add much for windows, because I do not like developing for windows. If you have routines or tricks added or know about, feel free to submit an issue with your suggestion and ill add it. An example of how to use this webshell with curl:
