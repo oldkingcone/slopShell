@@ -45,7 +45,7 @@ class postgres_checker
     public function getRecord($ip){
         if (!empty($ip) && is_string($ip)){
             $con = PG;
-            $row = pg_exec($con, sprintf("SELECT rhost FROM sloppy_bots_main WHERE rhost like '%s'", pg_escape_string($ip)));
+            $row = pg_exec($con, sprintf("SELECT rhost FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($ip)));
             if (!empty($row)) {
                 return pg_fetch_row($row);
             }else{
@@ -58,7 +58,7 @@ class postgres_checker
     public function insertHost($host){
         if (!empty($host) && is_string($host)){
             $con = PG;
-            $row = pg_exec($con,sprintf("SELECT uri from sloppy_bots_main WHERE rhost LIKE '%s'", pg_escape_string($host)));
+            $row = pg_exec($con,sprintf("SELECT uri from sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
             if (!empty($row)){
                 return pg_fetch_row($row);
             }else{

@@ -168,7 +168,7 @@ function aHo($host)
     }
 }
 
-function check($host, $path)
+function check($host, $path, $batch)
 {
 
 }
@@ -270,7 +270,25 @@ while ($run) {
             }
             break;
         case "ch":
-            echo "ch\n";
+            try{
+                $h = readline("Who is it we need to check on?\n->");
+                $b = readline("Is this going to be a batch job?(Y/N)\n->");
+                switch (!empty(strtolower($b))){
+                    case "n":
+                        echo "Not executing batch job.\n";
+                        check($h, queryDB($h, "ch"), "n");
+                        break;
+                    case "y":
+                        echo "Executing batch job!";
+                        check($h, queryDB($h, "ch"), "y");
+                        break;
+                    default:
+                        echo "Your host was empty, sorry but I will return you to the previous menu.\n";
+                        break;
+                }
+            }catch (Exception $e){
+                echo $e."\n";
+            }
             break;
         case "m":
             menu($clear = "clear");
