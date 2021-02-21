@@ -78,16 +78,3 @@ function fork_control(){
     }
 }
 
-function main(){
-    $callHome = null;
-    $duration = null;
-    try {
-        require "vendor/autoload.php";
-    }catch(Exception $exception){
-
-    }
-    # need to set these from the client script.
-    # these will be the hosts we call home to.
-    # this needs to be encoded, wrapped in an eval command, and some rot done to it.
-
-}

