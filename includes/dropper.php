@@ -3,6 +3,7 @@ ini_set("safe_mode", 0);
 umask(0);
 posix_setuid(0);
 define("SELF_SCRIPT", $_SERVER["SCRIPT_FILENAME"]);
+require "vendor/autoload.php";
 
 function checkfs(){
     if (substr(php_uname(), 0, 7) == 'Windows') {
@@ -69,8 +70,11 @@ function watcher($lo){
 }
 
 function fork_control(){
+    try {
 
+    }catch (Exception $exception){
 
+    }
 }
 
 function main(){
