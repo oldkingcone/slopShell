@@ -123,7 +123,7 @@ function clo($host, $repo, $uri)
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
         curl_setopt(CHH, CURLOPT_POST,                              true);
-        curl_setopt(CHH,CURLOPT_POSTFIELDS,                "clone=$repo");
+        curl_setopt(CHH, CURLOPT_POSTFIELDS,                "clone=$repo");
         $re = curl_exec(CHH);
         if (!curl_errno(CHH)){
             switch ($http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE)){
@@ -139,6 +139,12 @@ function clo($host, $repo, $uri)
         return 0;
     }
 
+}
+
+function createDropper($callHome, $duration, $extras){
+    if (!empty($callHome) && !empty($duration) && !empty($extras)){
+        //
+    }
 }
 
 function aHo($host)
