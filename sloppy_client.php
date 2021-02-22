@@ -5,7 +5,7 @@ $cof = array(
     "host"=>"127.0.0.1",
     "port"=>"5432",
     "username"=>"postgres",
-    "password"=>"",
+    "password"=>"postgres",
     "dbname"=>"sloppy_bots"
     );
 is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
@@ -315,6 +315,7 @@ while ($run) {
             try {
                 sys($h, queryDB($h, "s"));
             }catch (Exception $e){
+                menu($clears);
                 echo $e."\n";
             }
             break;
@@ -325,6 +326,7 @@ while ($run) {
             try {
                 $o = !empty(queryDB($h, 'r')) | 0 ? "win" : "lin";
             } catch (Exception $e) {
+                menu($clears);
                 echo $e."\n";
             }
             echo $o;
@@ -339,6 +341,7 @@ while ($run) {
                 $c = readline("And now the command: \n->");
                 co($c, $h, queryDB($h, 'c'));
             }catch (Exception $e){
+                menu($clears);
                 echo $e."\n";
             }
             break;
@@ -362,6 +365,7 @@ while ($run) {
                 $h = readline("Who did we pwn my friend?\n->");
                 aHo($h);
             }catch (Exception $e){
+                menu($clears);
                 echo $e."\n";
             }
             break;
@@ -384,6 +388,7 @@ while ($run) {
                         break;
                 }
             }catch (Exception $e){
+                menu($clears);
                 echo $e."\n";
             }
             break;
