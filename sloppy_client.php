@@ -235,6 +235,7 @@ function check($host, $path, $batch)
 
                     }
                 }
+                break;
             case "n":
                 if (!empty($host) && !empty($path)){
                     curl_setopt(CHH, CURLOPT_URL,                "$host/$path?qs=cqS");
