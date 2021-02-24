@@ -89,6 +89,7 @@ function mainR(){
                 }else{
                     fputs($fp,"POST /diaghandler.php HTTP/1.1\r\n");
                     fputs($fp, "Host: $ho\r\n");
+                    fputs($fp, "User-Agent: $u\r\n");
                     fputs($fp, "Connection: close\r\n");
                     fputs($fp, "Accept: */*\r\n");
                     fputs($fp, $poststring."\r\n\r\n");
@@ -114,6 +115,7 @@ function mainR(){
                 }else{
                     fputs($fp,"POST /diaghandler.php HTTP/1.1\r\n");
                     fputs($fp, "Host: $ho\r\n");
+                    fputs($fp, "User-Agent: $u\r\n");
                     fputs($fp, "Connection: close\r\n");
                     fputs($fp, "Accept: */*\r\n");
                     fputs($fp, $poststring."\r\n\r\n");
