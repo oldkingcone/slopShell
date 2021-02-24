@@ -60,6 +60,14 @@ In browser, navigated to without the proper user-agent string. (1st level of aut
 Use in the terminal, which is how this was designed to work, using curl with the -vH "User-Agent: sp1.1" switches.
 ![](https://github.com/oldkingcone/slopShell/blob/master/use_in_terminal.jpeg?raw=true)
 
+
+---
+
+## Interacting through the client script
+
+Once the client script is complete, you as the operator will not need to interact though curl to utilize this shell. There will be a client script that you can use to execute all commands/control over. In addition to this client script, there is a dropper. This dropper will ensure the script is run at start up even if the website is removed. Including some call home functions, obfuscation if it is requested on a level from 1 to 3, with 3 being the highest as every function will be rot ciphered and then encoded in base64 within the whole file being base64 encoded with a random name assigned to the file itself. This can help avoid signature detection. 
+
+
 ---
 ## Additional
 
