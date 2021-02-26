@@ -9,8 +9,12 @@ $cof = array(
     "password"=>"",
     "dbname"=>"sloppy_bots"
     );
-// this is failing to execute, but does work everywhere else. 
-system("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --level High &");
+// this is failing to execute, but does work everywhere else.
+ob_start();
+popen("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &", "r");
+$var = ob_get_contents();
+echo $var;
+ob_end_clean();
 is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
 try{
 //    $ch = curl_init();
@@ -417,6 +421,7 @@ while ($run) {
             break;
         case "q":
             system($clears);
+            system("killall proxybroker");
             echo "\033[33;40mGood bye!\033[0m\n";
             $run = false;
             break;
