@@ -9,7 +9,8 @@ $cof = array(
     "password"=>"",
     "dbname"=>"sloppy_bots"
     );
-system("bash -c \"nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --level High &\"");
+// this is failing to execute, but does work everywhere else. 
+system("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --level High &");
 is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
 try{
 //    $ch = curl_init();
