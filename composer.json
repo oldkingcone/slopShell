@@ -1,0 +1,13 @@
+{
+    "config": {
+        "disable-tls": false
+    },
+    "require": {
+        "amphp/amp": "^2.5",
+        "ext-curl": "*",
+        "ext-pgsql": "*",
+        "ext-readline": "*",
+        "ext-fileinfo": "*",
+        "ext-posix": "*"
+    }
+}

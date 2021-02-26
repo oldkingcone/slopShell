@@ -5,6 +5,7 @@
 [![language](https://img.shields.io/badge/language-PHP-blue?style=plastic)](https://www.php.net)
 [![language](https://img.shields.io/badge/language-Powershell-blue?style=plastic)](https://docs.microsoft.com/en-us/powershell/)
 [![language](https://img.shields.io/badge/language-Bash-yellow?style=plastic)](https://www.gnu.org/software/bash/)
+[![BuyMeACoffee](https://img.shields.io/badge/BuyMeACoffee-Or%20Book-yellowgreen?style=plastic)](https://www.buymeacoffee.com/oldkingcone)
 
 
 # slopShell
@@ -13,6 +14,20 @@ php webshell
 Since I derped, and forgot to talk about usage. Here goes.
 
 For this shell to work, you need 2 things, a victim that allows php file upload(yourself, in an educational environment) and a way to send http requests to this webshell. 
+
+---
+# Setup
+
+Ok, so here we go folks, there was an itch I had to write something in PHP so this is it. This webshell has a few bells and whistles, and more are added everyday. You will need a pgsql server running that you control. However you implement that is on you.
+
+Debian: `apt install -y postgresql php php-pear && python -m pip install proxybroker --user`
+
+RHEL Systems: `dnf -y -b install postgresql-server postgresql php php-pear && python -m pip install proxybroker --user`
+
+WIN: `install the php msi, and make sure you have an active postgresql server that you can connect to running somewhere. figure it out.`
+
+
+Once you have these set up properly and can confirm that they are running. A command I would encourge using is with `pg_ctl` you can create the DB that way, or at least init it and start it. Then all the db queries will work fine.
 
 ---
 ## How to interact.
@@ -45,6 +60,14 @@ In browser, navigated to without the proper user-agent string. (1st level of aut
 Use in the terminal, which is how this was designed to work, using curl with the -vH "User-Agent: sp1.1" switches.
 ![](https://github.com/oldkingcone/slopShell/blob/master/use_in_terminal.jpeg?raw=true)
 
+
+---
+
+## Interacting through the client script
+
+Once the client script is complete, you as the operator will not need to interact though curl to utilize this shell. There will be a client script that you can use to execute all commands/control over. In addition to this client script, there is a dropper. This dropper will ensure the script is run at start up even if the website is removed. Including some call home functions, obfuscation if it is requested on a level from 1 to 3, with 3 being the highest as every function will be rot ciphered and then encoded in base64 within the whole file being base64 encoded with a random name assigned to the file itself. This can help avoid signature detection. 
+
+
 ---
 ## Additional
 
@@ -57,3 +80,4 @@ I as the maintainer, am in no way responsible for the misuse of this product. Th
 
 
 If you have enjoyed this script, its is obligatory that you follow me and throw a star on this repo... because future editions will have more features(or bugs) depending on how you look at it.
+

