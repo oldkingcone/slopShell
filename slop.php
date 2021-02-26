@@ -156,7 +156,8 @@ function checkComs()
         "perl", 'python', 'php', 'mysql', 'pg_ctl', 'wget', 'curl', 'lynx', 'w3m', 'gcc', 'g++',
         'cobc', 'javac', 'maven', 'java', 'awk', 'sed', 'ftp', 'ssh', 'vmware', 'virtualbox',
         'qemu', 'sudo', "git", "xterm", "tcl", "ruby", "postgres", "mongo", "couchdb",
-        "cron", "anacron", "visudo", "mail", "postfix", "gawk", "base64", "uuid"
+        "cron", "anacron", "visudo", "mail", "postfix", "gawk", "base64", "uuid", "pg_lsclusters",
+        "pg_ctlcluster","pg_clusterconf", "pg_config", "pg", "pg_virtualenv", "pg_isready", "pg_conftool"
     );
     foreach ($lincommands as $item) {
         echo(shell_exec("which " . $item));

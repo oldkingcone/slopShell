@@ -8,3 +8,4 @@
 /httpRequests/
 /vendor
 includes/droppers/raw
+composer.json
