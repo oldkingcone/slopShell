@@ -308,10 +308,10 @@ function queryDB($host, $fetchWhat){
             $dbC = pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " password=" . config['password']);
             switch(strtolower($fetchWhat)){
                 case "r":
-                    $row = pg_fetch_row($dbC, sprintf("SELECT os_flavor FROM sloppy_bots_main WHERE rhost = '%s'"), pg_escape_string($host));
+                    $row = pg_fetch_row($dbC, sprintf("SELECT os_flavor FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
                     break;
                 default:
-                    $row = pg_fetch_row($dbC, sprintf("SELECT uri FROM sloppy_bots_main WHERE rhost = '%s'"), pg_escape_string($host));
+                    $row = pg_fetch_row($dbC, sprintf("SELECT uri FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
                     break;
             }
             if (!empty($row)){
@@ -359,7 +359,7 @@ while ($run) {
             $h = readline("Please tell me the host.\n->");
             $p = readline("\nWhich port shall we use?\n->");
             try {
-                $o = !empty(queryDB($h, 'r')) | 0 ? "win" : "lin";
+                $o = !empty(queryDB($h, 'r')) ? "win" : "lin";
             } catch (Exception $e) {
                 menu($clears);
                 echo $e."\n";
