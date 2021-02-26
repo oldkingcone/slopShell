@@ -1,7 +1,7 @@
 <?php
 # Obviously this will change depending on what your database information is. but this will append new 'bots'
 # to the db so you can reference them with the client script.
-define('DBCONN', pg_connect("host=127.0.0.1 port=5432 user=sloppy_main dbname=sloppy_bots"));
+define('DBCONN', pg_connect("host=127.0.0.1 port=5432 user=postgres dbname=sloppy_bots password="));
 
 function fresh_deploy(){
     require_once "includes/db/postgres_checker.php";

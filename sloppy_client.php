@@ -2,18 +2,20 @@
 require "includes/db/postgres_checker.php";
 $cof = array(
     "useragent"=> "sp1.1",
+    "proxy"=> "127.0.0.1:8090",
     "host"=>"127.0.0.1",
     "port"=>"5432",
     "username"=>"postgres",
-    "password"=>"postgres",
+    "password"=>"",
     "dbname"=>"sloppy_bots"
     );
+system("bash -c \"nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --level High &\"");
 is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
 try{
-    $ch = curl_init();
-    $uh = curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']);
-    define("CHH", $ch);
-    define("UAGENT", $uh);
+//    $ch = curl_init();
+    define("CHH", curl_init());
+    $uh = curl_setopt(CHH, CURLOPT_USERAGENT,       config['useragent']);
+    $uh = curl_setopt(CHH, CURLOPT_PROXY,           config["proxy"]);
 }catch (Exception $e){
     print("{$e}\n\n");
 }
@@ -52,7 +54,7 @@ _MENU;
 function sys($host, $uri)
 {
     if (!empty($host) && !empty($userA)) {
-        curl_setopt(CHH, CURLOPT_URL,                "$host/$uri?qs=cqS");
+        curl_setopt(CHH, CURLOPT_URL,                "$host/$uri?qs=cqBS");
         curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
