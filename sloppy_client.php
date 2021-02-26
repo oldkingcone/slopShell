@@ -10,11 +10,7 @@ $cof = array(
     "dbname"=>"sloppy_bots"
     );
 // this is failing to execute, but does work everywhere else.
-ob_start();
-popen("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &", "r");
-$var = ob_get_contents();
-echo $var;
-ob_end_clean();
+pclose(popen("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &", "r"));
 is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
 try{
 //    $ch = curl_init();
@@ -54,6 +50,21 @@ function menu($clear)
 _MENU;
     echo "\n\n\033[0m\n";
 
+}
+
+function opts(){
+    print("\n\nCurrent options enabled:\n\n");
+    foreach (config as $temp=>$values){
+        print($temp." => ".$values."\n");
+    }
+    print("\n".str_repeat("-", 35) . "\n");
+    print("\n\nCurrent DB Status:\n\n");
+    print(pg_ping()."\n");
+    print(pg_port()."\n");
+    print(pg_host()."\n");
+    print("\n".str_repeat("-", 35) . "\n");
+    print("\n\nProxybroker?\n\n");
+    print(system("ps aux | grep proxybroker")."\n");
 }
 
 function sys($host, $uri)
@@ -424,6 +435,9 @@ while ($run) {
             system("killall proxybroker");
             echo "\033[33;40mGood bye!\033[0m\n";
             $run = false;
+            break;
+        case "o":
+            opts();
             break;
         default:
             menu($clear = "clear");
