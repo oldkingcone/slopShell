@@ -15,8 +15,8 @@ is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.in
 try{
 //    $ch = curl_init();
     define("CHH", curl_init());
-    $uh = curl_setopt(CHH, CURLOPT_USERAGENT,       config['useragent']);
-    $uh = curl_setopt(CHH, CURLOPT_PROXY,           config["proxy"]);
+    curl_setopt(CHH, CURLOPT_USERAGENT,       config['useragent']);
+    curl_setopt(CHH, CURLOPT_PROXY,           config["proxy"]);
 }catch (Exception $e){
     print("{$e}\n\n");
 }
@@ -70,7 +70,7 @@ function opts(){
 function sys($host, $uri)
 {
     if (!empty($host) && !empty($userA)) {
-        curl_setopt(CHH, CURLOPT_URL,                "$host/$uri?qs=cqBS");
+        curl_setopt(CHH, CURLOPT_URL,               "$host/$uri?qs=cqBS");
         curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
@@ -148,7 +148,7 @@ function clo($host, $repo, $uri)
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
         curl_setopt(CHH, CURLOPT_POST,                              true);
-        curl_setopt(CHH, CURLOPT_POSTFIELDS,                "clone=$repo");
+        curl_setopt(CHH, CURLOPT_POSTFIELDS,               "clone=$repo");
         $re = curl_exec(CHH);
         if (!curl_errno(CHH)){
             switch ($http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE)){
@@ -272,7 +272,7 @@ function check($host, $path, $batch)
                 break;
             case "n":
                 if (!empty($host) && !empty($path)){
-                    curl_setopt(CHH, CURLOPT_URL,                "$host/$path?qs=cqS");
+                    curl_setopt(CHH, CURLOPT_URL,               "$host/$path?qs=cqS");
                     curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
                     curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
                     curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);

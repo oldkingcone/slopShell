@@ -131,10 +131,10 @@ _POSTDOC1;
 
 function b64($target, $how, $data, $ext, $dir)
 {
-    /*
-        So, this isn't pretty, or elegant. Its designed to work, and the base64 -w0 works the best from what i have seen, makes the file much
-        easier to transport across http/https, as it strips the newlines out of the end result.
-    */
+/*  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *
+*       So, this isn't pretty, or elegant. Its designed to work, and the base64 -w0 works the best from what i have seen, makes the file much   *
+*       easier to transport across http/https, as it strips the newlines out of the end result.                                                 *
+*   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
     if (!empty($how) && !empty($target) && !empty($dir)) {
         if (!empty($data) && $how == "up") {
             echo("Starting to decode base64\n");
