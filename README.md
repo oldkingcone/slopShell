@@ -15,6 +15,9 @@ Since I derped, and forgot to talk about usage. Here goes.
 
 For this shell to work, you need 2 things, a victim that allows php file upload(yourself, in an educational environment) and a way to send http requests to this webshell. 
 
+Basic Usage Video:
+https://www.youtube.com/watch?v=FywNszpfDJo
+
 ---
 # Setup
 
