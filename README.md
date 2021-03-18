@@ -19,9 +19,9 @@ Basic Usage Video(Hosted on Youtube):
 
 [![Video Showing Usage](https://i.ytimg.com/vi_webp/FywNszpfDJo/maxresdefault.webp)](https://www.youtube.com/watch?v=FywNszpfDJo)
 
-Current VT Detection ration: 1/59
+Current VT Detection ration: 2/59
 
-[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/34790f63bd7380ed46ee65c75cff9886c7d53bd17e697352a89063ebaa757402)
+[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/8b792d74945ebf3d22828eaa22dec1d3df535247c6b741f003576e2be57195b9/detection)
 
 
 ---
