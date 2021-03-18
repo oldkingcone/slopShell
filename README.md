@@ -15,8 +15,13 @@ Since I derped, and forgot to talk about usage. Here goes.
 
 For this shell to work, you need 2 things, a victim that allows php file upload(yourself, in an educational environment) and a way to send http requests to this webshell. 
 
-Basic Usage Video:
-https://www.youtube.com/watch?v=FywNszpfDJo
+Basic Usage Video(Hosted on Youtube):
+
+[![Video Showing Usage](https://i.ytimg.com/vi_webp/FywNszpfDJo/maxresdefault.webp)](https://www.youtube.com/watch?v=FywNszpfDJo)
+
+Current VT Detection ration: 1/59
+[Virus Total](https://www.virustotal.com/gui/file/34790f63bd7380ed46ee65c75cff9886c7d53bd17e697352a89063ebaa757402)
+
 
 ---
 # Setup

