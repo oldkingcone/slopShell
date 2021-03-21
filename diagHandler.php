@@ -29,13 +29,13 @@ function fresh_deploy(){
 
 function addNewHost($rhost, $uri, $action, $uid, $os){
     if (!empty($rhost) && !empty($uri) && !empty($action) && !empty($os) && !empty($uid)){
-        $ipu = sprintf("SELECT host,check_in FROM sloppy_bots_main WHERE host like '%s'",
+        $ipu = sprintf("SELECT host,check_in FROM public.postgres.sloppy_bots WHERE host like '%s'",
             pg_escape_string($rhost)
         );
         $doEx = pg_exec(DBCONN, $ipu);
         $row = pg_fetch_row($doEx);
         if (strtolower($action) === 'add' && is_null($row)) {
-            $prep = sprintf("INSERT INTO sloppy_bots_main(host, os, uri, uid) VALUES ('%s', '%s', '%s', '%s')",
+            $prep = sprintf("INSERT INTO public.postgres.sloppy_bots(host, os, uri, uid) VALUES ('%s', '%s', '%s', '%s')",
                 pg_escape_string($rhost),
                 pg_escape_string($os),
                 pg_escape_string($uri),
@@ -44,7 +44,7 @@ function addNewHost($rhost, $uri, $action, $uid, $os){
             pg_exec(DBCONN, $prep);
             http_response_code("200");
         }elseif(strtolower($action) === "ci"){
-            $pe = sprintf("UPDATE sloppy_bots_main SET check_in = '%s' WHERE host = '%s'",
+            $pe = sprintf("UPDATE public.postgres.sloppy_bots SET check_in = '%s' WHERE host = '%s'",
                 $row[1] + 1,
                 pg_escape_string($rhost)
             );

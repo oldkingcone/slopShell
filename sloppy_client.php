@@ -278,8 +278,8 @@ function check($host, $path, $batch)
     if (!empty($batch)){
         switch ($batch){
             case "y":
-                $c = pg_exec(DBCONN, "SELECT rhost,uri FROM sloppy_bots_main WHERE NOT NULL OR NOT '-'");
-                $count = pg_exec(DBCONN, 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
+                $c = pg_exec(DBCONN, "SELECT rhost,uri FROM public.postgres.sloppy_bots WHERE NOT NULL OR NOT '-'");
+                $count = pg_exec(DBCONN, 'SELECT COUNT(*) FROM (SELECT rhost from public.postgres.sloppy_bots WHERE rhost IS NOT NULL) AS TEMP');
                 echo "Pulling: ". pg_fetch_row($count)."\nThis could take awhile.";
                 curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
                 curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
@@ -346,10 +346,10 @@ function queryDB($host, $fetchWhat){
             $dbC = pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " password=" . config['password']);
             switch(strtolower($fetchWhat)){
                 case "r":
-                    $row = pg_fetch_row($dbC, sprintf("SELECT os_flavor FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
+                    $row = pg_fetch_row($dbC, sprintf("SELECT os_flavor FROM public.postgres.sloppy_bots WHERE rhost = '%s'", pg_escape_string($host)));
                     break;
                 default:
-                    $row = pg_fetch_row($dbC, sprintf("SELECT uri FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
+                    $row = pg_fetch_row($dbC, sprintf("SELECT uri FROM public.postgres.sloppy_bots WHERE rhost = '%s'", pg_escape_string($host)));
                     break;
             }
             if (!empty($row)){

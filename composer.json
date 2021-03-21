@@ -1,13 +1,10 @@
 {
-    "config": {
-        "disable-tls": false
-    },
     "require": {
+        "react/event-loop": "^1.1",
         "amphp/amp": "^2.5",
-        "ext-curl": "*",
-        "ext-pgsql": "*",
-        "ext-readline": "*",
-        "ext-fileinfo": "*",
-        "ext-posix": "*"
+        "react/promise": "^2.8",
+        "react/react": "^1.1",
+        "amphp/parallel": "^1.2",
+        "amphp/parallel-functions": "^1.0"
     }
 }
