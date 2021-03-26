@@ -10,3 +10,4 @@
 includes/droppers/raw
 composer.json
 vendor/autoload.php
+vendor/autoload.php

@@ -1,9 +1,12 @@
 <?php
 
 
-$charlist = array(
-    "A"=>"",
-    "B"=>"",
+$char_map = array(
+    "a" => "",
+    "b" => "",
+    "c" => "",
+    "d" => "d",
+    "e" => "e",
 
 );
 
