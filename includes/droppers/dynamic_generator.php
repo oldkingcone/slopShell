@@ -32,30 +32,32 @@ $char_map_lower = array(
     "" => "\x00",
     "!" => "\x21",
     "?" => "\x3F",
-    "\"" => "",
-    "'" => "",
-    "\\" => "",
-    "/" => "",
-    "=" => "",
-    ">" => "",
-    "<" => "",
-    ":" => "",
-    ";" => "",
-    "-" => "",
-    "[" => "",
-    "]" => "",
-    "+" => "",
-    ")" => "",
-    "(" => "",
-    "%" => "",
-    "^" => "",
-    "*" => "",
-    "&" => "",
-    "#" => "",
-    "@" => "",
-    "`" => "",
-    "~" => "",
-    "|" => "",
+    "\"" => "\x22",
+    "'" => "\x27",
+    "\\" => "\x5C",
+    "/" => "\x2F",
+    "=" => "\x3D",
+    ">" => "\x3E",
+    "<" => "\x3C",
+    ":" => "\x3A",
+    ";" => "\x3B",
+    "-" => "\x2D",
+    "[" => "\x5B",
+    "]" => "\x5D",
+    "+" => "\x2B",
+    ")" => "\x29",
+    "(" => "\x28",
+    "%" => "\x25",
+    "^" => "\x5E",
+    "*" => "\x2A",
+    "&" => "\x26",
+    "#" => "\x23",
+    "@" => "\x40",
+    "`" => "\x60",
+    "~" => "\x5F",
+    "|" => "\x7C",
+    "}" => "\x7D",
+    "{" => "\x7B",
     "\r" => "\x0D",
     "\n" => "\x0A"
 );
@@ -74,8 +76,8 @@ class dynamic_generator
         }
     }
 
-    function begin_junk($file, $mode){
-        if (!empty($file) and is_file($file) and !empty($mode)){
+    function begin_junk($file, $mode, $depth){
+        if (!empty($file) and is_file($file) and !empty($mode) and !empty($depth)){
 
         }else{
             $required_params = array();
@@ -84,7 +86,7 @@ class dynamic_generator
             }else if (empty($file)){
                 array_push($required_params, "file cannot be empty.");
             }else if (!is_file($file)){
-                array_push($required_params, "File needs to be of type file not string.");
+                array_push($required_params, "File needs to be of type file not string.(think fopen)");
             }
             throw new Exception("Please rectify the following errors: \n" . array_values($required_params). "\n");
         }
