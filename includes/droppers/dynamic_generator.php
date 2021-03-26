@@ -74,4 +74,20 @@ class dynamic_generator
         }
     }
 
+    function begin_junk($file, $mode){
+        if (!empty($file) and is_file($file) and !empty($mode)){
+
+        }else{
+            $required_params = array();
+            if (empty($mode)){
+                array_push($required_params, ("mode cannot be empty. Please use either O for obfuscation or P for plain."));
+            }else if (empty($file)){
+                array_push($required_params, "file cannot be empty.");
+            }else if (!is_file($file)){
+                array_push($required_params, "File needs to be of type file not string.");
+            }
+            throw new Exception("Please rectify the following errors: \n" . array_values($required_params). "\n");
+        }
+    }
+
 }
