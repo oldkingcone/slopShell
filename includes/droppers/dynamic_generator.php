@@ -75,10 +75,8 @@ class dynamic_generator
         );
         if (!empty($file) and is_file($file) and !empty($mode) and !empty($depth)){
             fputs($out, "<?php eval(\"");
-            foreach (file($file) as $key => $string){
-                foreach (str_split($string) as $letter) {
+            foreach (str_split(file($file)) as $letter){
                     fputs($out, $char_map_lower[$letter]);
-                }
 
             }
             fputs($out, "\")");

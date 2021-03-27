@@ -78,6 +78,34 @@ Once the client script is complete, you as the operator will not need to interac
 
 
 ---
+## Encryption
+
+Once the encryption routine is fully worked out, the dropper script will be encrypted, and highly obfuscated.
+Example output:
+```
+Base64 decoded: also a test 123
+Re-Encoded: YWxzbyBhIHRlc3QgMTIz
+Key: 66346bc396a5418756ee0c
+Result:
+Array
+(
+    [original] => also a test 123
+    [key] => 66346bc396a5418756ee0c
+    [encrypted] => oaKNTp~3YWiPxb,
+    [base64_Encoded] => b2FLTlQbIVtwfjNZVwJpUHhiLB8=
+)
+Decrypt Test:
+Array
+(
+    [key] => 66346bc396a5418756ee0c
+    [encrypted] => oaKNTp~3YWiPxb,
+    [decrypted] => YWxzbyBhIHRlc3QgMTIz
+    [base64_decoded] => also a test 123
+    [original] => also a test 123
+)
+```
+
+---
 ## Additional
 
 This was going to remain private. But I decided otherwise.
