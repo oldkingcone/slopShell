@@ -85,20 +85,22 @@ Example output:
 ```
 Base64 decoded: also a test 123
 Re-Encoded: YWxzbyBhIHRlc3QgMTIz
-Key: 66346bc396a5418756ee0c
-Result:
+Key: 4212bd1ff1d366f23ca77021706a9a29cb824b45f82ae312bcf220de68c76760289f1d5550aa341002f1cfa9831e871e
+Key Length: 96
+Encryption Result:
 Array
 (
     [original] => also a test 123
-    [key] => 66346bc396a5418756ee0c
-    [encrypted] => oaKNTp~3YWiPxb,
-    [base64_Encoded] => b2FLTlQbIVtwfjNZVwJpUHhiLB8=
+    [key] => 4212bd1ff1d366f23ca77021706a9a29cb824b45f82ae312bcf220de68c76760289f1d5550aa341002f1cfa9831e871e
+    [encrypted] => meIHs/y6_U7U~7(M
+    [base64_Encoded] => bWVJSAAdcw4veTZfVQU3VX43KE0=
 )
 Decrypt Test:
+PHP Notice:  Undefined variable: decrypted in /root/test.php on line 26
 Array
 (
-    [key] => 66346bc396a5418756ee0c
-    [encrypted] => oaKNTp~3YWiPxb,
+    [key] => 4212bd1ff1d366f23ca77021706a9a29cb824b45f82ae312bcf220de68c76760289f1d5550aa341002f1cfa9831e871e
+    [encrypted] => meIHs/y6_U7U~7(M
     [decrypted] => YWxzbyBhIHRlc3QgMTIz
     [base64_decoded] => also a test 123
     [original] => also a test 123
