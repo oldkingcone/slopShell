@@ -65,13 +65,12 @@ $char_map_lower = array(
 
 class dynamic_generator
 {
-
     private function randomString(){
         return bin2hex(random_bytes(rand(5,25)));
     }
 
-    private function junkCodeGen($code){
-        if (is_array($code)){
+    private function junkCodeGen($seek_to_line){
+        if (is_array($seek_to_line)){
 
         }
     }
