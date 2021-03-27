@@ -96,7 +96,6 @@ Array
     [base64_Encoded] => bWVJSAAdcw4veTZfVQU3VX43KE0=
 )
 Decrypt Test:
-PHP Notice:  Undefined variable: decrypted in /root/test.php on line 26
 Array
 (
     [key] => 4212bd1ff1d366f23ca77021706a9a29cb824b45f82ae312bcf220de68c76760289f1d5550aa341002f1cfa9831e871e
