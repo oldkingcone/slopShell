@@ -10,3 +10,5 @@ includes/droppers/raw
 composer.json
 test.php
 /vendor/
+/includes/droppers/dynamic/obfuscated/
+/includes/droppers/dynamic/raw/
