@@ -4,14 +4,16 @@ class dynamic_generator
 {
     private function randomString(){
         $a = '';
-        $allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        $allowed_chars = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
         switch (rand(0,15)){
             case 0:
-                $a = "function ". substr(str_shuffle($allowed_chars), 0, rand(3,15)) . "(string \$". substr(str_shuffle($allowed_chars), 0, rand(3,15)) ."){\n";
+                $f_name = substr(str_shuffle($allowed_chars), 0, rand(3,15));
+                $a = "function ". $f_name . "(string \$". substr(str_shuffle($allowed_chars), 0, rand(3,15)) ."){\n";
                 for ($i = 0; $i <= rand(1,10); $i++) {
                     $a .= "\t\$" . substr(str_shuffle($allowed_chars), 0, rand(3, 15)) . " = \"" . bin2hex(random_bytes(rand(3, 10))) . "\";\n";
                 }
                 $a .= "\treturn false;\n}\n\n";
+                $a .= "{$f_name}('" . substr(str_shuffle($allowed_chars), 0, rand(3,15)) . "');\n";
                 break;
             case 1|3|5|7|9:
                 $junked = array(
@@ -32,6 +34,9 @@ class dynamic_generator
                 break;
             case 13:
                 $a = "// Delete this before this reaches prod, this was created to fill a need that we couldn't get before.. which is why its encoded in base64.\n// Consider this a \"temp\" file that we can use.\n";
+                $a .= "\$tmp = tmpfile();\nfwrite(\$tmp,\"".substr(str_shuffle($allowed_chars), 0, rand(3,15))."\");\n";
+                $a .= "fseek(\$tmp, 0);\n";
+                $a .= "fclose(\$tmp);\n";
                 break;
             case 14:
                 $a = "// why is it not launching??????\n";
