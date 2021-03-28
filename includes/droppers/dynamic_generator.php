@@ -40,11 +40,6 @@ class dynamic_generator
         return $a;
     }
 
-    private function junkCodeGen($seek_to_line){
-        if ($seek_to_line){
-
-        }
-    }
 
     function begin_junk($file, $depth, $out, $mode)
     {
