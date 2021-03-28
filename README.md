@@ -76,7 +76,7 @@ Use in the terminal, which is how this was designed to work, using curl with the
 ![](https://github.com/oldkingcone/slopShell/blob/master/use_in_terminal.jpeg?raw=true)
 
 Obfuscated script example: 
-![](https://github.com/oldkingcone/slopShell/blob/master/img.png?raw=true)
+![](https://github.com/oldkingcone/slopShell/blob/master/obfuscated_script.png?raw=true)
 
 
 ---
