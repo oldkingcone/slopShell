@@ -9,12 +9,12 @@ class dynamic_generator
     }
 
     private function junkCodeGen($seek_to_line){
-        if (is_array($seek_to_line)){
+        if ($seek_to_line){
 
         }
     }
 
-    function begin_junk($file, $depth, $out)
+    function begin_junk($file, $depth, $out, $mode)
     {
         $char_map_lower = array(
             "a" => "\\x61",
@@ -97,7 +97,21 @@ class dynamic_generator
                     array_push($b_encoded, $char_map_lower[strtolower($word)]);
                 }
             }
-            fputs(fopen($out, "a+"), "<?php eval(base64_decode(\"" .base64_encode(implode("", $b_encoded)) . "\"));");
+            switch (strtolower($mode)){
+                case "ob":
+                    $key = bin2hex(openssl_random_pseudo_bytes(rand(32,64)));
+                    echo "Key: {$key}\nKey length: ". strlen($key)."\n";
+                    $i = 0;
+                    $encrypted = '';
+                    $text = base64_encode(implode("", $b_encoded));
+                    foreach (str_split($text) as $char) {
+                        $encrypted .= chr(ord($char) ^ ord($key{$i++ % strlen($key)}));
+                    }
+                    fputs(fopen($out, "a+"), "<?php eval(base64_decode(\"" . base64_encode($encrypted) . "\"));");
+                    break;
+                default:
+                    fputs(fopen($out, "a+"), "<?php eval(base64_decode(\"" .base64_encode(implode("", $b_encoded)) . "\"));");
+            }
         }else{
             $required_params = array();
             if (empty($mode)){
@@ -107,7 +121,7 @@ class dynamic_generator
             }else if (!is_file($file)){
                 array_push($required_params, "File needs to be of type file not string.(think fopen)");
             }
-            throw new Exception("Please rectify the following errors: \n" . array_values($required_params). "\n");
+            throw new Exception("Please rectify the following errors: \n" . print_r($required_params) . "\n");
         }
     }
 

