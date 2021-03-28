@@ -133,7 +133,7 @@ class dynamic_generator
                 case "ob":
                     fputs(fopen($out, "a+"), "<?php\n");
                     for ($i = 0; $i <= $depth; $i++) {
-                        fputs(fopen($out, "a+"), $this->randomString());
+                        fputs(fopen($out, "a"), $this->randomString());
                     }
                     $key = bin2hex(random_bytes(rand(32,64)));
                     echo "Key: {$key}\nKey length: ". strlen($key)."\n";
@@ -143,7 +143,7 @@ class dynamic_generator
                     foreach (str_split($text) as $char) {
                         $encrypted .= chr(ord($char) ^ ord($key{$i++ % strlen($key)}));
                     }
-                    fputs(fopen($out, "a+"), "eval(base64_decode(\"" . base64_encode($encrypted) . "\"));");
+                    fputs(fopen($out, "a"), "eval(base64_decode(\"" . base64_encode($encrypted) . "\"));");
                     break;
                 default:
                     fputs(fopen($out, "a+"), "<?php eval(base64_decode(\"" .base64_encode(implode("", $b_encoded)) . "\"));");
