@@ -5,7 +5,7 @@ define("p", "droppers/dynamic/raw");
 class dynamic_generator
 {
     private function randomString(){
-        return bin2hex(random_bytes(rand(5,25)));
+        return "#" . bin2hex(random_bytes(rand(5,25)));
     }
 
     private function junkCodeGen($seek_to_line){

