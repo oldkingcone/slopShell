@@ -3,33 +3,41 @@
 class dynamic_generator
 {
     private function randomString(){
+        $a = '';
         switch (rand(0,15)){
             case 0:
-                $a = "";
+                $a = "function ". bin2hex(random_bytes(rand(3,10))) . "(string ". bin2hex(random_bytes(rand(1,5)))."){\n\t";
+                $a .= str_repeat("\$".bin2hex(random_bytes(rand(1,10))). " = \"" . bin2hex(random_bytes(rand(3,10)))."\";\n", rand(1,10));
+                $a .= "\n}";
                 break;
             case 1|3|5|7|9:
-                $a = "1";
+                $junked = array(
+                    "1" => "a",
+                    "2" => "caasdf",
+                    "3" => bin2hex(random_bytes(rand(5,10)))
+                );
+                $a = "#\$". $junked[rand(1,3)] . " = \"". $junked[rand(1,3)] . "\";\n";
                 break;
             case 2|4|6|8|10:
-                $a = "2";
+                $a = "define('". bin2hex(random_bytes(rand(5,10))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
                 break;
             case 11:
-                $a = "3";
+                $a = "#define('". bin2hex(random_bytes(rand(5,10))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
                 break;
             case 12:
-                $a = "4";
+                $a = "// define('". bin2hex(random_bytes(rand(5,10))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
                 break;
             case 13:
-                $a = "5";
+                $a = "// Delete this before this reaches prod, this was created to fill a need that we couldn't get before.. which is why its encoded in base64.\n// Consider this a \"temp\" file that we can use.\n";
                 break;
             case 14:
-                $a = "6";
+                $a = "// why is it not launching??????\n";
                 break;
             case 15:
-                $a = "7";
+                $a = "//\n";
                 break;
         }
-        return "define('". bin2hex(random_bytes(rand(5,10))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
+        return $a;
     }
 
     private function junkCodeGen($seek_to_line){
@@ -124,7 +132,7 @@ class dynamic_generator
             switch (strtolower($mode)){
                 case "ob":
                     fputs(fopen($out, "a+"), "<?php\n");
-                    for ($i = 0; $i < $depth; $i++) {
+                    for ($i = 0; $i <= $depth; $i++) {
                         fputs(fopen($out, "a+"), $this->randomString());
                     }
                     $key = bin2hex(random_bytes(rand(32,64)));
