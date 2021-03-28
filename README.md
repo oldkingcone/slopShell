@@ -74,6 +74,9 @@ In browser, navigated to without the proper user-agent string. (1st level of aut
 Use in the terminal, which is how this was designed to work, using curl with the -vH "User-Agent: sp1.1" switches.
 ![](https://github.com/oldkingcone/slopShell/blob/master/use_in_terminal.jpeg?raw=true)
 
+Obfuscated script example: 
+![](https://github.com/oldkingcone/slopShell/blob/master/img.png?raw=true)
+
 
 ---
 
