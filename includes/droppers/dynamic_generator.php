@@ -154,7 +154,7 @@ class dynamic_generator
                     fputs(fopen($out, "a"), "eval(base64_decode(\"" . base64_encode($encrypted) . "\"));");
                     break;
                 default:
-                    fputs(fopen($out, "a+"), "<?php eval(base64_decode(\"" .base64_encode(implode("", $b_encoded)) . "\"));");
+                    fputs(fopen($out, "a+"), "<?php\neval(base64_decode(\"" .base64_encode(implode("", $b_encoded)) . "\"));\n");
             }
         }else{
             $required_params = array();
