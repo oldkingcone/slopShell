@@ -24,13 +24,13 @@ class dynamic_generator
                 $a = "\$". substr(str_shuffle($allowed_chars), 0, rand(3,15)) . " = \"". $junked[rand(1,3)] . "\";\n";
                 break;
             case 2|4|6|8|10:
-                $a = "define('". bin2hex(random_bytes(rand(5,10))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
+                $a = "define('" . bin2hex(random_bytes(rand(3, 10))) . "', \"" . bin2hex(random_bytes(rand(5, 100))) . "\");\n";
                 break;
             case 11:
-                $a = "#define('". bin2hex(random_bytes(rand(5,10))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
+                $a = "define('". bin2hex(random_bytes(rand(2,20))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
                 break;
             case 12:
-                $a = "// define('". bin2hex(random_bytes(rand(5,10))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
+                $a = "define('". bin2hex(random_bytes(rand(1,35))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
                 break;
             case 13:
                 $a = "\$tmp = tmpfile();\nfwrite(\$tmp,\"".substr(str_shuffle($allowed_chars), 0, rand(3,15))."\");\n";
@@ -140,19 +140,45 @@ class dynamic_generator
             }
             switch (strtolower($mode)){
                 case "ob":
+                    $key = bin2hex(random_bytes(rand(32,64)));
+                    echo "Key: {$key}\nKey length: ". strlen($key)."\n";
+                    $allowed_chars = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
                     fputs(fopen($out, "a+"), "<?php\n");
                     for ($i = 0; $i <= $depth; $i++) {
                         fputs(fopen($out, "a"), $this->randomString());
                     }
-                    $key = bin2hex(random_bytes(rand(32,64)));
-                    echo "Key: {$key}\nKey length: ". strlen($key)."\n";
+                    $returned = $this->randomString();
+                    fputs(fopen($out, "a"), $returned);
                     $i = 0;
                     $encrypted = '';
                     $text = base64_encode(implode("", $b_encoded));
                     foreach (str_split($text) as $char) {
                         $encrypted .= chr(ord($char) ^ ord($key{$i++ % strlen($key)}));
                     }
-                    fputs(fopen($out, "a"), "eval(base64_decode(\"" . base64_encode($encrypted) . "\"));");
+                    $b = base64_encode($encrypted);
+                    $fun = substr(str_shuffle($allowed_chars), 0, rand(3,15));
+                    $ad = substr(str_shuffle($allowed_chars), 0, rand(3,15));
+                    $da = substr(str_shuffle($allowed_chars), 0, rand(3,15));
+                    $f_name = substr(str_shuffle($allowed_chars), 0, rand(3,15));
+                    if (!is_null($key)){
+                        $a = "\$" . $f_name . " = \"" . (string)$key . "\");\n";
+                    }
+                    $do = <<<FULL
+function $fun(string \$values)
+{
+    $a
+    \$i = 0;
+    if (!empty(\$values)){
+        \$$ad = \$values;
+        foreach (str_split(\$$ad) as \$chars){
+            \$$da .= chr(ord(\$$f_name{\$i++ % strlen(\$$f_name)}) ^ ord(\$chars));
+        }
+    }
+    base64_decode(\$$da);
+}
+$fun("$b");
+FULL;
+                    fputs(fopen($out, "a"), $do);
                     break;
                 default:
                     fputs(fopen($out, "a+"), "<?php\neval(base64_decode(\"" .base64_encode(implode("", $b_encoded)) . "\"));\n");

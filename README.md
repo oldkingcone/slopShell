@@ -24,10 +24,9 @@ Current VT Detection ratio: 2/59
 [![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/8b792d74945ebf3d22828eaa22dec1d3df535247c6b741f003576e2be57195b9/detection)
 
 
-Current VT Detection ratio (obfuscated version): 1/59
-With the only detection marking it as suspicious.
+Current VT Detection ratio (obfuscated version): 0/59 Obfuscation causes the dropper to be absolutely undetected.
 
-[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/858a2e7cf51f37b66392d47c8573eadb2aec4cdcc9e162e1df5cd08d44e19bef/detection)
+[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/9351f517c380836eba0e0de6ff307b3a62808ea6314bf0e1ba0aa25f8d505932/details)
 
 ---
 # Setup
