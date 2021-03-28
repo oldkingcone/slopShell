@@ -142,7 +142,7 @@ class dynamic_generator
                 case "ob":
                     $key = bin2hex(random_bytes(rand(32,64)));
                     echo "Key: {$key}\nKey length: ". strlen($key)."\n";
-                    $allowed_chars = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                    $allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
                     fputs(fopen($out, "a+"), "<?php\n");
                     for ($i = 0; $i <= $depth; $i++) {
                         fputs(fopen($out, "a"), $this->randomString());
@@ -161,7 +161,7 @@ class dynamic_generator
                     $da = substr(str_shuffle($allowed_chars), 0, rand(3,15));
                     $f_name = substr(str_shuffle($allowed_chars), 0, rand(3,15));
                     if (!is_null($key)){
-                        $a = "\$" . $f_name . " = \"" . (string)$key . "\");\n";
+                        $a = "\$" . $f_name . " = \"" . (string)$key . "\";\n";
                     }
                     $do = <<<FULL
 function $fun(string \$values)
@@ -174,9 +174,9 @@ function $fun(string \$values)
             \$$da .= chr(ord(\$$f_name{\$i++ % strlen(\$$f_name)}) ^ ord(\$chars));
         }
     }
-    base64_decode(\$$da);
+    eval(base64_decode(\$$da));
 }
-$fun("$b");
+$fun(base64_decode("$b"));
 FULL;
                     fputs(fopen($out, "a"), $do);
                     break;
