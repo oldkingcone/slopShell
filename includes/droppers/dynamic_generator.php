@@ -38,7 +38,7 @@ class dynamic_generator
                     $a .= "fwrite(\$tmp, base64_encode(\"" . substr(str_shuffle($allowed_chars), 0, rand(3, 15)) . "\"));\n";
                 }
                 $a .= "fseek(\$tmp, 0);\n";
-                $a .= "\$".substr(str_shuffle($allowed_chars), 0, rand(1,10))." = file(\$tmp);";
+                $a .= "\$".substr(str_shuffle($allowed_chars), 0, rand(1,10))." = file(\$tmp);\n";
                 $a .= "fclose(\$tmp);\n";
                 break;
             case 14:
