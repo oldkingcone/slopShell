@@ -161,7 +161,7 @@ class dynamic_generator
                     $da = substr(str_shuffle($allowed_chars), 0, rand(3,15));
                     $f_name = substr(str_shuffle($allowed_chars), 0, rand(3,15));
                     if (!is_null($key)){
-                        $a = "\$" . $f_name . " = \"" . (string)$key . "\";\n";
+                        $a = "\$" . $f_name . " = \"" . (string)$key . "\";";
                     }
                     $do = <<<FULL
 function $fun(string \$values)
