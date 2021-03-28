@@ -33,8 +33,10 @@ class dynamic_generator
                 $a = "// define('". bin2hex(random_bytes(rand(5,10))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
                 break;
             case 13:
-                $a = "// Delete this before this reaches prod, this was created to fill a need that we couldn't get before.. which is why its encoded in base64.\n// Consider this a \"temp\" file that we can use.\n";
-                $a .= "\$tmp = tmpfile();\nfwrite(\$tmp,\"".substr(str_shuffle($allowed_chars), 0, rand(3,15))."\");\n";
+                $a = "\$tmp = tmpfile();\nfwrite(\$tmp,\"".substr(str_shuffle($allowed_chars), 0, rand(3,15))."\");\n";
+                for ($i = 0; $i <= rand(10,15); $i++) {
+                    $a .= "fwrite(\$tmp, base64_encode(\"" . substr(str_shuffle($allowed_chars), 0, rand(3, 15)) . "\"));\n";
+                }
                 $a .= "fseek(\$tmp, 0);\n";
                 $a .= "fclose(\$tmp);\n";
                 break;
