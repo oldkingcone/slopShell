@@ -4,11 +4,14 @@ class dynamic_generator
 {
     private function randomString(){
         $a = '';
+        $allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
         switch (rand(0,15)){
             case 0:
-                $a = "function ". bin2hex(random_bytes(rand(3,10))) . "(string ". bin2hex(random_bytes(rand(1,5)))."){\n\t";
-                $a .= str_repeat("\$".bin2hex(random_bytes(rand(1,10))). " = \"" . bin2hex(random_bytes(rand(3,10)))."\";\n", rand(1,10));
-                $a .= "\n}";
+                $a = "function ". substr(str_shuffle($allowed_chars), 0, rand(3,15)) . "(string \$". substr(str_shuffle($allowed_chars), 0, rand(3,15)) ."){\n";
+                for ($i = 0; $i <= rand(1,10); $i++) {
+                    $a .= "\t\$" . substr(str_shuffle($allowed_chars), 0, rand(3, 15)) . " = \"" . bin2hex(random_bytes(rand(3, 10))) . "\";\n";
+                }
+                $a .= "\treturn false;\n}\n\n";
                 break;
             case 1|3|5|7|9:
                 $junked = array(
@@ -16,7 +19,7 @@ class dynamic_generator
                     "2" => "caasdf",
                     "3" => bin2hex(random_bytes(rand(5,10)))
                 );
-                $a = "#\$". $junked[rand(1,3)] . " = \"". $junked[rand(1,3)] . "\";\n";
+                $a = "\$". substr(str_shuffle($allowed_chars), 0, rand(3,15)) . " = \"". $junked[rand(1,3)] . "\";\n";
                 break;
             case 2|4|6|8|10:
                 $a = "define('". bin2hex(random_bytes(rand(5,10))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
@@ -34,7 +37,10 @@ class dynamic_generator
                 $a = "// why is it not launching??????\n";
                 break;
             case 15:
-                $a = "//\n";
+                $yy = "20" . rand(1997,date("Y"));
+                $mo = rand(1,12);
+                $dd = rand(1,31);
+                $a = "//created: \n". date("Y/m/d - l", mktime(null, null, null, $mo, $dd, $yy));
                 break;
         }
         return $a;
