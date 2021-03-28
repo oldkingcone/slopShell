@@ -28,6 +28,8 @@ Current VT Detection ratio (obfuscated version): 1/59
 
 [![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/178ad408829bff25f51672828568fa6f985a04d63efc02da0bf1797bb22d4581/detection)
 
+The issue with this detection happening is i have not found a viable workaround for the keyword of eval if there was no call to eval this script would be undetectable.
+
 ---
 # Setup
 
