@@ -44,7 +44,7 @@ class dynamic_generator
                 $a = "// why is it not launching??????\n";
                 break;
             case 15:
-                $yy = rand(1997,date("Y"));
+                $yy = rand(1997,(int)date("Y"));
                 $mo = rand(1,12);
                 $dd = rand(1,31);
                 $a = "//created: \n". date("Y/m/d - l", mktime(null, null, null, $mo, $dd, $yy));
