@@ -4,7 +4,23 @@ class dynamic_generator
 {
     private function randomString(){
         $a = '';
-        $allowed_chars = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        $types = array(
+            1 => "array",
+            2 => "string",
+            3 => "int"
+        );
+        $loop_types = array(
+            1 => "while",
+            2 => "if"
+        );
+        $operations = array(
+            1 => "!",
+            2 => "or",
+            3 => "and",
+            4 => "||",
+            5 => "&&"
+        );
+        $allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
         switch (rand(0,15)){
             case 0:
                 $f_name = substr(str_shuffle($allowed_chars), 0, rand(3,15));
@@ -17,8 +33,8 @@ class dynamic_generator
                 break;
             case 1|3|5|7|9:
                 $junked = array(
-                    "1" => "a",
-                    "2" => "caasdf",
+                    "1" => substr(str_shuffle($allowed_chars), 0, rand(3,15)),
+                    "2" => base64_encode(substr(str_shuffle($allowed_chars), 0, rand(3,15))),
                     "3" => bin2hex(random_bytes(rand(5,10)))
                 );
                 $a = "\$". substr(str_shuffle($allowed_chars), 0, rand(3,15)) . " = \"". $junked[rand(1,3)] . "\";\n";
@@ -27,7 +43,10 @@ class dynamic_generator
                 $a = "define('" . bin2hex(random_bytes(rand(3, 10))) . "', \"" . bin2hex(random_bytes(rand(5, 100))) . "\");\n";
                 break;
             case 11:
-                $a = "define('". bin2hex(random_bytes(rand(2,20))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
+                $a = "function ". substr(str_shuffle($allowed_chars), 0, rand(3,15)). "(".$types[rand(1,3)] ." \$". substr(str_shuffle($allowed_chars), 0, rand(3,15)). ")\n{\n";
+                $a .= "\t".$loop_types[rand(1,2)]." (".substr(str_shuffle($allowed_chars), 0, rand(3,15))."){\n\t";
+                $a .= "\t\$".substr(str_shuffle($allowed_chars), 0, rand(3,15))."= \"". base64_encode(substr(str_shuffle($allowed_chars), 0, rand(3,15))) . "\";\n\t";
+                $a .= "\tbreak;\n\t}\n}\n";
                 break;
             case 12:
                 $a = "define('". bin2hex(random_bytes(rand(1,35))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
@@ -35,7 +54,7 @@ class dynamic_generator
             case 13:
                 $a = "\$tmp = tmpfile();\nfwrite(\$tmp,\"".substr(str_shuffle($allowed_chars), 0, rand(3,15))."\");\n";
                 for ($i = 0; $i <= rand(10,15); $i++) {
-                    $a .= "fwrite(\$tmp, base64_encode(\"" . substr(str_shuffle($allowed_chars), 0, rand(3, 15)) . "\"));\n";
+                    $a .= "fwrite(\$tmp, \"" . base64_encode(substr(str_shuffle($allowed_chars), 0, rand(3, 15))) . "\");\n";
                 }
                 $a .= "fseek(\$tmp, 0);\n";
                 $a .= "\$".substr(str_shuffle($allowed_chars), 0, rand(1,10))." = file(\$tmp);\n";
@@ -160,18 +179,21 @@ class dynamic_generator
                     $ad = substr(str_shuffle($allowed_chars), 0, rand(3,15));
                     $da = substr(str_shuffle($allowed_chars), 0, rand(3,15));
                     $f_name = substr(str_shuffle($allowed_chars), 0, rand(3,15));
+                    $values = substr(str_shuffle($allowed_chars), 0, rand(3,15));
+                    $chars = substr(str_shuffle($allowed_chars), 0, rand(3,15));
+                    $iterator = substr(str_shuffle($allowed_chars), 0, rand(3,15));
                     if (!is_null($key)){
                         $a = "\$" . $f_name . " = \"" . (string)$key . "\";";
                     }
                     $do = <<<FULL
-function $fun(string \$values)
+function $fun(string \$$values)
 {
     $a
-    \$i = 0;
-    if (!empty(\$values)){
-        \$$ad = \$values;
-        foreach (str_split(\$$ad) as \$chars){
-            \$$da .= chr(ord(\$$f_name{\$i++ % strlen(\$$f_name)}) ^ ord(\$chars));
+    \$$iterator = 0;
+    if (!empty(\$$values)){
+        \$$ad = \$$values;
+        foreach (str_split(\$$ad) as \$$chars){
+            \$$da .= chr(ord(\$$f_name{\$$iterator++ % strlen(\$$f_name)}) ^ ord(\$$chars));
         }
     }
     base64_decode("ZXZhbCg=")."\"".base64_decode(\$$da)."\"".base64_decode("KQ==");
