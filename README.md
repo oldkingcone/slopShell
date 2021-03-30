@@ -24,11 +24,11 @@ Current VT Detection ratio: 2/59
 [![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/8b792d74945ebf3d22828eaa22dec1d3df535247c6b741f003576e2be57195b9/detection)
 
 
-Current VT Detection ratio (obfuscated version): 1/59
+Current VT Detection ratio (obfuscated version): 0/59
 
-[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/178ad408829bff25f51672828568fa6f985a04d63efc02da0bf1797bb22d4581/detection)
+[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/6738372a46f82c4f29c196f3602c1fc8ff1b34505376c516d6f3e96cdb74bedd/detection)
 
-The issue with this detection happening is i have not found a viable workaround for the keyword of eval if there was no call to eval this script would be undetectable.
+~~__The issue with this detection happening is i have not found a viable workaround for the keyword of eval if there was no call to eval this script would be undetectable.__~~
 
 ---
 # Setup

@@ -1,9 +1,10 @@
 <?php
+define('allowed_chars',"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 class dynamic_generator
 {
-    private function randomString(){
-        $a = '';
+    private function junkLoops(bool $needsleep, int $sleep_depth)
+    {
         $types = array(
             1 => "array",
             2 => "string",
@@ -11,53 +12,77 @@ class dynamic_generator
         );
         $loop_types = array(
             1 => "while",
-            2 => "if"
+            2 => "if",
+            3 => "for",
+            4 => "foreach"
         );
         $operations = array(
-            1 => "!",
-            2 => "or",
-            3 => "and",
-            4 => "||",
-            5 => "&&"
+            1 => "or",
+            2 => "and",
+            3 => "||",
+            4 => "&&"
         );
-        $allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        $sleeper = null;
+        $a = "function " . substr(str_shuffle(allowed_chars), 0, rand(3, 15)) . "(" . $types[rand(1, 3)] . " \$" . substr(str_shuffle(allowed_chars), 0, rand(3, 15)) . ")\n{\n";
+        switch ($needsleep) {
+            case true:
+                $for_looper = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+                if ($sleep_depth > 5) {
+                    $sleep_length = rand(1000, 5000);
+                } else {
+                    $sleep_length = rand(100, 900);
+                }
+                $sleeper = <<<SLEEPER
+\t$loop_types[4] ( $for_looper as ){\n\t
+
+SLEEPER;
+                return $sleeper;
+            case false:
+                $looper = $loop_types[rand(1, 2)];
+                $sleeper = <<<SLEEPER
+                \t (substr(str_shuffle(allowed_chars), 0, rand(3,15))){\n\t;
+
+                SLEEPER;
+                return $sleeper;
+        }
+    }
+
+    private function randomString(){
+        $a = '';
         switch (rand(0,15)){
             case 0:
-                $f_name = substr(str_shuffle($allowed_chars), 0, rand(3,15));
-                $a = "function ". $f_name . "(string \$". substr(str_shuffle($allowed_chars), 0, rand(3,15)) ."){\n";
+                $f_name = substr(str_shuffle(allowed_chars), 0, rand(3,15));
+                $a = "function ". $f_name . "(string \$". substr(str_shuffle(allowed_chars), 0, rand(3,15)) ."){\n";
                 for ($i = 0; $i <= rand(1,10); $i++) {
-                    $a .= "\t\$" . substr(str_shuffle($allowed_chars), 0, rand(3, 15)) . " = \"" . bin2hex(random_bytes(rand(3, 10))) . "\";\n";
+                    $a .= "\t\$" . substr(str_shuffle(allowed_chars), 0, rand(3, 15)) . " = \"" . bin2hex(random_bytes(rand(3, 10))) . "\";\n";
                 }
                 $a .= "\treturn false;\n}\n\n";
-                $a .= "{$f_name}('" . substr(str_shuffle($allowed_chars), 0, rand(3,15)) . "');\n";
+                $a .= "{$f_name}('" . substr(str_shuffle(allowed_chars), 0, rand(3,15)) . "');\n";
                 break;
             case 1|3|5|7|9:
                 $junked = array(
-                    "1" => substr(str_shuffle($allowed_chars), 0, rand(3,15)),
-                    "2" => base64_encode(substr(str_shuffle($allowed_chars), 0, rand(3,15))),
+                    "1" => substr(str_shuffle(allowed_chars), 0, rand(3,15)),
+                    "2" => base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3,15))),
                     "3" => bin2hex(random_bytes(rand(5,10)))
                 );
-                $a = "\$". substr(str_shuffle($allowed_chars), 0, rand(3,15)) . " = \"". $junked[rand(1,3)] . "\";\n";
+                $a = "\$". substr(str_shuffle(allowed_chars), 0, rand(3,15)) . " = \"". $junked[rand(1,3)] . "\";\n";
                 break;
             case 2|4|6|8|10:
                 $a = "define('" . bin2hex(random_bytes(rand(3, 10))) . "', \"" . bin2hex(random_bytes(rand(5, 100))) . "\");\n";
                 break;
             case 11:
-                $a = "function ". substr(str_shuffle($allowed_chars), 0, rand(3,15)). "(".$types[rand(1,3)] ." \$". substr(str_shuffle($allowed_chars), 0, rand(3,15)). ")\n{\n";
-                $a .= "\t".$loop_types[rand(1,2)]." (".substr(str_shuffle($allowed_chars), 0, rand(3,15))."){\n\t";
-                $a .= "\t\$".substr(str_shuffle($allowed_chars), 0, rand(3,15))."= \"". base64_encode(substr(str_shuffle($allowed_chars), 0, rand(3,15))) . "\";\n\t";
-                $a .= "\tbreak;\n\t}\n}\n";
+
                 break;
             case 12:
                 $a = "define('". bin2hex(random_bytes(rand(1,35))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
                 break;
             case 13:
-                $a = "\$tmp = tmpfile();\nfwrite(\$tmp,\"".substr(str_shuffle($allowed_chars), 0, rand(3,15))."\");\n";
+                $a = "\$tmp = tmpfile();\nfwrite(\$tmp,\"".substr(str_shuffle(allowed_chars), 0, rand(3,15))."\");\n";
                 for ($i = 0; $i <= rand(10,15); $i++) {
-                    $a .= "fwrite(\$tmp, \"" . base64_encode(substr(str_shuffle($allowed_chars), 0, rand(3, 15))) . "\");\n";
+                    $a .= "fwrite(\$tmp, \"" . base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3, 15))) . "\");\n";
                 }
                 $a .= "fseek(\$tmp, 0);\n";
-                $a .= "\$".substr(str_shuffle($allowed_chars), 0, rand(1,10))." = file(\$tmp);\n";
+                $a .= "\$".substr(str_shuffle(allowed_chars), 0, rand(1,10))." = file(\$tmp);\n";
                 $a .= "fclose(\$tmp);\n";
                 break;
             case 14:
@@ -161,7 +186,6 @@ class dynamic_generator
                 case "ob":
                     $key = bin2hex(random_bytes(rand(32,64)));
                     echo "Key: {$key}\nKey length: ". strlen($key)."\n";
-                    $allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
                     fputs(fopen($out, "a+"), "<?php\n");
                     for ($i = 0; $i <= $depth; $i++) {
                         fputs(fopen($out, "a"), $this->randomString());
@@ -175,13 +199,15 @@ class dynamic_generator
                         $encrypted .= chr(ord($char) ^ ord($key{$i++ % strlen($key)}));
                     }
                     $b = base64_encode($encrypted);
-                    $fun = substr(str_shuffle($allowed_chars), 0, rand(3,15));
-                    $ad = substr(str_shuffle($allowed_chars), 0, rand(3,15));
-                    $da = substr(str_shuffle($allowed_chars), 0, rand(3,15));
-                    $f_name = substr(str_shuffle($allowed_chars), 0, rand(3,15));
-                    $values = substr(str_shuffle($allowed_chars), 0, rand(3,15));
-                    $chars = substr(str_shuffle($allowed_chars), 0, rand(3,15));
-                    $iterator = substr(str_shuffle($allowed_chars), 0, rand(3,15));
+                    $fun = substr(str_shuffle(allowed_chars), 0, rand(3,15));
+                    $ad = substr(str_shuffle(allowed_chars), 0, rand(3,15));
+                    $da = substr(str_shuffle(allowed_chars), 0, rand(3,15));
+                    $f_name = substr(str_shuffle(allowed_chars), 0, rand(3,15));
+                    $values = substr(str_shuffle(allowed_chars), 0, rand(3,15));
+                    $chars = substr(str_shuffle(allowed_chars), 0, rand(3,15));
+                    $iterator = substr(str_shuffle(allowed_chars), 0, rand(3,15));
+                    $tt = substr(str_shuffle(allowed_chars), 0, rand(3,15));
+                    $tt_name = substr(str_shuffle(allowed_chars), 0, rand(3,15));
                     if (!is_null($key)){
                         $a = "\$" . $f_name . " = \"" . (string)$key . "\";";
                     }
@@ -196,7 +222,13 @@ function $fun(string \$$values)
             \$$da .= chr(ord(\$$f_name{\$$iterator++ % strlen(\$$f_name)}) ^ ord(\$$chars));
         }
     }
-    base64_decode("ZXZhbCg=")."\"".base64_decode(\$$da)."\"".base64_decode("KQ==");
+    \$$tt = tempnam(sys_get_temp_dir(),"$tt_name");
+    fwrite(fopen(\$$tt, "a+"), base64_decode(\$$da));
+    if (substr(php_uname(), 0, 7) == 'Windows') {
+        system("start /b php \$$tt");
+    }else{
+        system("nohup php -F \$$tt &");
+    }
 }
 $fun(base64_decode("$b"));
 FULL;
