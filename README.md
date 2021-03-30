@@ -78,6 +78,9 @@ Use in the terminal, which is how this was designed to work, using curl with the
 Obfuscated script example: 
 ![](https://github.com/oldkingcone/slopShell/blob/master/obfuscated_script.png?raw=true)
 
+Generation 2 obfuscated script:
+![](https://github.com/oldkingcone/slopShell/blob/master/obfuscated_gen2.png?raw=true)
+
 
 ---
 
