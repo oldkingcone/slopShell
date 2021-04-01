@@ -44,7 +44,7 @@ class dynamic_generator
                 }
                 $sleeper = <<<SLEEPER
 $loop_types[4] ( \$$for_looper as \$$foreach_key => \$$foreach_value ){\n\t
-\tfor (\$i = 0; \$i < 
+\tfor (\$i = 0; \$i <
 
 SLEEPER;
                 return array(
@@ -121,11 +121,11 @@ SLEEPER;
     private function encryptFile($filename):bool
     {
         if (!empty($filename) and is_file($filename)){
+            return true;
 
         }else{
-            return false;
+            return true;
         }
-        return false;
     }
 
     function begin_junk($file, $depth, $out, $mode)
@@ -212,15 +212,21 @@ SLEEPER;
                 }
             }
             switch (strtolower($mode)){
+                case "n":
+                    $d = "<?php\neval(base64_decode(\"" .base64_encode(implode("", $b_encoded)) . "\"));\n";
+                    fputs(fopen($out, "w"), $d, strlen($d));
+                    break;
                 case "ob":
+                    $out_file = fopen($out, "w");
                     $key = bin2hex(random_bytes(rand(32,64)));
                     echo "Key: {$key}\nKey length: ". strlen($key)."\n";
-                    fputs(fopen($out, "a+"), "<?php\n");
+                    fputs($out_file, "<?php\n", strlen("<?php\n"));
                     for ($i = 0; $i <= $depth; $i++) {
-                        fputs(fopen($out, "a"), $this->randomString());
+                        $ax = $this->randomString();
+                        fputs($out_file, $ax, strlen($ax));
                     }
                     $returned = $this->randomString();
-                    fputs(fopen($out, "a"), $returned);
+                    fputs($out_file, $returned, strlen($returned));
                     $i = 0;
                     $encrypted = '';
                     $text = base64_encode(implode("", $b_encoded));
@@ -261,10 +267,9 @@ function $fun(string \$$values)
 }
 $fun(base64_decode("$b"));
 FULL;
-                    fputs(fopen($out, "a"), $do);
+                    fputs($out_file, $do, strlen($do));
+                    fclose($out_file);
                     break;
-                default:
-                    fputs(fopen($out, "a+"), "<?php\neval(base64_decode(\"" .base64_encode(implode("", $b_encoded)) . "\"));\n");
             }
         }else{
             $required_params = array();
