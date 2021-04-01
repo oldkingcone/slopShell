@@ -121,7 +121,7 @@ SLEEPER2;
             case 13:
                 $obfs_tmp = substr(str_shuffle(allowed_chars), 0, rand(3,15));
                 $a = "\$" . $obfs_tmp . " = tmpfile();\nfwrite(\$".$obfs_tmp.",\"".substr(str_shuffle(allowed_chars), 0, rand(3,15))."\");\n";
-                for ($i = 0; $i <= rand(10,15); $i++) {
+                for ($i = 0; $i <= rand(1,10); $i++) {
                     $a .= "fwrite(\$".$obfs_tmp.", \"" . base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3, 15))) . "\");\n";
                 }
                 $a .= "fseek(\$".$obfs_tmp.", 0);\n";
