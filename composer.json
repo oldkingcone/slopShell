@@ -5,6 +5,9 @@
         "react/promise": "^2.8",
         "react/react": "^1.1",
         "amphp/parallel": "^1.2",
-        "amphp/parallel-functions": "^1.0"
+        "amphp/parallel-functions": "^1.0",
+        "ext-readline": "*",
+        "ext-pgsql": "*",
+        "ext-curl": "*"
     }
 }

