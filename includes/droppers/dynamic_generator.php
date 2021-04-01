@@ -3,8 +3,15 @@ define('allowed_chars',"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 class dynamic_generator
 {
-    private function junkLoops(bool $needsleep, int $sleep_depth):array
+    private function junkLoops(int $needsleep, int $sleep_depth):string
     {
+        $for_looper = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+        $iterator = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+        $iterator_second = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+        $container = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+        $container_two = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+        $foreach_key = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+        $foreach_value = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
         $types = array(
             1 => "array",
             2 => "string",
@@ -33,44 +40,57 @@ class dynamic_generator
         );
         $sleeper = null;
         switch ($needsleep) {
-            case true:
-                $for_looper = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
-                $foreach_key = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
-                $foreach_value = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
-                if ($sleep_depth > 5) {
+            case 1:
+
+                if ($sleep_depth >= 4.6) {
                     $sleep_length = rand(10000, 50000);
                 } else {
                     $sleep_length = rand(1000, 9000);
                 }
                 $sleeper = <<<SLEEPER
-$loop_types[4] ( \$$for_looper as \$$foreach_key => \$$foreach_value ){\n\t
-\tfor (\$i = 0; \$i <
-
-SLEEPER;
-                return array(
-                    "loop_chunk" => $sleeper,
-                    "foreach_key" => $for_looper
-                );
-            case false:
-                $looper = $loop_types[rand(1, 2)];
-                $sleeper = <<<SLEEPER
-                \t (substr(str_shuffle(allowed_chars), 0, rand(3,15))){\n\t;
-
-                SLEEPER;
-                return array(
-                    "1" => $sleeper
-                );
+    $loop_types[4] ( \$$for_looper as \$$foreach_key => \$$foreach_value ){
+        for (\$$iterator = 0; \$$iterator < $sleep_length; \$$iterator++){
+            \$$container = $sleep_length/2;
+            \$$container_two = array();
+            if (\$$iterator == \$$container and array_count_values(\$$container_two) != 10){
+                array_push(\$$container_two, rand(1,500));
+                \$$iterator = 0;
+            }
+            \$$iterator_second.=str_repeat("$iterator_second", 50);
         }
-        return array(
-            "skip"=>true
-        );
+        return hash('whirlpool', \$_SERVER['SCRIPT_FILENAME'], FALSE);
+    }
+SLEEPER;
+                break;
+            case 2:
+                $loo = $loop_types[rand(1,2)];
+                $che = $checks[rand(1,3)];
+                $opp = $operations[rand(1,4)];
+                $ty = $types[rand(1,3)];
+                $po = $pos_neg[rand(1,2)];
+                $sleeper = <<<SLEEPER2
+    $loo($po$che(\$$iterator) $opp $po$che(\$$iterator_second) $opp ($ty)\$$container){
+        $loo(\$$iterator $opp \$$iterator_second){
+            return true;
+        }
+        $loo($po$che(\$$iterator_second)){
+            return false;
+        }
+        $loo($po$che(\$$iterator)){
+            return true;
+        }
+    }\n
+SLEEPER2;
+                break;
+        }
+        return $sleeper;
     }
 
     private function randomString(){
         $a = '';
+        $f_name = substr(str_shuffle(allowed_chars), 0, rand(3,45));
         switch (rand(0,15)){
             case 0:
-                $f_name = substr(str_shuffle(allowed_chars), 0, rand(3,45));
                 $a = "function ". $f_name . "(string \$". substr(str_shuffle(allowed_chars), 0, rand(3,45)) ."){\n";
                 for ($i = 0; $i <= rand(1,15); $i++) {
                     $a .= "\t\$" . substr(str_shuffle(allowed_chars), 0, rand(3, 45)) . " = \"" . bin2hex(random_bytes(rand(3, 70))) . "\";\n";
@@ -93,7 +113,10 @@ SLEEPER;
 
                 break;
             case 12:
-                $a = "define('". bin2hex(random_bytes(rand(1,35))) . "', \"" . bin2hex(random_bytes(rand(5,100))) . "\");\n";
+                $a = "function ". $f_name . "(string \$". substr(str_shuffle(allowed_chars), 0, rand(3,45)) ."){\n";
+                $a .= $this->junkLoops(rand(1,2), rand(1,5));
+                $a .= "\t\n}\n\n";
+                $a .= "{$f_name}('" . substr(str_shuffle(allowed_chars), 0, rand(3,45)) . "');\n";
                 break;
             case 13:
                 $obfs_tmp = substr(str_shuffle(allowed_chars), 0, rand(3,15));
@@ -229,11 +252,11 @@ SLEEPER;
                         $encrypted .= chr(ord($char) ^ ord($key{$i++ % strlen($key)}));
                     }
                     $b = base64_encode($encrypted);
-                    $fun = substr(str_shuffle(allowed_chars), 0, rand(3,15));
-                    $ad = substr(str_shuffle(allowed_chars), 0, rand(3,15));
-                    $da = substr(str_shuffle(allowed_chars), 0, rand(3,15));
-                    $f_name = substr(str_shuffle(allowed_chars), 0, rand(3,15));
-                    $values = substr(str_shuffle(allowed_chars), 0, rand(3,15));
+                    $fun = substr(str_shuffle(allowed_chars), 0, rand(3,25));
+                    $ad = substr(str_shuffle(allowed_chars), 0, rand(3,16));
+                    $da = substr(str_shuffle(allowed_chars), 0, rand(3,17));
+                    $f_name = substr(str_shuffle(allowed_chars), 0, rand(3,18));
+                    $values = substr(str_shuffle(allowed_chars), 0, rand(3,19));
                     $chars = substr(str_shuffle(allowed_chars), 0, rand(3,15));
                     $iterator = substr(str_shuffle(allowed_chars), 0, rand(3,15));
                     $tt = substr(str_shuffle(allowed_chars), 0, rand(3,15));
