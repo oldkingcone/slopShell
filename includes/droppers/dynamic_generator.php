@@ -80,9 +80,9 @@ SLEEPER;
                 break;
             case 1|3|5|7|9:
                 $junked = array(
-                    "1" => substr(str_shuffle(allowed_chars), 0, rand(3,80)),
-                    "2" => base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3,80))),
-                    "3" => bin2hex(random_bytes(rand(5,80)))
+                    1 => substr(str_shuffle(allowed_chars), 0, rand(3,80)),
+                    2 => base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3,80))),
+                    3 => bin2hex(random_bytes(rand(5,80)))
                 );
                 $a = "\$". substr(str_shuffle(allowed_chars), 0, rand(3,15)) . " = \"". $junked[rand(1,3)] . "\";\n";
                 break;
@@ -118,14 +118,9 @@ SLEEPER;
         return $a;
     }
 
-    private function encryptFile($filename):bool
+    private function encryptFile($filename)
     {
-        if (!empty($filename) and is_file($filename)){
-            return true;
-
-        }else{
-            return true;
-        }
+        echo "Coming soon!";
     }
 
     function begin_junk($file, $depth, $out, $mode)
