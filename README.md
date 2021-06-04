@@ -15,6 +15,12 @@ Since I derped, and forgot to talk about usage. Here goes.
 
 For this shell to work, you need 2 things, a victim that allows php file upload(yourself, in an educational environment) and a way to send http requests to this webshell. 
 
+
+Thank you for all the support the community has given, it means alot to us. Now for things that will be added to this shell, to make it even more awesome. 
+
+ - Mutual TLS, with the ability to generate a CA on the fly(if thats possible that is.) 
+ - More refined dropper/shell itself, to ensure that the shell will not be stumbled upon for prolonged access.
+
 Basic Usage Video(Hosted on Youtube):
 
 [![Video Showing Usage](https://i.ytimg.com/vi_webp/FywNszpfDJo/maxresdefault.webp)](https://www.youtube.com/watch?v=FywNszpfDJo)
