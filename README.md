@@ -18,7 +18,7 @@ For this shell to work, you need 2 things, a victim that allows php file upload(
 
 Thank you for all the support the community has given, it means alot to us. Now for things that will be added to this shell, to make it even more awesome. 
 
- - Mutual TLS, with the ability to generate a CA on the fly(if thats possible that is.) 
+ - Mutual TLS, with the ability to generate a CA on the fly(if thats possible) 
  - More refined dropper/shell itself, to ensure that the shell will not be stumbled upon for prolonged access.
 
 Basic Usage Video(Hosted on Youtube):
