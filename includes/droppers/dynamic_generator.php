@@ -22,7 +22,7 @@ class dynamic_generator
                     default:
                         $keyInfo = array(
                             "private_key_type" => $keyType,
-                            "private_key_bits" => $CertStrength
+                            "private_key_bits" => (int)$CertStrength
                         );
                         break;
                 }

@@ -9,6 +9,7 @@
         "ext-readline": "*",
         "ext-pgsql": "*",
         "ext-curl": "*",
-      "ext-openssl": "*"
+      "ext-openssl": "*",
+        "ext-sodium": "*"
     }
 }

