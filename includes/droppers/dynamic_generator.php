@@ -1,9 +1,49 @@
 <?php
-define('allowed_chars',"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+define('allowed_chars', "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 class dynamic_generator
 {
-    private function junkLoops(int $needsleep, int $sleep_depth):string
+
+    private function genCert(int $CertStrength, string $certAlgo, string $keyType, string $digest, array $common)
+    {
+        if (!is_null($CertStrength) and is_int($CertStrength) and !is_null($certAlgo) and count($common) > 0) {
+            if ($CertStrength < 4096) {
+                echo "Are you sure you want such a small cert?\n";
+                echo "This is for client auth and mutual tls, make sure its a bit higher.\n";
+                return 0;
+            } else {
+                switch (strpos($keyType, "curve") or strpos($keyType, "prime") or strpos($keyType, "secp")) {
+                    case true:
+                        $keyInfo = array(
+                            "private_key_type" => OPENSSL_KEYTYPE_EC,
+                            "curve_name" => $keyType
+                        );
+                        break;
+                    default:
+                        $keyInfo = array(
+                            "private_key_type" => $keyType,
+                            "private_key_bits" => $CertStrength
+                        );
+                        break;
+                }
+                $privKey = openssl_pkey_new($keyInfo);
+                $csr = openssl_csr_new($common, $privKey, array("digest_alg" => $digest));
+                $x509 = openssl_csr_sign($csr, null, $privKey, $days = 365, array("digest_alg" => $digest));
+                openssl_csr_export_to_file($csr, "YOURCSR.csr");
+                openssl_x509_export_to_file($x509, "YOURX509CERT.crt");
+                openssl_pkey_export_to_file($privKey, "YOURPRIVKEY.pem");
+                echo "It is very important for you to know these are not password protected.\n";
+                while (($e = openssl_error_string()) !== false) {
+                    echo $e . "\n";
+                }
+            }
+        } else {
+            throw new ErrorException("Missing Needed information. {$CertStrength} - {$certAlgo}");
+        }
+        return 0;
+    }
+
+    private function junkLoops(int $needsleep, int $sleep_depth): string
     {
         $for_looper = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
         $iterator = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
@@ -63,11 +103,11 @@ class dynamic_generator
 SLEEPER;
                 break;
             case 2:
-                $loo = $loop_types[rand(1,2)];
-                $che = $checks[rand(1,3)];
-                $opp = $operations[rand(1,4)];
-                $ty = $types[rand(1,3)];
-                $po = $pos_neg[rand(1,2)];
+                $loo = $loop_types[rand(1, 2)];
+                $che = $checks[rand(1, 3)];
+                $opp = $operations[rand(1, 4)];
+                $ty = $types[rand(1, 3)];
+                $po = $pos_neg[rand(1, 2)];
                 $sleeper = <<<SLEEPER2
     $loo($po$che(\$$iterator) $opp $po$che(\$$iterator_second) $opp ($ty)\$$container){
         $loo(\$$iterator $opp \$$iterator_second){
@@ -86,56 +126,57 @@ SLEEPER2;
         return $sleeper;
     }
 
-    private function randomString(){
+    private function randomString()
+    {
         $a = '';
-        $f_name = substr(str_shuffle(allowed_chars), 0, rand(3,45));
-        switch (rand(0,15)){
+        $f_name = substr(str_shuffle(allowed_chars), 0, rand(3, 45));
+        switch (rand(0, 15)) {
             case 0:
-                $a = "function ". $f_name . "(string \$". substr(str_shuffle(allowed_chars), 0, rand(3,45)) ."){\n";
-                for ($i = 0; $i <= rand(1,15); $i++) {
+                $a = "function " . $f_name . "(string \$" . substr(str_shuffle(allowed_chars), 0, rand(3, 45)) . "){\n";
+                for ($i = 0; $i <= rand(1, 15); $i++) {
                     $a .= "\t\$" . substr(str_shuffle(allowed_chars), 0, rand(3, 45)) . " = \"" . bin2hex(random_bytes(rand(3, 70))) . "\";\n";
                 }
                 $a .= "\treturn false;\n}\n\n";
-                $a .= "{$f_name}('" . substr(str_shuffle(allowed_chars), 0, rand(3,45)) . "');\n";
+                $a .= "{$f_name}('" . substr(str_shuffle(allowed_chars), 0, rand(3, 45)) . "');\n";
                 break;
-            case 1|3|5|7|9:
+            case 1 | 3 | 5 | 7 | 9:
                 $junked = array(
-                    1 => substr(str_shuffle(allowed_chars), 0, rand(3,80)),
-                    2 => base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3,80))),
-                    3 => bin2hex(random_bytes(rand(5,80)))
+                    1 => substr(str_shuffle(allowed_chars), 0, rand(3, 80)),
+                    2 => base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3, 80))),
+                    3 => bin2hex(random_bytes(rand(5, 80)))
                 );
-                $a = "\$". substr(str_shuffle(allowed_chars), 0, rand(3,15)) . " = \"". $junked[rand(1,3)] . "\";\n";
+                $a = "\$" . substr(str_shuffle(allowed_chars), 0, rand(3, 15)) . " = \"" . $junked[rand(1, 3)] . "\";\n";
                 break;
-            case 2|4|6|8|10:
+            case 2 | 4 | 6 | 8 | 10:
                 $a = "define('" . bin2hex(random_bytes(rand(3, 90))) . "', \"" . bin2hex(random_bytes(rand(5, 100))) . "\");\n";
                 break;
             case 11:
 
                 break;
             case 12:
-                $a = "function ". $f_name . "(string \$". substr(str_shuffle(allowed_chars), 0, rand(3,45)) ."){\n";
-                $a .= $this->junkLoops(rand(1,2), rand(1,5));
+                $a = "function " . $f_name . "(string \$" . substr(str_shuffle(allowed_chars), 0, rand(3, 45)) . "){\n";
+                $a .= $this->junkLoops(rand(1, 2), rand(1, 5));
                 $a .= "\t\n}\n\n";
-                $a .= "{$f_name}('" . substr(str_shuffle(allowed_chars), 0, rand(3,45)) . "');\n";
+                $a .= "{$f_name}('" . substr(str_shuffle(allowed_chars), 0, rand(3, 45)) . "');\n";
                 break;
             case 13:
-                $obfs_tmp = substr(str_shuffle(allowed_chars), 0, rand(3,15));
-                $a = "\$" . $obfs_tmp . " = tmpfile();\nfwrite(\$".$obfs_tmp.",\"".substr(str_shuffle(allowed_chars), 0, rand(3,15))."\");\n";
-                for ($i = 0; $i <= rand(1,10); $i++) {
-                    $a .= "fwrite(\$".$obfs_tmp.", \"" . base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3, 15))) . "\");\n";
+                $obfs_tmp = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+                $a = "\$" . $obfs_tmp . " = tmpfile();\nfwrite(\$" . $obfs_tmp . ",\"" . substr(str_shuffle(allowed_chars), 0, rand(3, 15)) . "\");\n";
+                for ($i = 0; $i <= rand(1, 10); $i++) {
+                    $a .= "fwrite(\$" . $obfs_tmp . ", \"" . base64_encode(substr(str_shuffle(allowed_chars), 0, rand(3, 15))) . "\");\n";
                 }
-                $a .= "fseek(\$".$obfs_tmp.", 0);\n";
-                $a .= "\$".substr(str_shuffle(allowed_chars), 0, rand(1,90))." = file(\$".$obfs_tmp.");\n";
-                $a .= "fclose(\$".$obfs_tmp.");\n";
+                $a .= "fseek(\$" . $obfs_tmp . ", 0);\n";
+                $a .= "\$" . substr(str_shuffle(allowed_chars), 0, rand(1, 90)) . " = file(\$" . $obfs_tmp . ");\n";
+                $a .= "fclose(\$" . $obfs_tmp . ");\n";
                 break;
             case 14:
                 $a = "// why is it not launching??????\n";
                 break;
             case 15:
-                $yy = rand(1997,(int)date("Y"));
-                $mo = rand(1,12);
-                $dd = rand(1,31);
-                $a  .= "//created: \n". date("Y/m/d - l", mktime(null, null, null, $mo, $dd, $yy));
+                $yy = rand(1997, (int)date("Y"));
+                $mo = rand(1, 12);
+                $dd = rand(1, 31);
+                $a .= "//created: \n" . date("Y/m/d - l", mktime(null, null, null, $mo, $dd, $yy));
                 break;
         }
         return $a;
@@ -223,21 +264,21 @@ SLEEPER2;
             "9" => "\\x39",
         );
         $b_encoded = array();
-        if (!empty($file) and is_file($file) and !empty($depth)){
-            foreach (file($file) as $letter){
+        if (!empty($file) and is_file($file) and !empty($depth)) {
+            foreach (file($file) as $letter) {
                 foreach (str_split($letter) as $word) {
                     array_push($b_encoded, $char_map_lower[strtolower($word)]);
                 }
             }
-            switch (strtolower($mode)){
+            switch (strtolower($mode)) {
                 case "n":
-                    $d = "<?php\neval(base64_decode(\"" .base64_encode(implode("", $b_encoded)) . "\"));\n";
+                    $d = "<?php\neval(base64_decode(\"" . base64_encode(implode("", $b_encoded)) . "\"));\n";
                     fputs(fopen($out, "w"), $d, strlen($d));
                     break;
                 case "ob":
                     $out_file = fopen($out, "w");
-                    $key = bin2hex(random_bytes(rand(32,64)));
-                    echo "Key: {$key}\nKey length: ". strlen($key)."\n";
+                    $key = bin2hex(random_bytes(rand(32, 64)));
+                    echo "Key: {$key}\nKey length: " . strlen($key) . "\n";
                     fputs($out_file, "<?php\n", strlen("<?php\n"));
                     for ($i = 0; $i <= $depth; $i++) {
                         $ax = $this->randomString();
@@ -252,16 +293,16 @@ SLEEPER2;
                         $encrypted .= chr(ord($char) ^ ord($key{$i++ % strlen($key)}));
                     }
                     $b = base64_encode($encrypted);
-                    $fun = substr(str_shuffle(allowed_chars), 0, rand(3,25));
-                    $ad = substr(str_shuffle(allowed_chars), 0, rand(3,16));
-                    $da = substr(str_shuffle(allowed_chars), 0, rand(3,17));
-                    $f_name = substr(str_shuffle(allowed_chars), 0, rand(3,18));
-                    $values = substr(str_shuffle(allowed_chars), 0, rand(3,19));
-                    $chars = substr(str_shuffle(allowed_chars), 0, rand(3,15));
-                    $iterator = substr(str_shuffle(allowed_chars), 0, rand(3,15));
-                    $tt = substr(str_shuffle(allowed_chars), 0, rand(3,15));
-                    $tt_name = substr(str_shuffle(allowed_chars), 0, rand(3,15));
-                    if (!is_null($key)){
+                    $fun = substr(str_shuffle(allowed_chars), 0, rand(3, 25));
+                    $ad = substr(str_shuffle(allowed_chars), 0, rand(3, 16));
+                    $da = substr(str_shuffle(allowed_chars), 0, rand(3, 17));
+                    $f_name = substr(str_shuffle(allowed_chars), 0, rand(3, 18));
+                    $values = substr(str_shuffle(allowed_chars), 0, rand(3, 19));
+                    $chars = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+                    $iterator = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+                    $tt = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+                    $tt_name = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
+                    if (!is_null($key)) {
                         $a = "\$" . $f_name . " = \"" . (string)$key . "\";";
                     }
                     $do = <<<FULL
@@ -289,13 +330,13 @@ FULL;
                     fclose($out_file);
                     break;
             }
-        }else{
+        } else {
             $required_params = array();
-            if (empty($mode)){
+            if (empty($mode)) {
                 array_push($required_params, ("mode cannot be empty. Please use either ob for obfuscation or n for plain."));
-            }else if (empty($file)){
+            } else if (empty($file)) {
                 array_push($required_params, "file cannot be empty.");
-            }else if (!is_file($file)){
+            } else if (!is_file($file)) {
                 array_push($required_params, "File needs to be of type file not string.(think fopen)");
             }
             throw new Exception("Please rectify the following errors: \n" . print_r($required_params) . "\n");

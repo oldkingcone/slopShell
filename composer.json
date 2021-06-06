@@ -8,6 +8,7 @@
         "amphp/parallel-functions": "^1.0",
         "ext-readline": "*",
         "ext-pgsql": "*",
-        "ext-curl": "*"
+        "ext-curl": "*",
+      "ext-openssl": "*"
     }
 }
