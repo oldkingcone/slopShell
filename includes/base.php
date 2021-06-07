@@ -227,7 +227,7 @@ while(1) {
     {
         if (checkSystems() === true) {
             foreach (fgets(fopen(SELF_SCRIPT, "r+")) as $line) {
-                fputs(SELF_SCRIPT, openssl_encrypt($line, "aes-256-gcm", bin2hex(openssl_random_pseudo_bytes(128)), "", bin2hex(openssl_random_pseudo_bytes(256))));
+                fputs(SELF_SCRIPT, openssl_encrypt($line, "aes-256-gcm", bin2hex(openssl_random_pseudo_bytes(SODIUM_CRYPTO_AEAD_AES256GCM_KEYBYTES)), "", bin2hex(openssl_random_pseudo_bytes(256))));
                 }
             fclose(SELF_SCRIPT);
             unlink(SELF_SCRIPT);
