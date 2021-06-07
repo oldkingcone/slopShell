@@ -491,7 +491,7 @@ while ($run) {
             try{
                 $h = readline("Which host are we sending the command to?\n->");
                 $c = readline("And now the command: \n->");
-                co($c, $h, queryDB($h, 'c'));
+                co($c, $h, queryDB($h, 'c'), false); // defaulting to false for now. until all apsects of that call are worked out and added to the shell.
             }catch (Exception $e){
                 logo("c", clears, true, $e);
             }
