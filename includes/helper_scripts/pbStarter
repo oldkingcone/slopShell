@@ -11,6 +11,9 @@ check_PB(){
     python3 -m pip install proxybroker --user
     export PATH
     echo "I have set your path to: "$PATH
-    (nohup $proxy_broker serve serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &) &
+    (nohup $proxy_broker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &) &
+  else
+    (nohup $proxy_broker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &) &
   fi
 }
+check_PB()

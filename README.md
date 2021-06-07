@@ -53,6 +53,8 @@ Once you have these set up properly and can confirm that they are running. A com
 ---
 ## How to interact.
 
+
+CLIFFNOTE: For the anti analysis routines, I(oldkingcone) would love to try and take credit for this idea, but I cannot in good conscience, so the inspiration came from 1 person(you know who you are, you evil genius.) whom pointed me to this repo: https://github.com/NullArray/Archivist/blob/master/logger.py#L123 
 Firstly, you need to choose a valid User-Agent to use, this is kind of like a first layer of protection against your webshell being accidentally stumbled upon by anyone but you. I went with sp/1.1 as its a non typical user-agent used. This can cause red flags in a pentest, and your access or script to be blocked or deleted. So, be smart about it. Code obfuscation wouldnt hurt, I did not add that in because thats on you to decide. To use the shell, there are some presets to aid you in your pen test and traversal of the machine. I did not add much for windows, because I do not like developing for windows. If you have routines or tricks added or know about, feel free to submit an issue with your suggestion and ill add it. An example of how to use this webshell with curl:
 
 `curl https://victim/slop.php?qs=cqP -H "User-Agent: sp/1.1" -v`
