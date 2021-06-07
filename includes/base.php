@@ -90,7 +90,6 @@ while(1) {
     function mainR()
     {
         if (checkfs()) {
-            $duration = null;
             $ho = null;
             $p = null;
             $u = null;
@@ -121,6 +120,9 @@ while(1) {
                 }
                 fclose($fp);
             }
+        }else{
+            sleep(1000);
         }
     }
+    mainR();
 }
