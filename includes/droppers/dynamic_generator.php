@@ -184,7 +184,9 @@ SLEEPER2;
 
     private function encryptFile($filename)
     {
-        echo "Coming soon!";
+        if (!empty($filename) && is_file($filename)){
+
+        }
     }
 
     function begin_junk($file, $depth, $out, $mode)
