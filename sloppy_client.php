@@ -502,7 +502,16 @@ while ($run) {
             try{
                 $h = readline("Which host are we sending the command to?\n->");
                 $c = readline("And now the command: \n->");
-                co($c, $h, queryDB($h, 'c'), false); // defaulting to false for now. until all apsects of that call are worked out and added to the shell.
+                $e = readline("Are we needing to encrypt?\n(y/n)->");
+                switch (strtolower($e)){
+                    case "y":
+                        $encrypt = true;
+                        break;
+                    default:
+                        $encrypt = false;
+                        break;
+                }
+                co($c, $h, queryDB($h, 'c'), $encrypt); // defaulting to false for now. until all apsects of that call are worked out and added to the shell.
             }catch (Exception $e){
                 logo("c", clears, true, $e);
             }
@@ -519,7 +528,6 @@ while ($run) {
             break;
         case "u":
             system(clears);
-//            echo "Will be in future editions.\n";
             if (strstr(getcwd(), "slopShell") == true) {
                 system("git pull");
             }else{
