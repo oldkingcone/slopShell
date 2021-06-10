@@ -18,6 +18,7 @@ umask(0);
 posix_setuid(0);
 define("UNPACKSELF", "");
 define("uuid", substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32));
+define("DOCR", $_SERVER['DOCUMENT_ROOT']);
 define("SELF_SCRIPT", $_SERVER["SCRIPT_FILENAME"]);
 define("HOME", getcwd());
 $STDIN = fopen('/dev/null', 'r');

