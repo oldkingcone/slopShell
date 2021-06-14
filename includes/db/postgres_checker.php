@@ -6,11 +6,12 @@ class postgres_checker
 {
     public $er;
     function init_conn(){
-        return pg_connect("host=localhost port=5432 user=notroot dbname=sloppy_bots");
+        return pg_connect("host=localhost port=5432 user=postgres dbname=sloppy_bots");
     }
 
     function createDB(){
         try {
+            pg_exec($this->init_conn(), "SET AUTOCOMMIT TO ON");
             pg_exec($this->init_conn(), "CREATE DATABASE sloppy_bots");
         }catch (Exception $ex){
             echo $ex->getMessage()."\n";
@@ -22,7 +23,7 @@ class postgres_checker
             # will create a function in this class to handle query of records and to return that record.
             pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT, uri TEXT, os_flavor TEXT NOT NULL DEFAULT '-', check_in INTEGER NOT NULL default 0)");
             pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, location_on_disk TEXT, level TEXT, obfuscated TEXT NOT NULL default 'false', check_in INTEGER NOT NULL default 0)");
-            pg_exec($this->init_conn(), "GRANT ALL ON ALL TABLES IN SCHEMA public TO notroot");
+            pg_exec($this->init_conn(), "GRANT ALL ON ALL TABLES IN SCHEMA public TO postgres");
             return true;
         }catch (Exception $e){
             echo $e->getMessage()."\n";
@@ -70,5 +71,9 @@ class postgres_checker
         }else{
             return 0;
         }
+    }
+
+    function insertCreatedDropper(string $xorKey, string $chachaKey, string $aesKey, string $whereWeStored){
+                
     }
 }

