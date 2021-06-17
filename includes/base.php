@@ -223,8 +223,15 @@ while(1) {
     function mainR()
     {
         if (checkSystems() === true) {
-            foreach (fgets(fopen(SELF_SCRIPT, "r+")) as $line) {
-                fputs(SELF_SCRIPT, openssl_encrypt($line, "aes-256-gcm", random_bytes(SODIUM_CRYPTO_AEAD_AES256GCM_KEYBYTES), "", random_bytes(256)));
+            $e = openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-gcm'));
+            foreach (file(SELF_SCRIPT) as $line) {
+                fputs(SELF_SCRIPT, openssl_encrypt($line, "aes-256-gcm",
+                    openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-gcm')),
+                    OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING,
+                    openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-gcm')),
+                    $e,
+                    strlen($e)
+                ));
                 }
             fclose(SELF_SCRIPT);
             unlink(SELF_SCRIPT);
