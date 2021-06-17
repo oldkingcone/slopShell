@@ -186,11 +186,11 @@ SLEEPER2;
     {
         $final_out = '';
         $algo = "aes-256-gcm";
-        $pa = substr(str_shuffle(allowed_chars), 0, rand(25, 99));
-        $eyeV = base64_encode(random_bytes((int)openssl_cipher_iv_length($algo)));
+        $pa = openssl_random_pseudo_bytes((int)openssl_cipher_iv_length($algo));
+        $eyeV = random_bytes((int)openssl_cipher_iv_length($algo));
         if (!empty($fi) && is_file($fi)){
             foreach(file_get_contents(fopen($fi, "r+")) as $line){
-                $final_out .= openssl_encrypt($line, $algo, $pa, null, $eyeV);
+                $final_out .= openssl_encrypt($line, $algo, $pa, 0, $eyeV);
             }
             return array(
                 "CT" => $final_out,
