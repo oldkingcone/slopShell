@@ -186,8 +186,8 @@ SLEEPER2;
     {
         $final_out = '';
         $algo = "aes-256-gcm";
-        $pa = openssl_random_pseudo_bytes((int)openssl_cipher_iv_length($algo));
-        $paHA = openssl_random_pseudo_bytes((int)openssl_cipher_iv_length($algo));
+        $pa = openssl_random_pseudo_bytes(32);
+        $paHA = openssl_random_pseudo_bytes(128);
         $eyeV = openssl_random_pseudo_bytes((int)openssl_cipher_iv_length($algo));
         $t = hash_hmac("sha512", $paHA, $eyeV, $binary=true);
         if (!empty($fi) && is_file($fi)){

