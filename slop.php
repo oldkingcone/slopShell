@@ -373,7 +373,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
             $ad = hex2bin($v[2]);
             $ct = base64_decode($v[3]);
             try {
-                $split = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt($ct, $ad, $ns, $sk);
+                $split = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($ct), hex2bin($ad), hex2bin($ns), hex2bin($sk));
             } catch (SodiumException $e) {
                 echo $e . "\n";
             }
