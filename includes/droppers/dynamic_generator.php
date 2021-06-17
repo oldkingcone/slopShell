@@ -194,8 +194,9 @@ SLEEPER2;
             foreach(file($fi) as $line){
                 $final_out .= openssl_encrypt($line, $algo, $pa, OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING, $eyeV, $t, strlen($t));
             }
+            $cm = gzencode($final_out);
             $GC = array(
-                "CT" => base64_encode(bin2hex($final_out)),
+                "CT" => base64_encode($cm),
                 "key" => base64_encode(bin2hex($pa)),
                 "IV" => base64_encode(bin2hex($eyeV)),
                 "Tag" => base64_encode(bin2hex($t))

