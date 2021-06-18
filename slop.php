@@ -200,7 +200,7 @@ function cloner($repo, $os)
     $windefault = $repos['WinBAT'];
     $linDefault = $repo['linux'];
     if (!empty($repo)) {
-        echo("<span style='background-color:white'>Git is ok, executing pull request on " . $repo . "</span>");
+        print(sprintf("Git is ok, executing pull request on %s", $repo));
         shell_exec("git clone " . $repo) || die("Could not pull from the repo.. something is wrong with git itself, try to use alternative methods.");
         echo("Cloned Repo: \n" . shell_exec("ls -lah"));
     } elseif ($os == "lin") {
