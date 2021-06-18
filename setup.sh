@@ -9,8 +9,9 @@ function startPG() {
       $( which pg_ctl ) init -D /opt/postgres/slop -l /opt/postgres/slop
       $( which pg_ctl ) start -D /opt/postgres/slop -l /opt/postgres/slop
       cd $SLOP_DIR && $( which createdb )  sloppy_bots -E utf-8 -O "$( whoami )" -h localhost -p 5432 -U notroot
-      PG_SLOP=1
-      export PG_SLOP
+      echo "PG_SLOP=1" >> ~/.bashrc
+      echo "export PG_SLOP" >> ~/.bashrc
+      source ~/.bashrc
     else
       echo "PG Appears to be running!!"
     fi
