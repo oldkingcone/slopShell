@@ -1,23 +1,35 @@
 <?php
-# i am still working this. but will show its intent none the less.
-
-define('DBCONNINFO', sprintf("host=localhost port=5432 user=%s dbname=sloppy_bots", get_current_user()));
 const allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 class postgres_checker
 {
     public $er;
+    public $t;
+
     function init_conn()
     {
+        $slopINI = getcwd() . "/includes/config/sloppy_config.ini";
+        $t = parse_ini_file($slopINI, true);
+        !empty($t['sloppy_bot_user']['pass']) ?
+            define('DBCONNINFO', sprintf("host=%s port=%s user=%s pass=%s dbname=%s",
+                $t['sloppy_bot_user']['user'],
+                $t['sloppy_bot_user']['pass'],
+                $t['sloppy_db']['host'],
+                $t['sloppy_db']['port'],
+                $t['sloppy_db']['dbname']
+            )) : define('DBCONNINFO', sprintf("host=localhost port=5432 user=%s dbname=sloppy_bots",
+            get_current_user()
+        ));
         return pg_connect(DBCONNINFO);
+
     }
 
     function createDB()
     {
-        $sloppy_ini = parse_ini_file(getcwd()."/includes/config/sloppy_config.ini", true);
+        $sloppy_ini = parse_ini_file(getcwd() . "/includes/config/sloppy_config.ini", true);
         if (empty($sloppy_ini['sloppy_bot_user']['pass'])) {
             try {
-                $outWrite = file(getcwd()."/includes/config/sloppy_config.ini");
-                $tt = fopen(getcwd().'/includes/config/sloppy_config.ini', "w");
+                $outWrite = file(getcwd() . "/includes/config/sloppy_config.ini");
+                $tt = fopen(getcwd() . '/includes/config/sloppy_config.ini', "w");
                 $p = substr(str_shuffle(allowed_chars), 0, rand(8, 15));
                 $outWrite[2] = "pass={$p}\n";
                 foreach ($outWrite as $val) {
@@ -27,14 +39,14 @@ class postgres_checker
                 echo "Please annotate this down somewhere. This will be the sloppy_bot password: " . $p . "\n";
                 try {
                     pg_exec($this->init_conn(), "CREATE DATABASE sloppy_bots");
-                    pg_exec($this->init_conn(), sprintf("CREATE ROLE sloppy_bot WITH LOGIN ENCRYPTED PASSWORD '%s'", $p));
-                    pg_exec($this->init_conn(), "GRANT INSERT,UPDATE,SELECT ON ALL TABLES IN SCHEMA public TO sloppy_bot");
-                    pg_exec($this->init_conn(), sprintf("GRANT ALL ON ALL TABLES IN SCHEMA public TO %s", get_current_user()));
-                }catch (Exception $e){
-                    echo $e->getCode()."\n";
-                    echo $e->getTraceAsString()."\n";
-                    echo $e->getLine()."\n";
+                } catch (Exception $e) {
+                    echo $e->getCode() . "\n";
+                    echo $e->getTraceAsString() . "\n";
+                    echo $e->getLine() . "\n";
                 }
+                pg_exec($this->init_conn(), sprintf("CREATE ROLE sloppy_bot WITH LOGIN ENCRYPTED PASSWORD '%s'", $p));
+                pg_exec($this->init_conn(), sprintf("GRANT ALL ON ALL TABLES IN SCHEMA public TO %s", get_current_user()));
+                pg_exec($this->init_conn(), "GRANT INSERT,UPDATE,SELECT ON ALL TABLES IN SCHEMA public TO sloppy_bot");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT, uri TEXT, os_flavor TEXT NOT NULL DEFAULT '-', check_in INTEGER NOT NULL default 0, uuid TEXT NOT NULL DEFAULT '-')");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id SERIAL NOT NULL constraint sloppy_bots_droppers_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, location_on_disk TEXT, level TEXT, obfuscated TEXT NOT NULL default 'false', check_in INTEGER NOT NULL default 0)");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_domains(id SERIAL NOT NULL constraint sloppy_bots_domains_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, uses INTEGER NOT NULL DEFAULT 0)");
