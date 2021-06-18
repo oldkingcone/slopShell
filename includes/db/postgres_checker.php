@@ -61,11 +61,11 @@ class postgres_checker
         return false;
     }
 
-    function insertHost($host, $uri, $osType, $checkIn)
+    function insertHost($host, $uri, $osType, $checkIn, $uuid, $action)
     {
-        if (!empty($host)) {
+        if (!empty($host) && $action === 'add') {
             try {
-                pg_exec($this->init_conn(), sprintf("INSERT INTO sloppy_bots_main(rhost, uri, os_flavor, check_in) VALUES ('%s', '%s', '%s', '%s')", pg_escape_string($host), pg_escape_string($uri), pg_escape_string($osType), pg_escape_string($checkIn)));
+                pg_exec($this->init_conn(), sprintf("INSERT INTO sloppy_bots_main(rhost, uri, os_flavor, check_in, uuid) VALUES ('%s', '%s', '%s', '%s', '%s')", pg_escape_string($host), pg_escape_string($uri), pg_escape_string($osType), pg_escape_string($checkIn), pg_escape_string($uuid)));
                 pg_exec($this->init_conn(), "COMMIT");
                 return 1;
             } catch (Exception $exx) {
@@ -74,6 +74,25 @@ class postgres_checker
                 echo $exx->getMessage();
                 echo $exx->getCode();
                 return pg_fetch_row(pg_exec($this->init_conn(), sprintf("SELECT uri from sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host))));
+            }
+        } elseif ($action === 'ci') {
+            try {
+                $counter = 0;
+                $preOPwned = pg_exec($this->init_conn(), sprintf("SELECT id,check_in FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
+                if (!is_null(pg_fetch_row($preOPwned))) {
+                    $counter = $preOPwned[1] + 1;
+                } else {
+                    $counter = $checkIn;
+                }
+                pg_exec($this->init_conn(), sprintf("UPDATE sloppy_bots_main SET check_in = '%d' WHERE uuid LIKE '%s'", (int)$counter, pg_escape_string($uuid)));
+                pg_exec($this->init_conn(), "COMMIT");
+                return 1;
+            } catch (Exception $ex2) {
+                echo $ex2->getTraceAsString();
+                echo $ex2->getTrace();
+                echo $ex2->getMessage();
+                echo $ex2->getCode();
+                return 0;
             }
         } else {
             return 0;
