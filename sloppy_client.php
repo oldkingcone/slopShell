@@ -11,7 +11,7 @@ $cof = array(
     "proxy" => "",
     "host" => "127.0.0.1",
     "port" => "5432",
-    "username" => "postgres",
+    "username" => "notroot",
     "password" => "",
     "dbname" => "sloppy_bots"
 );
