@@ -46,7 +46,7 @@ class postgres_checker
                 }
                 pg_exec($this->init_conn(), sprintf("CREATE ROLE sloppy_bot WITH LOGIN ENCRYPTED PASSWORD '%s'", $p));
                 pg_exec($this->init_conn(), sprintf("GRANT ALL ON ALL TABLES IN SCHEMA public TO %s", get_current_user()));
-                pg_exec($this->init_conn(), "GRANT INSERT,UPDATE,SELECT ON ALL TABLES IN SCHEMA public TO sloppy_bot");
+                pg_exec($this->init_conn(), "GRANT INSERT,UPDATE,SELECT ON sloppy_bots_main,sloppy_bots_droppers,sloppy_bots_domains TABLES IN SCHEMA public TO sloppy_bot");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT, uri TEXT, os_flavor TEXT NOT NULL DEFAULT '-', check_in INTEGER NOT NULL default 0, uuid TEXT NOT NULL DEFAULT '-')");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id SERIAL NOT NULL constraint sloppy_bots_droppers_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, location_on_disk TEXT, level TEXT, obfuscated TEXT NOT NULL default 'false', check_in INTEGER NOT NULL default 0)");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_domains(id SERIAL NOT NULL constraint sloppy_bots_domains_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, uses INTEGER NOT NULL DEFAULT 0)");
