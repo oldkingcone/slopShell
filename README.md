@@ -89,6 +89,9 @@ Obfuscated script example:
 Generation 2 obfuscated script:
 ![](https://github.com/oldkingcone/slopShell/blob/master/obfuscated_gen2.png?raw=true)
 
+Client script usage:
+![](https://github.com/oldkingcone/slopShell/blob/master/client_usage.png?raw=true)
+
 
 ---
 
