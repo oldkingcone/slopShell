@@ -374,7 +374,7 @@ function aHo($host, $os, $checkIn)
     $t = new postgres_checker();
     if (!empty($host)) {
         $path = parse_url($host);
-        if ($t->insertHost($path['scheme'] . "://" . $path['host'] . ":" . $path['port'], $path['path'], $os, $checkIn) != 0) {
+        if ($t->insertRecord($path['scheme'] . "://" . $path['host'] . ":" . $path['port'], $path['path'], $os, $checkIn, $uuid='', $action='add') != 0) {
             echo "Successfully added: $host";
         } else {
             echo "There was an error. Double checking the database.";
