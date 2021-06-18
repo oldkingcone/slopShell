@@ -32,7 +32,7 @@ function addNewHost($rhost, $uri, $action, $uid, $os, $ci)
 {
     if (!empty($rhost) && !empty($uri) && !empty($action) && !empty($os) && !empty($uid)) {
         $createNewHost = new postgres_checker();
-        $createNewHost->insertHost($rhost, $uri, $os, 0, $uid, $action);
+        $createNewHost->insertHost($rhost, $uri, $os, $ci, $uid, $action);
         http_response_code("200");
     } else {
         http_response_code('444');
