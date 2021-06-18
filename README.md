@@ -92,6 +92,9 @@ Generation 2 obfuscated script:
 Client script usage:
 ![](https://github.com/oldkingcone/slopShell/blob/master/client_usage.png?raw=true)
 
+Reverse Connection initiated from the client script:
+![](https://github.com/oldkingcone/slopShell/blob/master/reverse_connection_client_script.png?raw=true)
+
 
 ---
 
