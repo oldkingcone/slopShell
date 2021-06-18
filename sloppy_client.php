@@ -11,7 +11,7 @@ $cof = array(
     "proxy" => "",
     "host" => "127.0.0.1",
     "port" => "5432",
-    "username" => "notroot",
+    "username" => get_current_user(),
     "password" => "",
     "dbname" => "sloppy_bots"
 );
@@ -88,7 +88,7 @@ function logo($last, $cl, bool $error, $error_value, string $lastHost)
         echo("\033[33;40m                         ▀     ▀                                     █   ██         \033[0m\n");
         echo("\033[33;40m                                                                                    \033[0m\n");
         echo("\033[33;40m  Last command: $last                                                               \033[0m\n");
-        print(sprintf("\033[33;40m   Last Host -> %s",$lastHost)."\033[0m\n");
+        print(sprintf("\033[33;40m  Last Host -> %s",$lastHost)."\033[0m\n");
         if ($error === true && !empty($error_value)) {
             if (is_array($error_value)) {
                 echo("\033[33;40m  What was the error:                                                           \033[0m\n");

@@ -8,7 +8,8 @@ function startPG() {
       SLOP_DIR="/opt/postgres/slop"
       $( which pg_ctl ) init -D /opt/postgres/slop -l /opt/postgres/slop
       $( which pg_ctl ) start -D /opt/postgres/slop -l /opt/postgres/slop
-      cd $SLOP_DIR && $( which createdb )  sloppy_bots -E utf-8 -O "$( whoami )" -h localhost -p 5432 -U notroot
+      cd $SLOP_DIR && $( which createdb )  sloppy_bots -E utf-8 -O "$( whoami )" -h localhost -p 5432 -U $( whoami )
+      echo "If any of these commands failed, you will need to re-run them yourself."
       echo "PG_SLOP=1" >> ~/.bashrc
       echo "export PG_SLOP" >> ~/.bashrc
       source ~/.bashrc
