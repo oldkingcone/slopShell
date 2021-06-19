@@ -78,22 +78,22 @@ Here is the better part of this shell. If someone happens upon this shell withou
 ## Images of use cases
 
 In browser, navigated to without the proper user-agent string. (1st level of auth)
-![](https://github.com/oldkingcone/slopShell/blob/master/in_browser.jpeg?raw=true)
+![](https://github.com/oldkingcone/slopShell/tree/master/images/in_browser.jpeg?raw=true)
 
 Use in the terminal, which is how this was designed to work, using curl with the -vH "User-Agent: sp1.1" switches.
-![](https://github.com/oldkingcone/slopShell/blob/master/use_in_terminal.jpeg?raw=true)
+![](https://github.com/oldkingcone/slopShell/tree/master/images/use_in_terminal.jpeg?raw=true)
 
 Obfuscated script example: 
-![](https://github.com/oldkingcone/slopShell/blob/master/obfuscated_script.png?raw=true)
+![](https://github.com/oldkingcone/slopShell/blob/master/images/obfuscated_script.png?raw=true)
 
 Generation 2 obfuscated script:
-![](https://github.com/oldkingcone/slopShell/blob/master/obfuscated_gen2.png?raw=true)
+![](https://github.com/oldkingcone/slopShell/blob/master/images/obfuscated_gen2.png?raw=true)
 
 Client script usage:
-![](https://github.com/oldkingcone/slopShell/blob/master/client_usage.png?raw=true)
+![](https://github.com/oldkingcone/slopShell/blob/master/images/client_usage.png?raw=true)
 
 Reverse Connection initiated from the client script:
-![](https://github.com/oldkingcone/slopShell/blob/master/reverse_connection_client_script.png?raw=true)
+![](https://github.com/oldkingcone/slopShell/blob/master/images/reverse_connection_client_script.png?raw=true)
 
 
 ---
