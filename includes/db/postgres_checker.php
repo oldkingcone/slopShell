@@ -7,19 +7,8 @@ class postgres_checker
 
     function init_conn()
     {
-        $slopINI = getcwd() . "/includes/config/sloppy_config.ini";
-        $t = parse_ini_file($slopINI, true);
-        !empty($t['sloppy_bot_user']['pass']) ?
-            define('DBCONNINFO', sprintf("host=%s port=%s user=%s pass=%s dbname=%s",
-                $t['sloppy_bot_user']['user'],
-                $t['sloppy_bot_user']['pass'],
-                $t['sloppy_db']['host'],
-                $t['sloppy_db']['port'],
-                $t['sloppy_db']['dbname']
-            )) : define('DBCONNINFO', sprintf("host=localhost port=5432 user=%s dbname=sloppy_bots",
-            get_current_user()
-        ));
-        return pg_connect(DBCONNINFO);
+        return pg_connect(sprintf("host=localhost port=5432 user=%s dbname=sloppy_bots",
+            get_current_user()));
 
     }
 

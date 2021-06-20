@@ -28,7 +28,7 @@ class dynamic_generator
                 }
                 $privKey = openssl_pkey_new($keyInfo);
                 $csr = openssl_csr_new($common, $privKey, array("digest_alg" => $digest));
-                $x509 = openssl_csr_sign($csr, null, $privKey, $days = 365, array("digest_alg" => $digest));
+                $x509 = openssl_csr_sign($csr, null, $privKey, 365, array("digest_alg" => $digest));
                 openssl_csr_export_to_file($csr, "YOURCSR.csr");
                 openssl_x509_export_to_file($x509, "YOURX509CERT.crt");
                 openssl_pkey_export_to_file($privKey, "YOURPRIVKEY.pem");
