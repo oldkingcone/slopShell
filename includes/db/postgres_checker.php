@@ -26,13 +26,6 @@ class postgres_checker
                 }
                 fclose($tt);
                 echo "Please annotate this down somewhere. This will be the sloppy_bot password: " . $p . "\n";
-                try {
-                    pg_exec($this->init_conn(), "CREATE DATABASE sloppy_bots");
-                } catch (Exception $e) {
-                    echo $e->getCode() . "\n";
-                    echo $e->getTraceAsString() . "\n";
-                    echo $e->getLine() . "\n";
-                }
                 pg_exec($this->init_conn(), sprintf("CREATE ROLE sloppy_bot WITH LOGIN ENCRYPTED PASSWORD '%s'", $p));
                 pg_exec($this->init_conn(), sprintf("GRANT ALL ON ALL TABLES IN SCHEMA public TO %s", get_current_user()));
                 pg_exec($this->init_conn(), "GRANT INSERT,UPDATE,SELECT ON sloppy_bots_main,sloppy_bots_droppers,sloppy_bots_domains TABLES IN SCHEMA public TO sloppy_bot");

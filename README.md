@@ -30,9 +30,9 @@ Current VT Detection ratio: 1/59 (most new version)
 [![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file-analysis/Mzc1NjIzYTU5Mjg0YzJiN2ExZGM0Y2E4MDVhM2Q3MzE6MTYyNDAzNzg4MA==/detection)
 
 
-Current VT Detection ratio (obfuscated version): 0/59
+Current VT Detection ratio (obfuscated version): 0/59 (should be final version of the obfuscated version. Might make more changes to the routine later on, but for now, behold.)
 
-[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/6738372a46f82c4f29c196f3602c1fc8ff1b34505376c516d6f3e96cdb74bedd/detection)
+[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/3f1c5bc158c57d1d065b02760cf7c67d271641176bfad9051e183446b328435d/detection)
 
 ~~__The issue with this detection happening is i have not found a viable workaround for the keyword of eval if there was no call to eval this script would be undetectable.__~~
 

