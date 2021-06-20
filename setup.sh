@@ -2,7 +2,7 @@
 echo "Attempting to start postgresql"
 if test $PG_SLOP -z; then
   echo "PGSQL Is not started, trying to init the db, and then start it."
-  sudo mkdir -p /opt/postgres/slop && sudo chown -R $( whoami ):postgres /opt/postgres/slop
+  sudo mkdir -p /opt/postgres/slop && sudo chown -R postgres:postgres /opt/postgres/slop
   SLOP_DIR="/opt/postgres/slop"
   $( which pg_ctl ) initdb -D /opt/postgres/slop -l /opt/postgres/slop/main.log
   sudo $( which chmod ) o+w /var/run/postgresql
