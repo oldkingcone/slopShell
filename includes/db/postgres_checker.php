@@ -136,18 +136,20 @@ class postgres_checker
         if (!empty($dom)){
             $usedDoms = pg_exec($this->init_conn(), sprintf("SELECT uses FROM sloppy_bots_domains WHERE domain = '%s'", pg_escape_string($dom)));
             $dUses = pg_fetch_row($usedDoms);
-            if (strlen($dUses[0] > 3)){
-                print("Hey there, it looks like you have used this domain at least 3 times.\nIt would be very smart to use a CDN to avoid this domain being sinkholed.");
-                pg_exec($this->init_conn(), sprintf("UPDATE sloppy_bots_domains SET uses = '%d' WHERE domain = '%s'", $dUses[0]+1, pg_escape_string($dom)));
-                pg_exec($this->init_conn(), "COMMIT");
-                return $dom;
-            }else if ($dUses[0] > 10){
-                print("Look, I know that setting up CDN's can appear to be rough.\n but i promise you, its better to set up a CDN and domain front through that, than your shell being caught.\n");
-                pg_exec($this->init_conn(), sprintf("UPDATE sloppy_bots_domains SET uses = '%d' WHERE domain = '%s'", $dUses[0]+1, pg_escape_string($dom)));
-                pg_exec($this->init_conn(), "COMMIT");
-                return 0;
-            }else{
-                pg_exec($this->init_conn(), sprintf("UPDATE sloppy_bots_domains SET uses = '%d' WHERE domain = '%s'", 1, pg_escape_string($dom)));
+            try {
+                if ((int)$dUses > 3) {
+                    print("Hey there, it looks like you have used this domain at least 3 times.\nIt would be very smart to use a CDN to avoid this domain being sinkholed.");
+                    pg_exec($this->init_conn(), sprintf("UPDATE sloppy_bots_domains SET uses = '%d' WHERE domain = '%s'", $dUses[0] + 1, pg_escape_string($dom)));
+                    pg_exec($this->init_conn(), "COMMIT");
+                    return $dom;
+                } else if ((int)$dUses > 10) {
+                    print("Look, I know that setting up CDN's can appear to be rough.\n but i promise you, its better to set up a CDN and domain front through that, than your shell being caught.\n");
+                    pg_exec($this->init_conn(), sprintf("UPDATE sloppy_bots_domains SET uses = '%d' WHERE domain = '%s'", $dUses[0] + 1, pg_escape_string($dom)));
+                    pg_exec($this->init_conn(), "COMMIT");
+                    return 0;
+                }
+            }catch (Exception $e1){
+                pg_exec($this->init_conn(), sprintf("UPDATE sloppy_bots_domains SET uses = '%d' WHERE domain = '%s'", $dUses[0] + 1, pg_escape_string($dom)));
                 pg_exec($this->init_conn(), "COMMIT");
                 return $dom;
             }

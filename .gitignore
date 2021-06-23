@@ -12,3 +12,4 @@ test.php
 /vendor/
 /includes/droppers/dynamic/obfuscated/
 /includes/droppers/dynamic/raw/
+includes/config/Dumped-Database/
