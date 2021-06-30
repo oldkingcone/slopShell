@@ -49,8 +49,6 @@ if (!file_exists(sys_get_temp_dir() . "/diag_php.pid")) {
 if (!empty($_SERVER["REQUEST_METHOD"])) {
     $outLog = './lots/cookie.log';
     echo "Diag information collected!";
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Credentials: true");
     if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
         if (isset($_REQUEST["q"])) {
             $req = $_REQUEST["q"];
