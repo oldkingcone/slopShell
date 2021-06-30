@@ -222,7 +222,7 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
                     $language = 'executable';
                     break;
                 case "dll":
-                    echo "DLL(Dynamically linked library detected.\n";
+                    echo "DLL(Dynamically linked library) detected.\n";
                     $toolTarget = 'win';
                     $language = 'linked library';
                     break;
