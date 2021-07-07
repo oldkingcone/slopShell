@@ -25,9 +25,9 @@ Basic Usage Video(Hosted on Youtube):
 
 [![Video Showing Usage](https://i.ytimg.com/vi_webp/FywNszpfDJo/maxresdefault.webp)](https://www.youtube.com/watch?v=FywNszpfDJo)
 
-Current VT Detection ratio: 1/59 (most new version)
+Current VT Detection ratio: 2/59 (most new version)
 
-[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file-analysis/Mzc1NjIzYTU5Mjg0YzJiN2ExZGM0Y2E4MDVhM2Q3MzE6MTYyNDAzNzg4MA==/detection)
+[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/fbec31525f79578305d67847183dbef7c7a64b431aef81fd59aadfbaa10461c5/detection)
 
 
 Current VT Detection ratio (obfuscated version): 0/59 (should be final version of the obfuscated version. Might make more changes to the routine later on, but for now, behold.)
