@@ -9,14 +9,19 @@ require "includes/droppers/dynamic_generator.php";
 $firstRun = new postgres_checker();
 $firstRun->createDB();
 $cof = array(
-    "useragent" => "sp1.1",
-    "proxy" => trim(readline("Proxy?(schema://host:port) Press enter for none->")),
-    "host" => "127.0.0.1",
-    "port" => "5432",
-    "username" => get_current_user(),
-    "password" => trim(readline("Password?Press enter for none->")),
-    "dbname" => "sloppy_bots",
-    "verify_ssl" => trim(readline("Verify SSL?(yes/no)->"))
+    "sloppy_db" => array(
+        "host" => "127.0.0.1",
+        "port" => "5432",
+        "user" => get_current_user(),
+        "password" => trim(readline("Password?Press enter for none->")),
+        "dbname" => "sloppy_bots",
+    ),
+    "sloppy_http" => array(
+        "useragent" => "sp1.1",
+        "proxy" => trim(readline("Proxy?(schema://host:port) Press enter for none->")),
+        "verify_ssl" => trim(readline("Verify SSL?(yes/no)->"))
+    ),
+
 );
 //todo need to figure out why this is no longer working on raspi
 //$success = null;
@@ -24,30 +29,30 @@ $cof = array(
 is_file("includes/config/sloppy_config.ini") ? define("config", parse_ini_file('includes/config/sloppy_config.ini', true)) : define("config", $cof);
 if (empty(config['password'])) {
     define('DBCONN', sprintf("host=%s port=%s user=%s dbname=%s",
-        config['host'],
-        config['port'],
-        config['username'],
-        config['dbname']
+        config['sloppy_db']['host'],
+        config['sloppy_db']['port'],
+        config['sloppy_db']['user'],
+        config['sloppy_db']['dbname']
     ));
 } else {
     define('DBCONN', sprintf("host=%s port=%s user=%s password=%s dbname=%s",
-        config['host'],
-        config['port'],
-        config['username'],
-        config['password'],
-        config['dbname']
+        config['sloppy_db']['host'],
+        config['sloppy_db']['port'],
+        config['sloppy_db']['user'],
+        config['sloppy_db']['password'],
+        config['sloppy_db']['dbname']
     ));
 }
 try {
     define("CHH", curl_init());
-    if (empty(config['proxy'])) {
+    if (empty(config['sloppy_http']['proxy'])) {
         echo "Not setting proxy information";
-        curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']);
+        curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
     } else {
-        curl_setopt(CHH, CURLOPT_USERAGENT, config['useragent']);
-        curl_setopt(CHH, CURLOPT_PROXY, config["proxy"]);
+        curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
+        curl_setopt(CHH, CURLOPT_PROXY, config['sloppy_http']["proxy"]);
     }
-    if (config['verify_ssl'] === "no") {
+    if (config['sloppy_http']['verify_ssl'] === "no") {
         curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt(CHH, CURLOPT_SSL_VERIFYPEER, 0);
     } else {

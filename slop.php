@@ -441,7 +441,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         }
     } else {
         $a = curl_init();
-
         $rhost = $_SERVER['REMOTE_ADDR'];
         http_response_code(500);
         header("Status: 500 Internal Server Error");
