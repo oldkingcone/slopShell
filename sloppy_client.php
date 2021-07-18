@@ -43,25 +43,8 @@ if (empty(config['pass'])) {
         config['sloppy_db']['dbname']
     ));
 }
-try {
-    define("CHH", curl_init());
-    if (empty(config['sloppy_http']['proxy'])) {
-        echo "Not setting proxy information";
-        curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
-    } else {
-        curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
-        curl_setopt(CHH, CURLOPT_PROXY, config['sloppy_http']["proxy"]);
-    }
-    if (config['sloppy_http']['verify_ssl'] === "no") {
-        curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt(CHH, CURLOPT_SSL_VERIFYPEER, 0);
-    } else {
-        curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 1);
-        curl_setopt(CHH, CURLOPT_SSL_VERIFYPEER, 1);
-    }
-} catch (Exception $e) {
-    print("{$e}\n\n");
-}
+define("CHH", curl_init());
+
 
 function logo($last, $cl, bool $error, $error_value, string $lastHost)
 {
@@ -805,6 +788,27 @@ while ($run) {
     $e = null;
     $w = null;
     $pw = null;
+    curl_reset(CHH);
+    try {
+        if (empty(config['sloppy_http']['proxy'])) {
+            echo "\e[0;31;40mPROXY NOT SET.\e[0m\n";
+            curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
+        } else {
+            echo "\e[0;32;40mProxy Set: " . config['sloppy_http']['proxy']."\e[0m\n";
+            curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
+            curl_setopt(CHH, CURLOPT_PROXY, config['sloppy_http']["proxy"]);
+        }
+        if (config['sloppy_http']['verify_ssl'] === "no") {
+            curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt(CHH, CURLOPT_SSL_VERIFYPEER, 0);
+        } else {
+            curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt(CHH, CURLOPT_SSL_VERIFYPEER, 2);
+        }
+    } catch (Exception $e) {
+        print("{$e}\n\n");
+    }
+    echo "Current User-Agent: ". config['sloppy_http']['useragent']."\n";
     print("\n\033[33;40mPlease select your choice: \n->");
     echo("\033[0m");
     $pw = trim(fgets(STDIN));
@@ -950,6 +954,7 @@ while ($run) {
             break;
         case "q":
             logo('q', clears, false, '', '');
+            curl_close(CHH);
             $run = false;
             break;
         case "o":
