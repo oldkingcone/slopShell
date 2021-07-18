@@ -804,6 +804,7 @@ while ($run) {
     $c = null;
     $e = null;
     $w = null;
+    $pw = null;
     print("\n\033[33;40mPlease select your choice: \n->");
     echo("\033[0m");
     $pw = trim(fgets(STDIN));
