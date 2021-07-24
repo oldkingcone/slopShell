@@ -6,7 +6,7 @@ if (strtolower(php_uname()) == "windows") {
 }
 require "includes/db/postgres_checker.php";
 require "includes/droppers/dynamic_generator.php";
-$firstRun = new postgres_checker();
+
 $cof = array(
     "sloppy_db" => array(
         "host" => "127.0.0.1",
@@ -20,7 +20,13 @@ $cof = array(
         "proxy" => trim(readline("Proxy?(schema://host:port) Press enter for none->")),
         "verify_ssl" => trim(readline("Verify SSL?(yes/no)->"))
     ),
+    "sloppy_proxies" => array(
+        "proxy_init"=>"",
+        "use_proxies"=>"",
+        "rotate"=>'',
+        "use_tor"=>true
 
+    )
 );
 const response_array = array(
     "default" => PHP_EOL . "\e[1;33m%s%s Hmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\e[0m" . PHP_EOL,
@@ -28,9 +34,17 @@ const response_array = array(
     "404" => PHP_EOL . "\e[0;31m%s%s Looks like our shell was caught... sorry..\e[0m" . PHP_EOL,
     "500" => PHP_EOL . "\e[1;31m%s%s Your useragent was not the correct one... did you forget??\e[0m" . PHP_EOL
 );
-is_file("includes/config/sloppy_config.ini") ? define("config", parse_ini_file('includes/config/sloppy_config.ini', true)) : define("config", $cof);
+is_file("includes/config/sloppy_config.ini") ? define("config", parse_ini_file('includes/config/sloppy_config.ini', true, 2)) : define("config", $cof);
+$firstRun = new postgres_checker();
 if (empty(config['sloppy_db']['pass'])) {
     $firstRun->createDB();
+    define('DBCONN', sprintf("host=%s port=%s user=%s password=%s dbname=%s",
+        config['sloppy_db']['host'],
+        config['sloppy_db']['port'],
+        config['sloppy_db']['user'],
+        config['sloppy_db']['pass'],
+        config['sloppy_db']['dbname']
+    ));
 } else {
     define('DBCONN', sprintf("host=%s port=%s user=%s password=%s dbname=%s",
         config['sloppy_db']['host'],
@@ -40,13 +54,21 @@ if (empty(config['sloppy_db']['pass'])) {
         config['sloppy_db']['dbname']
     ));
 }
-if (empty(config['sloppy_proxies']['proxy_init'])){
+if (config['sloppy_proxies']['proxy_init'] !== true){
     $firstRun->getProxies('initial');
 }else{
     echo "proxies built".PHP_EOL;
 }
 define("CHH", curl_init());
 
+
+function grab_proxy(string $schema, string $target_domain){
+    if (!empty($schema) && !empty($target_domain)){
+        logo('proxied', clears, false, "Grabbed proxy with {$schema}!".PHP_EOL, $target_domain);
+    }else{
+        logo('proxied', clears, true, "The Required information was empty.".PHP_EOL, $target_domain);
+    }
+}
 
 function logo($last, $cl, bool $error, $error_value, string $lastHost)
 {
@@ -110,7 +132,8 @@ function menu()
         (CH)eck if hosts are still pwned
         (AT) Add tool\e[0m
         \e[0;31;40m(UP)load tool to bot - currently not working, will be soon.\e[0m
-        \e[0;32m(L)ist (T)ools                                            
+        \e[0;32m(L)ist (T)ools
+        \e[0;32m(G)rab (P)roxy\e[0m                                            
         (M)ain menu                                                                 
         (Q)uit\e[0m                                                                      
 _MENU;
@@ -988,6 +1011,9 @@ while ($run) {
             break;
         case "o":
             opts();
+            break;
+        case "gp":
+            grab_proxy(readline("Schema Please->"), 'http://localhost:8099/slop.php');
             break;
         default:
             logo($lc, clears, "", "", '');
