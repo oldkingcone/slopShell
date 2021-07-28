@@ -335,7 +335,9 @@ SLEEPER2;
                         "CheckinDomain" => $checkInHost,
                         "CheckinPort" => $checkInPort,
                         "WhenToPanic" => $checkInDuration,
-                        "Depth" => 0
+                        "Depth" => 0,
+                        "Cookie" => null,
+                        "Cookie Value" => null
                     );
                 case "ob":
                     $out_file = fopen($out, "w");
@@ -403,7 +405,9 @@ FULL;
                         "CheckinDomain" => $checkInHost,
                         "CheckinPort" => $checkInPort,
                         "WhenToPanic" => $checkInDuration,
-                        "Depth" => $depth
+                        "Depth" => $depth,
+                        "Cookie" => $cName,
+                        "Cookie Value" => $cValue
                     );
             }
         } else {
@@ -429,7 +433,9 @@ FULL;
             "CheckinDomain" => null,
             "CheckinPort" => null,
             "WhenToPanic" => null,
-            "Depth" => 0
+            "Depth" => 0,
+            "Cookie" => null,
+            "Cookie Value" => null
         );
     }
 
