@@ -906,6 +906,7 @@ while ($run) {
     $w = null;
     $pw = null;
     curl_reset(CHH);
+    curl_setopt(CHH, CURLOPT_HEADER, 1);
     try {
         if (is_null($proxy_set)) {
             echo "\e[0;31;40mPROXY NOT SET.\e[0m".PHP_EOL;
@@ -920,7 +921,6 @@ while ($run) {
                 if (strpos($proxy_schema, "http")) {
                     curl_setopt(CHH, CURLOPT_HTTPPROXYTUNNEL, 1);
                 }
-                curl_setopt(CHH, CURLOPT_HEADER, 1);
                 curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 30);
                 curl_setopt(CHH, CURLOPT_TIMEOUT, 30);
                 curl_setopt(CHH, CURLOPT_PROXYTYPE, $proxy_schema);
