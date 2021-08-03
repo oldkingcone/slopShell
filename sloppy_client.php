@@ -807,18 +807,22 @@ function check($host, $path, $batch, $proxy)
                     case 200:
                         logo('check',clears,false, '', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['200'], $axX[0],$axX[1]));
+                        update_proxy_db_entries($proxy, true, $axX[0].$axX[1]);
                         break;
                     case 404:
                         logo('check',clears,true, 'Shell not found.', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['404'], $axX[0],$axX[1]));
+                        update_proxy_db_entries($proxy, true, $axX[0].$axX[1]);
                         break;
                     case 500:
                         logo('check',clears,true, 'Bad User Agent', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['500'], $axX[0],$axX[1]));
+                        update_proxy_db_entries($proxy, true, $axX[0].$axX[1]);
                         break;
                     default:
                         logo('check',clears,true, 'Server still running??', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['default'], $axX[0],$axX[1]));
+                        update_proxy_db_entries($proxy, false, $axX[0].$axX[1]);
                         break;
                 }
             }
@@ -904,7 +908,7 @@ switch (strtolower(readline("Would you like to configure the proxies?(y/n/tor)")
         $cho = awesomeMenu('proxies');
         $proxy_set = true;
         $proxy_target = $cho['Proxy'][0];
-        $proxy_schema = $cho['Schema'];
+        $proxy_schema = $curlopt_proxy_types[$cho['Schema']];
         break;
     case "n":
         $proxy_set = false;
@@ -976,7 +980,7 @@ while ($run) {
                     $cho = awesomeMenu('proxies');
                     $proxy_set = true;
                     $proxy_target = $cho['Proxy'][0];
-                    $proxy_schema = $cho['Schema'];
+                    $proxy_schema = $curlopt_proxy_types[$cho['Schema']];
                     break;
                 case "n":
                     $proxy_set = false;
@@ -986,7 +990,7 @@ while ($run) {
                 case "tor":
                     $proxy_set = true;
                     $proxy_target = "127.0.0.1:9050";
-                    $proxy_schema = "socks4";
+                    $proxy_schema = $curlopt_proxy_types['tor'];
                     break;
             }
             if ($proxy_set === false) {
