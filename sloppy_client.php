@@ -22,9 +22,9 @@ $cof = array(
         "verify_ssl" => trim(readline("Verify SSL?(yes/no)->"))
     ),
     "sloppy_proxies" => array(
-        "proxy_init"=>"",
-        "use_proxies"=>"",
-        "rotate"=>'',
+        "proxy_init"=>null,
+        "use_proxies"=>null,
+        "rotate"=>null,
         "use_tor"=>true
 
     )
@@ -141,13 +141,19 @@ _MENU;
 
 }
 
-function update_proxy_db_entries(string $proxy, bool $succssful, string $last_contact){
+function update_proxy_db_entries(string $proxy, bool $succssful, string $last_contact, bool $time_out, int $round_trip_time){
     if (!is_null($proxy) && !is_null($succssful) && !is_null($last_contact)) {
         $tg = pg_fetch_row(pg_exec(pg_connect(DBCONN),
-            sprintf("SELECT times_used FROM sloppy_bots_proxies WHERE proxy = '%s'", $proxy)));
+            sprintf("SELECT times_used,time_outs,successful_responses FROM sloppy_bots_proxies WHERE proxy = '%s'", $proxy)));
         $tc = pg_exec(pg_connect(DBCONN),
-            sprintf("UPDATE sloppy_bots_proxies SET times_used = '%s', last_domain_contacted = '%s'  WHERE proxy = '%s'",
-                (int)$tg[0] + 1, $last_contact, $proxy));
+            sprintf("UPDATE sloppy_bots_proxies SET times_used = '%s', last_domain_contacted = '%s', round_trip_time = '%s', time_outs = '%s', successful_responses = '%s'  WHERE proxy = '%s'",
+                (int)$tg[0] + 1,
+                $last_contact,
+                $round_trip_time ? $round_trip_time : 0,
+                $time_out ? (int)$tg[1] + 1 : 0,
+                $succssful ? (int)$tg[2] + 1 : (int)$tg[2] - 1,
+                $proxy
+            ));
     }
 }
 
@@ -777,19 +783,20 @@ function check($host, $path, $batch, $proxy)
                     case 200:
                         print(sprintf(response_array['200'], $r['rhost'],$r['uri']));
                         pg_exec(pg_connect(DBCONN), sprintf("UPDATE sloppy_bots_main SET check_in = '%s' WHERE rhost = '%s'",  (int)$r['check_in'] + 1,$r['rhost']));
-                        update_proxy_db_entries($proxy, true, $r['rhost']);
+                        update_proxy_db_entries($proxy, true, $r['rhost'], false, curl_getinfo(CHH, CURLINFO_TOTAL_TIME_T));
                         break;
                     case 404:
                         print(sprintf(response_array['404'], $r['rhost'],$r['uri']));
-                        update_proxy_db_entries($proxy, true, $r['rhost']);
+                        update_proxy_db_entries($proxy, true, $r['rhost'], false, curl_getinfo(CHH, CURLINFO_TOTAL_TIME_T));
                         break;
                     case 500:
                         print(sprintf(response_array['500'], $r['rhost'],$r['uri']));
-                        update_proxy_db_entries($proxy, true, $r['rhost']);
+                        update_proxy_db_entries($proxy, true, $r['rhost'], false, curl_getinfo(CHH, CURLINFO_TOTAL_TIME_T));
                         break;
                     default:
                         print(sprintf(response_array['default'], $r['rhost'],$r['uri']));
-                        update_proxy_db_entries($proxy, false, $r['rhost']);
+                        $teaTime = curl_getinfo(CHH);
+                        update_proxy_db_entries($proxy, false, $r['rhost'], false, curl_getinfo(CHH, CURLINFO_TOTAL_TIME_T));
                         break;
                     }
         }
@@ -807,24 +814,26 @@ function check($host, $path, $batch, $proxy)
                     case 200:
                         logo('check',clears,false, '', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['200'], $axX[0],$axX[1]));
-                        update_proxy_db_entries($proxy, true, $axX[0].$axX[1]);
+                        update_proxy_db_entries($proxy, true, $axX[0].$axX[1], false, curl_getinfo(CHH, CURLINFO_TOTAL_TIME_T));
                         break;
                     case 404:
                         logo('check',clears,true, 'Shell not found.', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['404'], $axX[0],$axX[1]));
-                        update_proxy_db_entries($proxy, true, $axX[0].$axX[1]);
+                        update_proxy_db_entries($proxy, true, $axX[0].$axX[1], false, curl_getinfo(CHH, CURLINFO_TOTAL_TIME_T));
                         break;
                     case 500:
                         logo('check',clears,true, 'Bad User Agent', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['500'], $axX[0],$axX[1]));
-                        update_proxy_db_entries($proxy, true, $axX[0].$axX[1]);
+                        update_proxy_db_entries($proxy, true, $axX[0].$axX[1], false, curl_getinfo(CHH, CURLINFO_TOTAL_TIME_T));
                         break;
                     default:
                         logo('check',clears,true, 'Server still running??', sprintf('%s', $axX[0].$axX[1]));
                         print(sprintf(response_array['default'], $axX[0],$axX[1]));
-                        update_proxy_db_entries($proxy, false, $axX[0].$axX[1]);
+                        update_proxy_db_entries($proxy, true, $axX[0].$axX[1], false, curl_getinfo(CHH, CURLINFO_TOTAL_TIME_T));
                         break;
                 }
+            }else{
+                update_proxy_db_entries($proxy, false, $axX[0].$axX[1], true, curl_getinfo(CHH, CURLINFO_TOTAL_TIME_T));
             }
         }
     } else {
@@ -903,6 +912,9 @@ $curlopt_proxy_types = array(
     "socks5" => CURLPROXY_SOCKS5,
     "tor" => CURLPROXY_SOCKS4
 );
+
+$rotate_proxy = null;
+
 switch (strtolower(readline("Would you like to configure the proxies?(y/n/tor)"))){
     case "y":
         $cho = awesomeMenu('proxies');
@@ -921,6 +933,17 @@ switch (strtolower(readline("Would you like to configure the proxies?(y/n/tor)")
         $proxy_schema = $curlopt_proxy_types['tor'];
         break;
 }
+if (is_null(config['sloppy_proxies']['rotate']) && $proxy_set != false){
+    switch (strtolower(readline("Would you like to rotate proxies?(y/n)-> "))){
+        case "y":
+            $rotate_proxy = true;
+            break;
+        case "n":
+            $rotate_proxy = false;
+            break;
+    }
+}
+
 while ($run) {
     $h = null;
     $p = null;
@@ -971,10 +994,6 @@ while ($run) {
     logo($lc, clears, "", "", '');
     switch (strtolower($pw)) {
         case "r":
-            curl_reset(CHH);
-            echo PHP_EOL."As of right now, the only proxy that is working with no issue is tor.".PHP_EOL;
-            echo PHP_EOL."Working on rotating proxies, and dynamically updating the proxy as we use this.".PHP_EOL;
-            echo PHP_EOL."For now, tor is the only real way to work with this.".PHP_EOL;
             switch (strtolower(readline("Would you like to configure the proxies?(y/n/tor)"))){
                 case "y":
                     $cho = awesomeMenu('proxies');
@@ -992,24 +1011,6 @@ while ($run) {
                     $proxy_target = "127.0.0.1:9050";
                     $proxy_schema = $curlopt_proxy_types['tor'];
                     break;
-            }
-            if ($proxy_set === false) {
-                curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
-                curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 15);
-                curl_setopt(CHH, CURLOPT_TIMEOUT, 15);
-            } else {
-                curl_setopt(CHH, CURLOPT_USERAGENT, config['sloppy_http']['useragent']);
-                if (!is_null($proxy_target)){
-                    if (strpos($proxy_schema, "http")) {
-                        curl_setopt(CHH, CURLOPT_HTTPPROXYTUNNEL, 1);
-                    }else{
-                        curl_setopt(CHH, CURLOPT_HTTPPROXYTUNNEL, 0);
-                    }
-                    curl_setopt(CHH, CURLOPT_CONNECTTIMEOUT, 30);
-                    curl_setopt(CHH, CURLOPT_TIMEOUT, 30);
-                    curl_setopt(CHH, CURLOPT_PROXYTYPE, $proxy_schema);
-                    curl_setopt(CHH, CURLOPT_PROXY, $proxy_target);
-                }
             }
             break;
         case "lt":
