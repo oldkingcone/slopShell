@@ -14,7 +14,7 @@ if test $PG_SLOP -n; then
   sudo $( which chmod ) 770 /var/run/postgresql
   # shellcheck disable=SC2046
   sudo $( which chown ) postgres:postgres /var/run/postgresql
-  $( which pg_ctl ) start -D $SLOP_DIR/slop_data -l $SLOP_DIR/main.log
+  $( which pg_ctl || ls /usr/lib/postgresql/*/bin/pg_ctl ) start -D $SLOP_DIR/slop_data -l $SLOP_DIR/main.log
   # shellcheck disable=SC2046
   echo "If any of these commands failed, you will need to re-run them yourself."
   echo "export PG_SLOP=1" >> ~/.zshrc
