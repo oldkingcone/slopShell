@@ -5,16 +5,30 @@ declare -a postgres_versions=('13' '12' '11' '10' '9' '8' '7')
 declare -a pg_dir_exists=()
 choice=''
 
+function root_check(){
+  if [[ $( id | grep -c "uid=0" ) -eq 0 ]]; then
+    echo "Please run as root."
+    exit
+  fi
+}
+
 function apt_prep(){
-  echo "Coming soon."
+  if ! [ -f "/usr/lib/postgresql/13/bin/pg_ctl" ]; then
+    echo "Install pre-requsites. And as such, installing postgresql 13."
+    apt install postgresql-13 php php-pear
+  fi
 }
 
-function aur_prep(){
-  echo "Coming soon."
-}
-
-function rhel_prep(){
-  echo "Coming soon."
+function non_apt_prep(){
+  if ! [[ $( which pg_ctl | grep -c 'no pg_ctl' ) -gt 0 ]]; then
+    case $1 in
+      'arch' |  "black")
+        pacman -Syy postgresql php php-pear
+      ;;
+      'red' | 'fedora')
+        dnf -y -b --refresh install postgresql-server postgresql php php-pear
+    esac
+  fi
 }
 
 function deb() {
@@ -49,10 +63,12 @@ else
   shell_type=$2
   case $1 in
   'debian' | 'deb' | 'kali' | 'parrot')
+    apt_prep
     pg_choice=deb
     ;;
   'red' | 'fedora' | 'arch' | 'black')
-    pg_choice="$(which pg_ctl)"
+      non_apt_prep "$1"
+      pg_choice="$(which pg_ctl)"
     ;;
   esac
   echo "Attempting to start postgresql"
