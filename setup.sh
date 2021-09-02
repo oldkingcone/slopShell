@@ -20,7 +20,7 @@ function apt_prep(){
 }
 
 function non_apt_prep(){
-  if ! [[ $( which pg_ctl | grep -c 'no pg_ctl' ) -gt 0 ]]; then
+  if [[ $( which pg_ctl | grep -c 'no pg_ctl' ) -gt 0 ]]; then
     case $1 in
       'arch' |  "black")
         pacman -Syy postgresql php php-pear
