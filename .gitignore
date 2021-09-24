@@ -11,6 +11,6 @@ composer.json
 test.php
 /vendor/
 /includes/droppers/dynamic/obfuscated/
-/includes/droppers/dynamic/raw/
+/includes/droppers/dynamic/slim/
 includes/config/Dumped-Database/
 includes/config/sloppy_config.ini

