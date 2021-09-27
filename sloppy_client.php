@@ -703,16 +703,16 @@ function awesomeMenu(string $what)
                 "Schema" => $schema
             );
         case "droppers":
-            $axx = pg_exec(pg_connect(DBCONN), sprintf("SELECT * FROM sloppy_bots_droppers WHERE obfuscated = '%s' LIMIT %s", trim(readline('[ !! ] Encrypted? (y/n)->')), trim(readline("Limit(there are a ton in the db.)?"))));
+            $axx = pg_exec(pg_connect(DBCONN), sprintf("SELECT * FROM sloppy_bots_slim_droppers LIMIT %s", trim(readline("Limit(there are a ton in the db.)?"))));
             echo str_repeat("+", 35) . "[ Droppers ]" . str_repeat("+", 39) . "\n\n";
             foreach (pg_fetch_all($axx) as $tem => $use) {
-                print(sprintf("[ ID: ]-> %s [ Stored: ]-> %s [ Obfuscated: ]-> %s [ Checkin: ]-> %s [ Cookie Name: ]-> %s [ Cookie Value: ]-> %s\n",
+                print(sprintf("[ ID: ]-> %s [ Stored: ]-> %s [ CallerDomain: ]-> %s [ Cookie Name: ]-> %s [ Cookie Value: ]-> %s [ User Agent ] -> %s\n",
                     $use['id'],
                     $use['location_on_disk'],
-                    $use['obfuscated'],
-                    $use['check_in'],
+                    $use['caller_domain'],
                     $use['cookiename'],
-                    $use['cookievalue']
+                    $use['cookievalue'],
+                    $use['user_agent']
                 ));
             }
             pg_free_result($axx);

