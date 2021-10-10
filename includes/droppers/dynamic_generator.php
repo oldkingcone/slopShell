@@ -119,7 +119,7 @@ SLIMM;
             echo system("ls -lahR {$d}").PHP_EOL;
             echo str_repeat("-", 30).PHP_EOL;
             pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_certs(cert_location_on_disk, base64_encoded_cert, csr, pub, cipher, encrypted, priv_key_password) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
-            $d.$priv_path,
+            $priv_path,
             base64_encode($out->priv),
             base64_encode($out->csr),
             base64_encode($out->pub),
