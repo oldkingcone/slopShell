@@ -118,11 +118,12 @@ SLIMM;
             echo "All of your certs reside here: ".PHP_EOL;
             echo system("ls -lahR {$d}").PHP_EOL;
             echo str_repeat("-", 30).PHP_EOL;
-            pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_certs(cert_location_on_disk, base64_encoded_cert, csr, pub, cipher, encrypted, priv_key_password) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+            pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_certs(cert_location_on_disk, base64_encoded_cert, csr, pub, pem, cipher, encrypted, priv_key_password) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
             $priv_path,
             base64_encode($out->priv),
             base64_encode($out->csr),
             base64_encode($out->pub),
+            base64_encode(file_get_contents($pem_path)),
             $certAlgo.":".$cert_confg['private_key_bits'],
             $cert_confg['encrypt_key'],
             $priv_pass
