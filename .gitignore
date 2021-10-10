@@ -14,3 +14,4 @@ test.php
 /includes/droppers/dynamic/slim/
 includes/config/Dumped-Database/
 includes/config/sloppy_config.ini
+composer.lock

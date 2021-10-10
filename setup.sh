@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 SLOP_DIR="/opt/slop_shell/"
+export SLOP_DIR
 declare -a postgres_versions=('13' '12' '11' '10' '9' '8' '7')
 declare -a pg_dir_exists=()
 choice=''
@@ -82,7 +83,7 @@ else
     $pg_choice initdb -D $SLOP_DIR/slop_data -l $SLOP_DIR/main.log
     cd $SLOP_DIR/slop_data && $(which createdb) sloppy_bots -E utf-8 -O $(whoami) -h localhost -p 5432 -U postgres
     # shellcheck disable=SC2046
-    sudo $(which chmod) 770 /var/run/postgresql
+    sudo $(which chmod) 776 /var/run/postgresql
     # shellcheck disable=SC2046
     sudo $(which chown) postgres:postgres /var/run/postgresql
     $pg_choice start -D $SLOP_DIR/slop_data -l $SLOP_DIR/main.log
