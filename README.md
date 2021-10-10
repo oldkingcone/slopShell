@@ -73,12 +73,6 @@ Here is the better part of this shell. If someone happens upon this shell withou
 ---
 ## Images of use cases
 
-In browser, navigated to without the proper user-agent string. (1st level of auth)
-![](https://github.com/oldkingcone/slopShell/tree/master/images/in_browser.jpeg?raw=true)
-
-Use in the terminal, which is how this was designed to work, using curl with the -vH "User-Agent: sp1.1" switches.
-![](https://github.com/oldkingcone/slopShell/tree/master/images/use_in_terminal.jpeg?raw=true)
-
 Client script usage:
 ![](https://github.com/oldkingcone/slopShell/blob/master/images/client_usage.png?raw=true)
 
