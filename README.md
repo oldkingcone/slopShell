@@ -21,9 +21,6 @@ Thank you for all the support the community has given, it means alot to us. Now 
  - Mutual TLS, with the ability to generate a CA on the fly(if thats possible) 
  - More refined dropper/shell itself, to ensure that the shell will not be stumbled upon for prolonged access.
 
-Basic Usage Video(Hosted on Youtube):
-
-[![Video Showing Usage](https://i.ytimg.com/vi_webp/FywNszpfDJo/maxresdefault.webp)](https://www.youtube.com/watch?v=FywNszpfDJo)
 
 Current VT Detection ratio: 2/59 (most new version)
 
@@ -41,9 +38,9 @@ Current VT Detection ratio (obfuscated version): 0/59 (should be final version o
 
 Ok, so here we go folks, there was an itch I had to write something in PHP so this is it. This webshell has a few bells and whistles, and more are added everyday. You will need a pgsql server running that you control. However you implement that is on you.
 
-Debian: `apt install -y postgresql php php-pear && python -m pip install proxybroker --user`
+Debian: `apt install -y postgresql php php-pear python3-pip php-readline php-curl libsodium libsodium-devel && python -m pip install proxybroker --user`
 
-RHEL Systems: `dnf -y -b install postgresql-server postgresql php php-pear && python -m pip install proxybroker --user`
+RHEL Systems: `dnf -y -b install postgresql-server postgresql php php-pear python3-pip php-readline php-curl libsodium libsodium-devel && python -m pip install proxybroker --user`
 
 WIN: `install the php msi, and make sure you have an active postgresql server that you can connect to running somewhere.`
 
