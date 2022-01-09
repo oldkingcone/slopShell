@@ -508,6 +508,9 @@ function co($command, $host, bool $encrypt)
             echo "The line it happened on: ".$exception->getLine().PHP_EOL;
             return 0;
         }
+    } elseif ($command === 'base'){
+        $cr = '1b';
+        $space_Safe_coms = base64_encode('base');
     } else {
         $cr = "1";
         $space_Safe_coms = base64_encode(serialize(base64_encode($command)));
