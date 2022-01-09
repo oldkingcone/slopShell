@@ -127,7 +127,7 @@ _MENU;
 }
 
 function update_proxy_db_entries(string $proxy, bool $succssful, string $last_contact, bool $time_out, int $round_trip_time){
-    if (!is_null($proxy) && !is_null($succssful) && !is_null($last_contact)) {
+    if (!is_null($proxy) && !is_null($succssful) && !is_null($last_contact) && $proxy !== 'none') {
         $tg = pg_fetch_row(pg_exec(pg_connect(DBCONN),
             sprintf("SELECT times_used,time_outs,successful_responses FROM sloppy_bots_proxies WHERE proxy = '%s'", $proxy)));
         $tc = pg_exec(pg_connect(DBCONN),
@@ -139,6 +139,8 @@ function update_proxy_db_entries(string $proxy, bool $succssful, string $last_co
                 $succssful ? (int)$tg[2] + 1 : (int)$tg[2] - 1,
                 $proxy
             ));
+    }else{
+        return 0;
     }
 }
 
@@ -391,6 +393,9 @@ function opts(bool $proxy_set)
         print("Could not connect... ensure the DB is running and we are allowed to connect to it.");
     }
     print("\n\n" . str_repeat("-", 35) . "\n");
+    echo "\033[4;33;40mIs tor running?\033[0m".PHP_EOL;
+    echo system("systemctl status tor").PHP_EOL;
+    print("\n\n" . str_repeat("-", 35) . "\n");
     curl_setopt(CHH, CURLOPT_HEADER, 0);
     curl_setopt(CHH, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt(CHH, CURLOPT_URL, "https://icanhazip.com");
@@ -498,9 +503,9 @@ function co($command, $host, bool $encrypt)
             $cr = "2";
             $space_Safe_coms = base64_encode(bin2hex($our_nonce) . "." . bin2hex($secure_Key) . "." . bin2hex($additionalData) . "." . bin2hex($ct));
         } catch (SodiumException $exception) {
-            echo $exception->getMessage();
-            echo $exception->getTraceAsString();
-            echo $exception->getLine();
+            echo "What happened: ". $exception->getMessage().PHP_EOL;
+            echo "Where it happened: ". $exception->getTraceAsString().PHP_EOL;
+            echo "The line it happened on: ".$exception->getLine().PHP_EOL;
             return 0;
         }
     } else {
@@ -730,6 +735,9 @@ function awesomeMenu(string $what)
 
 function check($host, $path, $batch, $proxy)
 {
+    if (is_null($proxy)){
+        $proxy = 'none';
+    }
     if ($batch === "y") {
         logo('ch',clears,false, '','batch request');
         $count = pg_exec(pg_connect(DBCONN), 'SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost IS NOT NULL) AS TEMP');
