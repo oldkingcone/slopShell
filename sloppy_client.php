@@ -142,6 +142,14 @@ function update_proxy_db_entries(string $proxy, bool $succssful, string $last_co
     }
 }
 
+function activate_dropper(string $hostname, string $user_agent, string $cookie_name, string $cookie_value, string $post_value){
+
+}
+
+function reset_dropper(string $hostname, string $dropper_location){
+
+}
+
 function b64(array $what, $how, string $whereWeGo)
 {
     // this function is currently causing the client to throw a 500 error.
