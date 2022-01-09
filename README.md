@@ -38,7 +38,7 @@ Current VT Detection ratio (obfuscated version): 0/59 (should be final version o
 
 Ok, so here we go folks, there was an itch I had to write something in PHP so this is it. This webshell has a few bells and whistles, and more are added everyday. You will need a pgsql server running that you control. However you implement that is on you.
 
-Debian: `apt install -y postgresql php php-pear python3-pip php-readline php-curl libsodium libsodium-devel && python -m pip install proxybroker --user`
+Debian: `apt install -y postgresql php php-pear python3-pip php-readline php-curl libsodium libsodium-dev && python -m pip install proxybroker --user`
 
 RHEL Systems: `dnf -y -b install postgresql-server postgresql php php-pear python3-pip php-readline php-curl libsodium libsodium-devel && python -m pip install proxybroker --user`
 
