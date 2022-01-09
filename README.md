@@ -20,6 +20,7 @@ Thank you for all the support the community has given, it means alot to us. Now 
 
  - Mutual TLS, with the ability to generate a CA on the fly(if thats possible) 
  - More refined dropper/shell itself, to ensure that the shell will not be stumbled upon for prolonged access.
+ - Future edititions of this will have access to a personal database of cloud entities, its bascially a personal shodan of mine. Fee will be required for this(sorry).
 
 
 Current VT Detection ratio: 2/59 (most new version)
