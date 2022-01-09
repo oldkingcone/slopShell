@@ -54,7 +54,8 @@ function deb() {
 }
 
 
-root_check
+# need to diagnose whats going on with this function and why its not properly detecting if the script is running with the root user or not.
+#root_check
 if test $# -lt 1; then
   echo Missing args.
   echo "$0" [os] [shell you are using]
