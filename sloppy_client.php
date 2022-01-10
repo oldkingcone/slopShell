@@ -871,7 +871,7 @@ $run = true;
 logo($lc = null, clears, "", "", '');
 echo "[ ++ ] Checking for updates [ ++ ]".PHP_EOL;
 if (strstr(getcwd(), "slopShell") == true) {
-    system("git pull");
+    system("git checkout master && git pull");
 } else {
     $homie = readline("Where is slopshell downloaded to?(full path)->");
     system("git pull {$homie}");
