@@ -34,23 +34,22 @@ function non_apt_prep(){
 
 function deb() {
   for ((version = 0; version < ${#postgres_versions[@]}; version++)); do
-    deb_pg_dir="/usr/lib/postgresql/${version}/bin/pg_ctl"
+    deb_pg_dir="/usr/lib/postgresql/${postgres_version[$version]}/bin/pg_ctl"
     if [ -f $deb_pg_dir ]; then
       pg_dir_exists+=("${deb_pg_dir}")
     fi
   done
-  printf '++%.0s'{1..45};echo;echo
+   echo $( seq -s "-" 50 | sed 's/[0-9]*//g');echo;echo
   echo "These are the confirmed pg_ctl binaries on disk, please choose from them.";echo
   for ((con = 0; con < ${#pg_dir_exists[@]}; con++)); do
     echo "Index: ${con} : ${pg_dir_exists[con]}"
   done
   echo
-  printf '++%.0s'{1..45};echo;echo
+   echo $( seq -s "-" 50 | sed 's/[0-9]*//g');echo;echo
   echo -n "Which one shall we be using? ->"
   read choice
   echo -n "${pg_dir_exists[$choice]}"
   echo
-  return "${pg_dir_exists[$choice]}"
 }
 
 
@@ -81,8 +80,7 @@ else
     else
       echo "Directory is already created."
     fi
-    $pg_choice initdb -D $SLOP_DIR/slop_data -l $SLOP_DIR/main.log
-    cd $SLOP_DIR/slop_data && $(which createdb) sloppy_bots -E utf-8 -O $(whoami) -h localhost -p 5432 -U postgres
+    cd $SLOP_DIR/slop_data && $( which createdb ) sloppy_bots -E utf-8 -O postgres -h localhost -p 5432 -U postgres
     # shellcheck disable=SC2046
     sudo $(which chmod) 776 /var/run/postgresql
     # shellcheck disable=SC2046
