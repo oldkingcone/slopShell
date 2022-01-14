@@ -28,9 +28,9 @@ Current VT Detection ratio: 2/59 (most new version)
 [![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/fbec31525f79578305d67847183dbef7c7a64b431aef81fd59aadfbaa10461c5/detection)
 
 
-Current VT Detection ratio (obfuscated version): 0/59 (should be final version of the obfuscated version. Might make more changes to the routine later on, but for now, behold.)
+Current VT Detection ratio (obfuscated version): 1/59 //This is a refined version of the slimmed down dropper. the overall file length is just under 2kb in size. Slopshell now correctly assigns a randomized useragent with a correct useragent value, that is, an actual useragent like mozilla,opera,chrome,chromium, etc.
 
-[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/3f1c5bc158c57d1d065b02760cf7c67d271641176bfad9051e183446b328435d/detection)
+[![Virus Total](https://www.virustotal.com/gui/images/VT_search_hash.svg)](https://www.virustotal.com/gui/file/46920e27a685d707cb82f23c6c76dd3705d6ec9c96b398828d57791bed7af059/detection)
 
 ~~__The issue with this detection happening is i have not found a viable workaround for the keyword of eval if there was no call to eval this script would be undetectable.__~~
 
