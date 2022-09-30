@@ -8964,13 +8964,20 @@ foreach($extensions as $ext){
     }
 }
 
-exec('ps -ahxwo pid:1,command:1', $data['procs']);
+exec('ps -ahxwo pid:1,command:1', $procs);
+foreach ($procs as $uhoh){
+    foreach ($bad_procs as $oh) {
+        if (strpos($uhoh, $oh) !== false){
+            $data['bad_procs_found'][] = "\033[0;31mIdentified => $oh via => $uhoh\033[0m";
+        }
+    }
+}
 print(str_repeat("-", 150)).PHP_EOL;
 foreach (explode("\n", file_get_contents("/etc/passwd")) as $user){
     $entry = explode(":", $user);
     if (isset($entry[6]) && isset($entry[5])){
         if (!in_array(md5($entry[6]), $bad_shell) && !in_array(md5($entry[5]), $bad_shell)){
-            $data['users'][] = $entry;
+            $data['users'][] = implode(':', $entry);
         }
     }
 }
