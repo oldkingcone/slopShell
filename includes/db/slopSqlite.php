@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS sloppy_bots_slim_droppers(
     caller_domain TEXT NOT NULL DEFAULT '-',
     cookiename TEXT NOT NULL DEFAULT '-',
     cookievalue TEXT NOT NULL DEFAULT '-',
-    user_agent TEXT NOT NULL DEFAULT 'sp/1.1'
+    user_agent TEXT NOT NULL DEFAULT 'sp/1.1',
 );
 CREATE TABLE IF NOT EXISTS sloppy_bots_domains(
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS sloppy_bots_certs(
     pem TEXT UNIQUE,
     cipher TEXT DEFAULT '-',
     is_encrypted BOOLEAN DEFAULT FALSE,
-    priv_key_pass TEXT UNIQUE NOT NULL
+    priv_key_pass TEXT UNIQUE NOT NULL,
+    rotated BOOLEAN NOT NULL DEFAULT FALSE
 );
 CREATE TABLE IF NOT EXISTS sloppy_bots_proxies(
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -79,6 +80,12 @@ CREATE TABLE IF NOT EXISTS sloppy_bots_proxies(
     round_trip_time INTEGER NOT NULL DEFAULT 0,
     time_outs INTEGER NOT NULL DEFAULT 0,
     successful_responses INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS sloppy_deployer(
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  encrypted_contents TEXT NOT NULL,
+  pem_used TEXT NOT NULL DEFAULT 'NONE',
+  targeted_host TEXT NOT NULL
 );
 EOF;
         if ($this->exec($prepare_tables) === true){
@@ -252,6 +259,9 @@ EOF;
                 }else{
                     $sqlfrag = "SELECT * FROM sloppy_bots_tools";
                 }
+                break;
+            case strpos($data['type'], 'pullSlop') !== false:
+                $sqlfrag = sprintf("SELECT encrypted_contents, pem_used FROM sloppy_deployer WHERE targeted_host = '%s'", $data['rhost']);
                 break;
             default:
                 break;

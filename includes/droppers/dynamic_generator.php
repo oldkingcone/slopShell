@@ -85,7 +85,7 @@ SLIMM;
         if (!is_null($CertStrength) and is_int($CertStrength) and !is_null($certAlgo) and count($common) > 0) {
             if ($CertStrength < 2048) {
                 echo "Going with higher bits... setting to 8096" . PHP_EOL;
-                $CertStrength = 4096;
+                $CertStrength = 8096;
             }
             $cert_types = array(
                 "rsa" => OPENSSL_KEYTYPE_RSA,

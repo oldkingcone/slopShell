@@ -168,6 +168,9 @@ class postgres_pdo extends PDO
                     $sqlfrag = "SELECT * FROM sloppy_bots_tools";
                 }
                 break;
+            case strpos($data['type'], 'pullSlop') !== false:
+                $sqlfrag = sprintf("SELECT encrypted_contents, pem_used FROM sloppy_deployer WHERE targeted_host = '%s'", $data['rhost']);
+                break;
             default:
                 break;
         }
@@ -252,6 +255,7 @@ class postgres_pdo extends PDO
                 $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_tools(id SERIAL NOT NULL constraint sloppy_bots_tools_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, tool_name TEXT UNIQUE NOT NULL DEFAULT '-', target TEXT NOT NULL DEFAULT '-', base64_encoded_tool TEXT UNIQUE NOT NULL DEFAULT '-', keys TEXT UNIQUE DEFAULT '-', tags TEXT UNIQUE DEFAULT '-', iv TEXT UNIQUE DEFAULT '-', aad TEXT DEFAULT '-',cipher TEXT DEFAULT '-', hmac_hash TEXT UNIQUE DEFAULT '-', lang TEXT DEFAULT '-', encrypted BOOLEAN DEFAULT false)");
                 $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_certs(id SERIAL NOT NULL constraint sloppy_bots_certs_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, cert_location_on_disk TEXT UNIQUE NOT NULL DEFAULT '-', base64_encoded_cert TEXT UNIQUE NOT NULL DEFAULT '-', csr TEXT UNIQUE DEFAULT '-', pub TEXT UNIQUE DEFAULT '-', pem TEXT UNIQUE DEFAULT '-', cipher TEXT DEFAULT '-', encrypted BOOLEAN DEFAULT false, priv_key_password TEXT NOT NULL DEFAULT '-' UNIQUE)");
                 $this->exec("CREATE TABLE IF NOT EXISTS sloppy_bots_proxies(id SERIAL NOT NULL constraint sloppy_bots_proxies_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, proxy_schema TEXT NOT NULL DEFAULT '-', proxy TEXT UNIQUE NOT NULL DEFAULT '-', times_used INTEGER NOT NULL DEFAULT 0, last_domain_contacted TEXT NOT NULL DEFAULT '-', proxy_still_viable BOOLEAN NOT NULL DEFAULT TRUE, round_trip_time INTEGER NOT NULL DEFAULT 0, time_outs INTEGER NOT NULL DEFAULT 0, successful_responses INTEGER NOT NULL DEFAULT 0)");
+                $this->exec("CREATE TABLE IF NOT EXISTS sloppy_deployer(id SERIAL NOT NULL constraint sloppy_deployer_pkey,encrypted_contents TEXT NOT NULL,pem_used TEXT NOT NULL DEFAULT 'NONE',targeted_host TEXT NOT NULL)");
                 $this->exec("GRANT SELECT,INSERT,UPDATE ON sloppy_bots_main,sloppy_bots_certs,sloppy_bots_domains,sloppy_bots_tools,sloppy_bots_proxies,sloppy_bots_slim_droppers TO sloppy_bot");
                 $this->exec("GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO sloppy_bot");
                 // calling this commit to ensure the transaction succeeds, even though we have set autocommit to on.
