@@ -1,11 +1,12 @@
 <?php
-
 error_reporting(E_ERROR | E_PARSE | E_WARNING);
 set_include_path(get_include_path() . PATH_SEPARATOR . getcwd() . "/includes");
 if (!defined("config")){
     define("config", parse_ini_file('includes/config/sloppy_config.ini', true, 2));
 }
 if (!isset($_SERVER['HTTP_HOST'])){
+set_include_path(get_include_path() . PATH_SEPARATOR . getcwd() . "/includes");
+if (!defined("_SERVER")){
     print("\n\033[0;31mYou appear to be using the CLI version of PHP, meaning that most of the global variables needed to access information needed by this framework will not be accessible.\033[0m\nPlease take a second look at your PHP env and make sure you have the correct version.\n");
 }
 if (!function_exists("openssl_decrypt") && !function_exists("openssl_encrypt")){
@@ -33,4 +34,4 @@ if (!defined("SQL_SELECTION")){
             }
             break;
     }
-}
+

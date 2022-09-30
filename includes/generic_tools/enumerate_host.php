@@ -8974,4 +8974,3 @@ foreach (explode("\n", file_get_contents("/etc/passwd")) as $user){
         }
     }
 }
-print_r($data).PHP_EOL;
