@@ -228,7 +228,7 @@ EOF;
         }
     }
 
-    public function grabAndFormatOutput(array $data): mixed{
+    public function grabAndFormatOutput(array $data){
         switch ($data['call']){
             case strpos($data['call'], "multi"):
                 $type_call = "multi";

@@ -14,21 +14,6 @@ require "includes/droppers/dynamic_generator.php";
 require "db/postgres_pdo.php";
 require "db/slopSqlite.php";
 
-switch (SQL_SELECTION){
-    case strpos(SQL_SELECTION, "pgsql") !== false:
-        $db_call = new postgres_pdo("pgsql:host=localhost;dbname=postgres", "postgres", "", array(
-            PDO::ATTR_PERSISTENT => true
-        )); //Change these values as needed.
-        if (empty(config['sloppy_db']['pass'])) {
-            $db_call->firstRun();
-        }
-        break;
-    case strpos(SQL_SELECTION, "sqlite3") !== false:
-    default:
-        $db_call = new slopSqlite("includes/db/sqlite3_repo/slopSqlite.sqlite3", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, "");
-        break;
-}
-
 const response_array = array(
     "default" => PHP_EOL . "\e[1;33m%s%s Hmm. A status other than what i was looking for was returned, please manually confirm the shell was uploaded.\e[0m" . PHP_EOL,
     "200" => PHP_EOL . "\e[0;32m%s%s is still ours!\e[0m" . PHP_EOL,
@@ -36,13 +21,29 @@ const response_array = array(
     "500" => PHP_EOL . "\e[1;31m%s%s Your useragent was not the correct one... did you forget??\e[0m" . PHP_EOL
 );
 
-
+function callDatabase(array $data){
+    switch (SQL_SELECTION){
+        case strpos(SQL_SELECTION, "pgsql") !== false:
+            $db_call = new postgres_pdo("pgsql:host=localhost;dbname=postgres", "postgres", "", array(
+                PDO::ATTR_PERSISTENT => true
+            )); //Change these values as needed.
+            if (empty(config['sloppy_db']['pass'])) {
+                $db_call->firstRun();
+            }
+            break;
+        case strpos(SQL_SELECTION, "sqlite3") !== false:
+        default:
+            $db_call = new slopSqlite("includes/db/sqlite3_repo/slopSqlite.sqlite3", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, "");
+            break;
+    }
+}
 
 function grab_proxy(string $action, string $target_domain, bool $randomize){
 
     if ($action === "test" && !empty($target_domain)){
-        $fetched = "SELECT proxy_schema,proxy from sloppy_bots_proxies WHERE last_domain_contacted NOT LIKE '%".$target_domain."%'";
-        print(print_r(pg_fetch_all(pg_exec(pg_connect(DBCONN), $fetched))).PHP_EOL);
+        foreach ($db_call->grabAndFormatOutput(['call' => 'multi','type'=> "proxy"]) as $row){
+            print($row);
+        }
     }else{
         logo('proxied', clears, true, "The Required information was empty.".PHP_EOL, $target_domain);
     }
@@ -120,6 +121,7 @@ _MENU;
 
 function update_proxy_db_entries(string $proxy, bool $succssful, string $last_contact, bool $time_out, int $round_trip_time){
     if (!is_null($proxy) && !is_null($succssful) && !is_null($last_contact) && $proxy !== 'none') {
+        #@TODO fix this.
         $tg = $db_call->(sprintf("SELECT times_used,time_outs,successful_responses FROM sloppy_bots_proxies WHERE proxy = '%s'", $proxy));
         $tc = pg_exec(pg_connect(DBCONN),
             sprintf("UPDATE sloppy_bots_proxies SET times_used = '%s', last_domain_contacted = '%s', round_trip_time = '%s', time_outs = '%s', successful_responses = '%s'  WHERE proxy = '%s'",
@@ -152,6 +154,7 @@ function b64(array $what, $how, string $whereWeGo)
     $our_nonce = openssl_random_pseudo_bytes(24);
     $secure_Key = openssl_random_pseudo_bytes(32);
     $additionalData = openssl_random_pseudo_bytes(16);
+    #@TODO fix this.
     $wheretoGo = pg_fetch_row(pg_exec(pg_connect(DBCONN), sprintf("SELECT rhost,uri,os_flavor FROM sloppy_bots_main WHERE id = %s", $whereWeGo)));
     curl_setopt(CHH, CURLOPT_URL, $wheretoGo[0].$wheretoGo[1]);
     if ($how === "u") {
@@ -195,7 +198,6 @@ function b64(array $what, $how, string $whereWeGo)
 
 function sloppyTools(string $action, $pathToFile, $toolName, bool $encrypted)
 {
-    $c = pg_connect(DBCONN);
     if ($action === "add") {
         if (!empty($pathToFile) && is_file($pathToFile) && !empty($toolName)) {
             $file_parts = pathinfo($pathToFile);
