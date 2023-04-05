@@ -3,6 +3,23 @@
 
 class generic_constants
 {
+    function initDatabase(){
+        if (is_null(getenv('SLOP_SHELL'))) {
+            switch (SQL_SELECTION) {
+                case str_contains(SQL_SELECTION, "pgsql"):
+                    define("db_call", new postgres_pdo("pgsql:host=localhost;dbname=postgres", "postgres", "", array(
+                        PDO::ATTR_PERSISTENT => true
+                    ))); //Change these values as needed.
+                    db_call->firstRun();
+                    break;
+                case str_contains(SQL_SELECTION, "sqlite3"):
+                default:
+                    define("db_call", new slopSqlite("includes/db/sqlite3_repo/slopSqlite.sqlite3", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, ""));
+                    break;
+            }
+            putenv("SLOP_SHELL='initialized as fuck'");
+        }
+    }
     function set_pathing()
     {
         error_reporting(E_ERROR | E_PARSE | E_WARNING);
@@ -29,25 +46,26 @@ class generic_constants
             print("Would you prefer to use SQlite3 or PostgreSQL?\n");
             $selection = readline("(sqlite3/pgsql)->");
             switch ($selection) {
-                case strpos($selection, "pgsql") !== false:
+                case str_contains($selection, "pgsql"):
                     if (extension_loaded("pgsql")) {
                         print("\033[0;34mNeeded extentions are loaded, selecting PGSQL\033[0m\n");
                         define("SQL_SELECTION", "pgsql");
+                        $this->initDatabase();
                     } else {
                         print("\033[0;31mIt appears as though PGSQL is not enabled/installed. Please verify the needed libs are installed, and the php build is built with pgsql extentions.\033[0m\n");
                     }
                     break;
-                case strpos($selection, "sqlite3") !== false:
+                case str_contains($selection, "sqlite3"):
                 default:
                     echo "\033[0;33mNo selection was made or the default was selected, using SQLITE3\033[0m\n";
                     if (extension_loaded("sqlite3")) {
                         define("SQL_SELECTION", "sqlite3");
+                        $this->initDatabase();
                     } else {
                         print("\033[0;31mSQLITE3 is not loaded. Please check your build of php and ensure that SQLITE3 flag is enabled at build time.\033[0m\n");
                     }
                     break;
             }
         }
-        return;
     }
 }

@@ -1,12 +1,14 @@
 <?php
 
 use menu_items\logo;
-
-require "generic_constants.php";
+require "includes/bot_c2/bot_comms/talk_to_me_damnit.php";
+require "includes/generic_constants.php";
 require "includes/droppers/dynamic_generator.php";
 require "includes/bot_c2/menu_items/logo.php";
+
 $a = new generic_constants();
 $a->runn();
+$bot_com = new talk_to_me_damnit();
 
 $supply_template = [
     "last" => NULL,
@@ -27,23 +29,7 @@ const response_array = array(
     "500" => PHP_EOL . "\e[1;31m%s%s Your useragent was not the correct one... did you forget??\e[0m" . PHP_EOL
 );
 
-function initDatabase(array $data){
-    if (is_null(getenv('FIRST_RUN'))) {
-        switch (SQL_SELECTION) {
-            case str_contains(SQL_SELECTION, "pgsql"):
-                define("db_call", new postgres_pdo("pgsql:host=localhost;dbname=postgres", "postgres", "", array(
-                    PDO::ATTR_PERSISTENT => true
-                ))); //Change these values as needed.
-                db_call->firstRun();
-                break;
-            case str_contains(SQL_SELECTION, "sqlite3"):
-            default:
-                define("db_call", new slopSqlite("includes/db/sqlite3_repo/slopSqlite.sqlite3", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, ""));
-                break;
-        }
-        putenv("FIRST_RUN=1");
-    }
-}
+
 
 //function grabData(array $data): array{
 //    switch ($data['local']){
