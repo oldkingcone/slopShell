@@ -78,6 +78,23 @@ Reverse Connection initiated from the client script:
 ![](https://github.com/oldkingcone/slopShell/blob/master/images/reverse_connection_client_script.png?raw=true)
 
 ---
+## Finding this will be difficult.
+
+So, while doing some changes, i thought heck why not add in a way for the ACTUAL shell itself to hide itself from a less than observant admin.
+
+Here is what I was able to come up with:
+ - The shell will dynamically rename itself (this did break the client for now, I have so many things to change in the client, but this is just a pet project of mine.)
+ - The original file will be deleted after it is written to disk.
+ - The value of the old file and the new file name will be reported back to the user in a header.
+ - The shell now response HTTP 404 to everything, even valid requests. (another reason the client script is broken.)
+ - Still working on the MTLS portions of the client and shell script.
+ - I named it something different than i normally do.
+ - Remapped some of the extra functions to fire off by default now, IE OS detection.
+ - Added the ability for the script (if the directory is writable) to create a hidden folder for the shell to store the uploaded goodies to, and then reference.
+ - Still working on dynamic loading and execution of uploaded scripts.
+
+
+---
 ## Additional
 
 I as the maintainer, am in no way responsible for the misuse of this product. This was published for legitmate penetration testing/red teaming purposes, and/or for educational value.  Know the applicable laws in your country of residence before using this script, and do not break the law whilst using this. Thank you and have a nice day.
