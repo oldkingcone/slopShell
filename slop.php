@@ -408,7 +408,7 @@ INI. PHP_EOL;
     foreach (uwumodifyme() as $new_data => $d){
         header("{$new_data}: {$d}");
     }
-    unlink($_SERVER['PHP_SELF']);
+    unlink($_SERVER['SCRIPT_FILENAME']);
     http_response_code(404);
     die();
 }
