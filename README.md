@@ -49,40 +49,16 @@ WIN: `install the php msi, and make sure you have an active postgresql server th
 Once you have these set up properly and can confirm that they are running. A command I would encourge using is with `pg_ctl` you can create the DB that way, or at least init it and start it. Then all the db queries will work fine.
 
 ---
+# Credits for the execution methods
+
+You may notice these are a reskin of another Wordpress backdoor, and once i find the repo again, [i will make sure to give credit for the execution of commands function that is present in these shells](https://github.com/leonjza/wordpress-shell/blob/master/shell.php#L47). I do not like to rip off code and believe that credit needs to be given where credit is due. Thank you kind sir, you have helped me quite a bit with this by making your scripts available to the public.
+
+---
 ## What makes this shell unique?
 
+So, while doing some changes, i thought heck why not add in a way for the ACTUAL shell itself to hide itself from a less than observant admin. Cleaned up the code execution methods, cleaned up the whole script. No longer will it display a fake 500 page, as this attracts too much attention from an observent admin (more so from my time as an admin of a php dev stack on a server) 500 error messages attract a lot of attention, which will mean the shell is more likely to be discovered. A 404 response however, is much less likely to draw in the gaze of the server admin. Making this shell itself much more difficult to detect and find, in addition to the changing filename, finding this shell will be an absolute nightmare. User-Agent customization is still something that will need to be done, or a unique cookie value will need to be used in place of the User-Agent value that however, will not be set by myself and i will let more experienced users customize this shell to their hearts content. Again, if you notice any issues, or any shortcomings(most i have fixed, and have updated this shell to PHP8 for the most part, type hints i still cannot add in and this is for backwards compatibility reasons) please do open an issue and let me know what is wrong, and i will see about fixing it. Thank you, do good fight evil, have fun.
 
-There are a few key features that makes this shell stand out from most others. Aside from the lack of a pretty GUI/Web interface
-This shell makes use of a few things that I as an operator did notice of other shells. Firstly being the light self-defense features that are built in, and in
-my opinion... offer much more protection than a prompt for credentials. 
-Some of the protection features are:
- - Need of a unique user-agent in order to reach the shell
- - Use of any/all commands are sent through uniquely named cookies.
- - Ability to encrypt commands sent from the client script to the shell itself.
- - Ability to deploy a small dropper that again with unique cookie values and user agent values will protect the dropper from being "Accidentally stumbled upon". The dropper will respond in a 404 with very little returned to the user, byte length of a UUID (16 bits in length) to hide its presence,  Once the dropper is properly activated, the dropper will encrypt then delete itself.
- - If the shell itself is found, without the unique user-agent/cookie values, the shell will respond with a 500 tricking the user into thinking the script is broken or the server failed to execute the script. Driving interest away from the file itself.
- - This shell is actively developed with much more being added.
-
-CLIFFNOTE: For the anti analysis routines, I(oldkingcone) would love to try and take credit for this idea, but I cannot in good conscience, so the inspiration came from 1 person(you know who you are, you evil genius.) whom pointed me to this repo: https://github.com/NullArray/Archivist/blob/master/logger.py#L123 
-
-
-Here is the better part of this shell. If someone happens upon this shell without supplying the exact user agent string specified in the script, this shell will produce a 500 error with a fake error page then it will attempt some XSS to steal that users session information and sends it back to a handler script on your server/system. This will then attempt to store the information in a running log file. If it is unable to do so, well the backup is your logs. Once the XSS has completed, this shell will redirect the user back to the root(/) of the webserver. So, youll steal sessions if someone finds this, can even beef it up to execute commands on the server on behalf of the user, or drop a reverse shell on the users browser through Beef or another method. The possibilities are legit endless.
-
----
-## Images of use cases
-
-Client script usage:
-![](https://github.com/oldkingcone/slopShell/blob/master/images/client_usage.png?raw=true)
-
-Reverse Connection initiated from the client script:
-![](https://github.com/oldkingcone/slopShell/blob/master/images/reverse_connection_client_script.png?raw=true)
-
----
-## Finding this will be difficult.
-
-So, while doing some changes, i thought heck why not add in a way for the ACTUAL shell itself to hide itself from a less than observant admin.
-
-Here is what I was able to come up with:
+Here is what I was able to come up with for the added evasive routines:
  - The shell will dynamically rename itself (this did break the client for now, I have so many things to change in the client, but this is just a pet project of mine.)
  - The original file will be deleted after it is written to disk.
  - The value of the old file and the new file name will be reported back to the user in a header.
@@ -92,6 +68,17 @@ Here is what I was able to come up with:
  - Remapped some of the extra functions to fire off by default now, IE OS detection.
  - Added the ability for the script (if the directory is writable) to create a hidden folder for the shell to store the uploaded goodies to, and then reference.
  - Still working on dynamic loading and execution of uploaded scripts.
+
+As I have grown in the language of PHP so will this whole project and the classes will become proper classes, with namespaces and all. Just need some time as i fix the code to more common standards of PHP development. I will likely add in a way to package this shell itself as a WordPress plugin, so that way it can be used in wordpress as well.( a proper plugin at that. )
+
+---
+## Images of use cases
+
+Client script usage:
+![](https://github.com/oldkingcone/slopShell/blob/master/images/client_usage.png?raw=true)
+
+Reverse Connection initiated from the client script:
+![](https://github.com/oldkingcone/slopShell/blob/master/images/reverse_connection_client_script.png?raw=true)
 
 
 ---
