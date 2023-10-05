@@ -60,7 +60,7 @@ So, while doing some changes, i thought heck why not add in a way for the ACTUAL
 
 Here is what I was able to come up with for the added evasive routines:
  - The shell will dynamically rename itself (this did break the client for now, I have so many things to change in the client, but this is just a pet project of mine.)
- - The original file will be deleted after it is written to disk.
+ - The original file will be deleted after it is written to disk the script now also adds a random comment at the top of the file, completely changing the checksum of the file, making signature based detection scanning much more difficult, not polymorphic, would be nice if this can be done in php. May write an additional function to randomize the location of the functions and adds random functions at random locations.
  - The value of the old file and the new file name will be reported back to the user in a header.
  - The shell now response HTTP 404 to everything, even valid requests. (another reason the client script is broken.)
  - Still working on the MTLS portions of the client and shell script.
