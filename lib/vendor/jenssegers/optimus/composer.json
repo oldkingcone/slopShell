@@ -1,0 +1,42 @@
+{
+    "name": "jenssegers/optimus",
+    "description": "Id obfuscation based on Knuth's integer hash method",
+    "keywords": ["obfuscation", "ids", "optimus", "hashids", "id obfuscation"],
+    "homepage": "https://github.com/jenssegers/optimus",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jens Segers",
+            "homepage": "https://jenssegers.com"
+        }
+    ],
+    "require": {
+        "php": "^7.4||^8.0",
+        "phpseclib/phpseclib": "^3.0",
+        "symfony/console": "^5.0||^6.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jenssegers\\Optimus\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jenssegers\\Optimus\\Tests\\": "tests"
+        }
+    },
+    "suggest": {
+        "ext-gmp": "Required for 32bit systems"
+    },
+    "bin": ["bin/optimus"],
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist"
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit --testdox --color=always"
+    }
+}

