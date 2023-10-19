@@ -71,7 +71,7 @@ Here is what I was able to come up with for the added evasive routines:
  - Added the ability for the script (if the directory is writable) to create a hidden folder for the shell to store the uploaded goodies to, and then reference.
  - Still working on dynamic loading and execution of uploaded scripts.
 
-As I have grown in the language of PHP so will this whole project and the classes will become proper classes, with namespaces and all. Just need some time as i fix the code to more common standards of PHP development. I will likely add in a way to package this shell itself as a WordPress plugin, so that way it can be used in wordpress as well.( a proper plugin at that. )
+As I have grown in the language of PHP so will this whole project and the classes will become proper classes, with namespaces and all. Just need some time as i fix the code to more common standards of PHP development. ~~I will likely add in a way to package this shell itself as a WordPress plugin, so that way it can be used in wordpress as well.( a proper plugin at that.)~~ The client now makes proper wordpress plugins, which hook the init function of the wordpress site. I have not tested this fully, so if there are any issues at all, please feel free to open a new issue and describe the problem you are having.
 
 ---
 ## Images of use cases
