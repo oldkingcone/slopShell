@@ -1,0 +1,13 @@
+{
+  "require": {
+    "ext-pdo": "*",
+    "ext-curl": "*",
+    "ext-readline": "*",
+    "ext-sqlite3": "*",
+    "ext-openssl": "*",
+    "ext-zip": "*",
+    "defuse/php-encryption": "^2.4",
+    "jenssegers/optimus": "^1.1",
+    "fakerphp/faker": "^1.23"
+  }
+}
