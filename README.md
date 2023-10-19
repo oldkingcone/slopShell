@@ -48,6 +48,8 @@ WIN: `install the php msi, and make sure you have an active postgresql server th
 
 Once you have these set up properly and can confirm that they are running. A command I would encourge using is with `pg_ctl` you can create the DB that way, or at least init it and start it. Then all the db queries will work fine.
 
+You need to cd into `/lib/` and run `composer install` to install the server side depends that will be required for the client to work. The client now runs much faster than before. 
+
 ---
 # Credits for the execution methods
 
