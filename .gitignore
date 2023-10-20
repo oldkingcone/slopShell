@@ -7,5 +7,5 @@
 # Editor-based HTTP Client requests
 /httpRequests/
 test.php
-/vendor/
-composer.lock
+lib/vendor/
+lib/composer.lock
