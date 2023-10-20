@@ -1,5 +1,5 @@
 <?php
-require_once "classes.php";
+require_once "lib/classes.php";
 
 use userAgents\agentsList;
 use curlStuff\mainCurl;

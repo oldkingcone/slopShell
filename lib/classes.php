@@ -47,7 +47,7 @@ if (!defined("PATH_SEPARATOR")){
         define("PATH_SEPARATOR", ":");
     }
 }
-set_include_path(get_include_path(). PATH_SEPARATOR . getcwd() . "/lib");
+set_include_path(classes . phpget_include_path() . PATH_SEPARATOR . getcwd() . "/lib");
 
 if (!defined("SQL_USE")){
     $a = new initialization\initializeC2\initializeC2ConfigFile(default_config->exportConfigConstants()['slop_home'], false);

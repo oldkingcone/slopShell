@@ -8,6 +8,8 @@
     "ext-zip": "*",
     "defuse/php-encryption": "^2.4",
     "jenssegers/optimus": "^1.1",
-    "fakerphp/faker": "^1.23"
+    "fakerphp/faker": "^1.23",
+    "guzzlehttp/guzzle": "^7.8",
+    "ext-http": "*"
   }
 }
