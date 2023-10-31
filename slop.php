@@ -1,10 +1,10 @@
 <?php
 //leave me in.
-//changeme
 
-define("allowed_chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ");
-
-//error_reporting(E_WARN|E_PARSE);
+if (!defined('allowed_chars')) {
+    define("allowed_chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ");
+}
+error_reporting(E_WARNING | E_PARSE);
 if ( ! defined( "PATH_SEPARATOR" ) ) {
     if (str_contains($_ENV["OS"], "Win") !== false)
         define( "PATH_SEPARATOR", ";" );
