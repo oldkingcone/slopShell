@@ -1,5 +1,5 @@
 <?php
-require_once "lib/classes.php";
+require_once "lib/classes.inc.php";
 
 //pipe dream.
 use fake_the_landing\randomDefaultPage;
