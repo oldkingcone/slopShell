@@ -32,4 +32,9 @@ class randomDefaultPage
         }
     }
 
+    private function whyNot()
+    {
+
+    }
+
 }
