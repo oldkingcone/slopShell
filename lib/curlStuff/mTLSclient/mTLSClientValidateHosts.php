@@ -9,8 +9,7 @@ use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-
-class mutualTLSClientValidateHosts extends Client
+class mTLSClientValidateHosts extends Client
 {
     public function __construct(array $config = [], array $mTLSOpts = [])
     {
