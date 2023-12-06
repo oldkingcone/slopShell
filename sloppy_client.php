@@ -80,7 +80,8 @@ while (true){
                     $database->insertData([
                             "action" => "add_press",
                             "zip" => $a['TrojanPlugin'],
-                            "activator" => $a['ActivationWord']]
+                            "activator" => $a['ActivationWord'],
+                        ]
                     );
                     readline("Press the any key to continue.");
                     break;
@@ -94,7 +95,10 @@ while (true){
                     $database->insertData([
                         "action" => "add_press",
                         "zip" => $yay['TrojanPlugin'],
-                        "activator" => $yay['ActivationWord']
+                        "activator" => $yay['ActivationWord'],
+                        'CookieName' => $a['CookieName'],
+                        'CookieVal' => $a['CookieVal'],
+                        'AllowedAgent' => $a['AllowedAgent']
                     ]);
                     readline("Press the any key to continue.");
                     break;

