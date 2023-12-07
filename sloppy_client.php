@@ -49,7 +49,8 @@ if (str_contains(SQL_USE, "PGSQL")){
 }
 
 while (true){
-    system(clear);
+    system(CLEAR);
+    $l->prepareFrames();
     $l->displayLogo();
     $m->menu();
     $c = strtolower(trim(readline("->")));
@@ -148,7 +149,7 @@ while (true){
         case str_starts_with($c, "ac") !== false:
             break;
         case str_starts_with($c, "q") !== false:
-            system(clear);
+            system(CLEAR);
             foreach ($m->goodBye() as $bye) {
                 echo "\033[0;34m{$bye}\033[0m" . PHP_EOL;
             }

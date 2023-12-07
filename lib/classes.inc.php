@@ -28,29 +28,27 @@ include "lib/curlStuff/mainCurl.php";
 
 use config\defaultConfig;
 
-@srand((double) microtime() * 1000000000, MT_RAND_PHP);
+mt_srand((int) (microtime(true) * 1000000));
 
 const default_config = new defaultConfig();
 
-
-if (!defined("clear")){
-    if (str_starts_with(php_uname(), "Win") !== false){
-        define("clear", "cls");
-    }else{
-        define("clear", "clear");
+if (!defined("CLEAR")){
+    if (DIRECTORY_SEPARATOR == '\\'){
+        define("CLEAR", "cls");
+    } else {
+        define("CLEAR", "clear");
     }
 }
 
-if (!defined("PATH_SEPARATOR")){
-    if (str_starts_with(php_uname(), "Win") !== false) {
-        define("PATH_SEPARATOR", ";");
-    }else{
-        define("PATH_SEPARATOR", ":");
+if (!defined("CUSTOM_PATH_SEPARATOR")){
+    if (DIRECTORY_SEPARATOR == '\\'){
+        define("CUSTOM_PATH_SEPARATOR", ";");
+    } else {
+        define("CUSTOM_PATH_SEPARATOR", ":");
     }
 }
-set_include_path(get_include_path() . PATH_SEPARATOR . getcwd() . "/lib");
+set_include_path(get_include_path() . constant("CUSTOM_PATH_SEPARATOR") . getcwd() . "/lib");
 
 if (!defined("SQL_USE")){
-    $homie = default_config->exportConfigConstants()['slop_home'];
-    $a = new initialization\initializeC2\initializeC2ConfigFile($homie, true);
+    $a = new initialization\initializeC2\initializeC2ConfigFile(default_config->exportConfigConstants()['slop_home'], true);
 }
