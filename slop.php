@@ -48,9 +48,31 @@ if (slopos === "Windows"){
 if (function_exists("gnupg_decrypt") && function_exists("gnupg_key_import") && function_exists("escapeshellarg")){
     if (!defined("slopPGP")){
         define("slopPGP", true);
-        putenv("GNUPGHOME=$(pwd)/.scache/.gnupg");
+        putenv(sprintf("GNUPGHOME=%s/.scache/.gnupg", scache));
     }else{
         define("slopPGP", false);
+    }
+}
+
+if (function_exists("stream_context_create") && function_exists("stream_socket_server")){
+    if (!defined("slopMTLS")){
+        define("slopMTLS", true);
+        $server_key = $_COOKIE['cck'];
+        $server_cert = $_COOKIE['ppc'];
+        $temp_cert_p = tempnam(sys_get_temp_dir(), bin2hex(random_bytes(25)));
+        $temp_key_p = tempnam(sys_get_temp_dir(), bin2hex(random_bytes(25)));
+        file_put_contents($temp_cert_p, $server_cert);
+        file_put_contents($temp_key_p, $server_key);
+        mkdir(sprintf("%s/.crypto", scache));
+        stream_context_create([
+            "local_cert" => $temp_cert_p,
+            "local_pk" => $temp_key_p,
+            "verify_peer" => true,
+            "verify_peer_name" => false
+        ]);
+//        stream_socket_server();
+    } else{
+        define("slopMTLS", false);
     }
 }
 
