@@ -16,28 +16,26 @@ if (!defined("cval")){
 if (!defined('allowed_chars')) {
     define("allowed_chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ");
 }
-if ( ! defined( "PATH_SEPARATOR" ) ) {
-    if (str_contains($_ENV["OS"], "Win") !== false)
-        define( "PATH_SEPARATOR", ";" );
-    else define( "PATH_SEPARATOR", ":" );
+
+if (!defined("os")){
+    define("slopos", strtoupper(substr(PHP_OS, 0, 3)));
 }
-if (str_starts_with(php_uname(), 'Windows')) {
-    if (!defined("sloppyshell")){
-        define("sloppyshell", "cmd.exe");
-    }
-    define("slopos", "Windows");
-} else {
-    if (!defined("sloppyshell")){
-        define("sloppyshell", "bash");
-    }
-    define("slopos", "Linux");
+$shell = (slopos === 'WIN') ? 'cmd.exe' : 'bash';
+
+if (!defined('sloppyshell')) {
+    define('sloppyshell', $shell);
 }
+
+if (!defined("dirSeparator")){
+    define("dirSeparator", slopos === 'WIN' ? '\\' : '/');
+}
+
 if (slopos === "Windows"){
     if (!is_dir(".\\scache")){
         mkdir(".\\scache");
         shell_exec("attrib +H .\\scache");
     }
-    define("scache", getcwd()."\\scache\\");
+    define("scache", getcwd()."\\scache");
 }else{
     if (!is_dir("./.scache")){
         mkdir("./.scache");
