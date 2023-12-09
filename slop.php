@@ -45,6 +45,15 @@ if (slopos === "Windows"){
     define("scache", getcwd()."/.scache/");
 }
 
+if (function_exists("gnupg_decrypt") && function_exists("gnupg_key_import") && function_exists("escapeshellarg")){
+    if (!defined("slopPGP")){
+        define("slopPGP", true);
+        putenv("GNUPGHOME=$(pwd)/.scache/.gnupg");
+    }else{
+        define("slopPGP", false);
+    }
+}
+
 set_include_path(get_include_path().PATH_SEPARATOR.scache);
 ini_set("safe_mode", 0);
 ini_set("file_uploads", "on");

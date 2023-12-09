@@ -5,7 +5,7 @@ include "lib/bots/bot_cmds/doMyBidding.php";
 include "lib/bots/bot_coms/listenToMe.php";
 include "lib/bots/bot_esplode/mustRetreat.php";
 include "lib/bots/bot_files/hereEatThis.php";
-include "lib/crypto/certMaker/mutualTLS.php";
+include "lib/crypto/certMaker/certGenerator.php";
 include "lib/crypto/encryptMyComs/hideMyCommunication.php";
 include "lib/crypto/needSalt/missingSalt.php";
 include "lib/proxyWorks/confirmProxy.php";
@@ -24,6 +24,7 @@ include "lib/database/slopSqlite.php";
 include "lib/initialization/initializeC2/initializeC2ConfigFile.php";
 include "lib/new_bots/wordpressPlugins/makeMeWordPressing.php";
 include "lib/curlStuff/mainCurl.php";
+include "lib/crypto/certMaker/certGenerator.php";
 
 
 use config\defaultConfig;

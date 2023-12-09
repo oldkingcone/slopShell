@@ -1,6 +1,10 @@
 <?php
 require_once "lib/classes.inc.php";
 
+//crypto
+use crypto\certMaker\certGenerator;
+//end crypto
+
 //pipe dream.
 use fake_the_landing\randomDefaultPage;
 //end pipe dream.
@@ -48,10 +52,11 @@ if (str_contains(SQL_USE, "PGSQL")){
     readline("Press enter to continue.");
 }
 
+$l->prepareFrames();
+$l->displayLogo();
 while (true){
     system(CLEAR);
-    $l->prepareFrames();
-    $l->displayLogo();
+    $l->displayStaticAsciiLogo();
     $m->menu();
     $c = strtolower(trim(readline("->")));
     switch ($c){

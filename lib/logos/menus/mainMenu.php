@@ -98,7 +98,10 @@ T.PHP_EOL;
     function generateCertMenu(): void
     {
         echo <<<CR
-Still working the kinks out on this.
+This requires 3 inputs:
+    - Slophome (this is passed by the default config.)
+    - Key, there will be checks done in this function to make sure you are using a strong key.
+    - Use X509, this is a boolean value, 
 CR.PHP_EOL;
 
     }

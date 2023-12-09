@@ -79,6 +79,6 @@ class artisticStuff
 
     public function displayStaticAsciiLogo(): void
     {
-
+        echo implode("\n", $this->frames[array_key_last($this->frames)]).PHP_EOL;
     }
 }

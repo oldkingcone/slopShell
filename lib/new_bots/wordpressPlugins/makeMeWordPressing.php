@@ -3,7 +3,6 @@
 namespace new_bots\wordpressPlugins;
 
 use Faker\Factory;
-use phpseclib3\Math\BigInteger\Engines\PHP;
 
 
 class makeMeWordPressing extends \ZipArchive
@@ -68,9 +67,7 @@ class makeMeWordPressing extends \ZipArchive
         $base .= "*/\n";
         $slop = file('slop.php');
         if ($slop === false){
-            return [
-                null
-            ];
+            throw new \Exception("[ !! ] Unable to find slop.php file. I cannot continue. [ !! ]");
         }
         $slop[4] = "\tdefine(\"allow_agent\", \"{$this->allowed_agent}\");".PHP_EOL;
         $slop[7] = "\tdefine(\"uuid\", \"{$this->auth_uuid}\");".PHP_EOL;
