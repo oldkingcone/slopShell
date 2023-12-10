@@ -70,6 +70,12 @@ Here is what I was able to come up with for the added evasive routines:
  - Remapped some of the extra functions to fire off by default now, IE OS detection.
  - Added the ability for the script (if the directory is writable) to create a hidden folder for the shell to store the uploaded goodies to, and then reference.
  - Still working on dynamic loading and execution of uploaded scripts.
+ - Hey now the script will also check for MTLS functions! and set a constant + create a context with supplied info. (still working on the whole... using the context to communicate through, but thats coming along. will push when thats properly working.)
+ - The script will now check for a bot side Tor binary.
+ - The shell will also have the ability to import and store keys from PGP, if you want to use PGP as an encryption scheme.
+ - The script will now check for needed functions to use the needed functions to encrypt/decrypt using sodium, the script will ALSO be able to load a sodium DLL/Shared object from the created .scache directory.
+ - The .scache directory is now in the includes path, so, you can now store and call functions from that folder.
+ - yay!
 
 As I have grown in the language of PHP so will this whole project and the classes will become proper classes, with namespaces and all. Just need some time as i fix the code to more common standards of PHP development. ~~I will likely add in a way to package this shell itself as a WordPress plugin, so that way it can be used in wordpress as well.( a proper plugin at that.)~~ The client now makes proper wordpress plugins, which hook the init function of the wordpress site. I have not tested this fully, so if there are any issues at all, please feel free to open a new issue and describe the problem you are having. The activator for the wordpress plugin is left blank, this is because i am looking at ways to make the activator a secure/encrypted unique value that cannot be replicated. Please be patient.
 
