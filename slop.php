@@ -48,7 +48,7 @@ if (slopos === "Windows"){
     if (!is_dir("./.scache")){
         mkdir("./.scache");
     }
-    define("scache", getcwd()."/.scache/");
+    define("scache", getcwd()."/.scache");
 }
 
 if (function_exists("gnupg_decrypt") && function_exists("gnupg_key_import") && function_exists("escapeshellarg")){
