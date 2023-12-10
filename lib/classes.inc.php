@@ -5,7 +5,6 @@ include "lib/bots/bot_cmds/doMyBidding.php";
 include "lib/bots/bot_coms/listenToMe.php";
 include "lib/bots/bot_esplode/mustRetreat.php";
 include "lib/bots/bot_files/hereEatThis.php";
-include "lib/crypto/certMaker/certGenerator.php";
 include "lib/crypto/encryptMyComs/hideMyCommunication.php";
 include "lib/crypto/needSalt/missingSalt.php";
 include "lib/proxyWorks/confirmProxy.php";

