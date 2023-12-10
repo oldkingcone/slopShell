@@ -469,8 +469,8 @@ function slopp()
                         $slopDefines = implode(PHP_EOL, [
                             sprintf("slopMTLS: %s", slopMTLS ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
                             sprintf("slopEncryption: %s", slopEncryption ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
-                            sprintf("slopOS: %s", slopos ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
-                            sprintf("slopShell: %s", sloppyshell ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
+                            sprintf("slopOS: %s", slopos ?? "\033[0;32m".slopos."\033[0m"),
+                            sprintf("slopShell: %s", sloppyshell ?? "\033[0;32m".sloppyshell."\033[0m"),
                             sprintf("slopTor: %s", slopTor ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
                             sprintf("slopPGP: %s", slopPGP ? "\033[0;32mtrue\033[0m": "\033[0;31mfalse\033[0m"),
                             sprintf(".scache full path: %s", scache)
