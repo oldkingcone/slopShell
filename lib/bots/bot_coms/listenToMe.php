@@ -2,11 +2,12 @@
 
 namespace bots\bot_coms;
 use curlStuff\mTLSclient\mTLSClientExecuteCommands;
-use curlStuff\defaultClient;
+use curlStuff\defaultClient\genericClientExecuteCommands;
 class listenToMe
 {
     private array $cert_data;
-    private mTLSClientExecuteCommands $client;
+    private genericClientExecuteCommands $client;
+    private mTLSClientExecuteCommands $mtls_client;
 
     function __construct(array $cert_data, bool $useTLS)
     {
@@ -14,12 +15,13 @@ class listenToMe
             throw new \InvalidArgumentException("[ !! ] Length of cert data is 0, cannot communicate over MTLS, review data supplied and try again. [ !! ]");
         }else {
             $this->cert_data = $cert_data;
-            $this->client = new  mTLSClientExecuteCommands();
+            $this->mtls_client = new  mTLSClientExecuteCommands();
         }
+        $this->client = new genericClientExecuteCommands();
     }
 
     function enumerateSystem(array $target)
     {
-        $this->client
+        $this->client->
     }
 }
