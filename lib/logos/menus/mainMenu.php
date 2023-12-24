@@ -150,7 +150,8 @@ RP;
     {
         echo <<<CMM
 execute commands on the target host.
-CMM;
+CMM.PHP_EOL;
+
 
         
     }

