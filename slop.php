@@ -82,28 +82,7 @@ if (!is_file(sprintf("%s/.iCanCallYou", scache))){
     }
 }
 
-if (function_exists("stream_context_create") && function_exists("stream_socket_server")){
-    if (!defined("slopMTLS")){
-        define("slopMTLS", true);
-        if (!is_null($_COOKIE['cck']) && !is_null($_COOKIE['ppc'])) {
-            $server_key = $_COOKIE['cck'];
-            $server_cert = $_COOKIE['ppc'];
-            define("temp_cert_p", tempnam(sys_get_temp_dir(), bin2hex(random_bytes(random_int(25, 50)))));
-            define("temp_key_p", tempnam(sys_get_temp_dir(), bin2hex(random_bytes(random_int(25, 50)))));
-            file_put_contents(temp_cert_p, $server_cert);
-            file_put_contents(temp_key_p, $server_key);
-            mkdir(sprintf("%s/.crypto", scache));
-            define("ctx", stream_context_create([
-                "local_cert" => temp_cert_p,
-                "local_pk" => temp_key_p,
-                "verify_peer" => true,
-                "verify_peer_name" => false
-            ]));
-        }
-    } else{
-        define("slopMTLS", false);
-    }
-}
+// removing MTLS for now.
 
 set_include_path(get_include_path().PATH_SEPARATOR.scache);
 ini_set("safe_mode", 0);

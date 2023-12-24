@@ -34,7 +34,7 @@ class mTLSClientValidateHosts extends Client
                         if (str_contains($value, "HELLYEAH")) {
                             echo "We still own {$response->getEffectiveUrl()}\n";
                             $datas[$response->getEffectiveUrl()] = [
-                                "NewShellName" => $headers['NewName'][0] ?? '',
+                                "NewShellName" => $headers['NewName'][0],
                                 "Successful" => true
                             ];
                         }
