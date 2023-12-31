@@ -3,7 +3,7 @@
 namespace fake_the_landing;
 
 use config\defaultConfig;
-
+// look at using react PHP event loops for this.
 
 /**
  * @property string $characters

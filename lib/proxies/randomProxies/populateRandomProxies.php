@@ -1,6 +1,6 @@
 <?php
 
-namespace proxies;
+namespace proxies\randomProxies;
 
 class populateRandomProxies
 {

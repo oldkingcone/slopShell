@@ -7,5 +7,6 @@
 # Editor-based HTTP Client requests
 /httpRequests/
 test.php
-lib/vendor/*
 lib/composer.lock
+/lib/vendor/
+/.scache/

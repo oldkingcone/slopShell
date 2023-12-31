@@ -10,6 +10,7 @@
     "jenssegers/optimus": "^1.1",
     "fakerphp/faker": "^1.23",
     "guzzlehttp/guzzle": "^7.8",
-    "ext-zlib": "*"
+    "ext-zlib": "*",
+    "monolog/monolog": "^3.5"
   }
 }
