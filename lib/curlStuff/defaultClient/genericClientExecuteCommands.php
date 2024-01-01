@@ -4,10 +4,6 @@ namespace curlStuff\defaultClient;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
-use GuzzleHttp\MessageFormatter;
-use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Exception\ConnectException;
 

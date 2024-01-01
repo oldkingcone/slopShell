@@ -65,6 +65,7 @@ while (true) {
             $m->reverseConnectionsMenu();
             break;
         case str_starts_with($c, "com") !== false:
+            // need to add handling into this script for the new script filenames.
             $m->commandMenu();
             $page = 0;
             $itemsPerPage = 10;
