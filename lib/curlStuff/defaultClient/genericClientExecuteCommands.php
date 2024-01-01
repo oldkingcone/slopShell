@@ -56,4 +56,13 @@ class genericClientExecuteCommands extends Client
                 ];
         }
     }
+
+    private function processReturnedCommand(mixed $command)
+    {
+        if (preg_match("/^(i|s|a|o|d)(.*);/si", $command)){
+            return unserialize(base64_decode($command), ['allowed_classes' => false]);
+        }else{
+            return explode(":", trim(base64_decode($command)));
+        }
+    }
 }

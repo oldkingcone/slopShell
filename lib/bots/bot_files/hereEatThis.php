@@ -23,8 +23,6 @@ class hereEatThis extends Client
         }else{
             return "File upload failure :(";
         }
-
-
     }
 
 }

