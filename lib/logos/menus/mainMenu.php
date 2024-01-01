@@ -151,9 +151,20 @@ RP;
         echo <<<CMM
 execute commands on the target host.
 CMM.PHP_EOL;
+    }
 
+    function commandTypes()
+    {
+        echo <<<TYPES
+this shell supports the ability to serialize the commands (if you have multiple to execute at once on the specified host.
+encrypt the command you are trying to execute. This will also need to be decrypted in the client. This feature has not been introduced just yet, but will soon. (older versions have this ability, but that client script sucked.)
+And finally, to just send the raw command over.
 
-        
+The options are:
+ 1b -> for no modification of the command other than base64 encoding it.
+ 1 -> serialize and base64 encode the command, this works well if you have spaces in your command.
+ e -> this will encrypt the command, in addition to base64 encoding it.
+TYPES;
     }
 
     function reverseConnectionsMenu(): void

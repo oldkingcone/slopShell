@@ -29,8 +29,8 @@ class talkToMeDamnit
             throw new \Exception("Cannot get with supplied URI, please double check your info and make sure its correct.");
         }
         $response = $this->client->get($uri);
-        if (str_contains($response->getHeader('I-Am-Alive'), "Yes") !== false){
-            $newFile = $response->getHeader("NewName");
+        if (str_contains($response->getHeaderLine('I-Am-Alive'), "Yes") !== false){
+            $newFile = $response->getHeaderLine("NewName");
             $response_data = $response->getBody();
         }
         return ["New Filename" => $newFile, "Response Data" => $response_data];

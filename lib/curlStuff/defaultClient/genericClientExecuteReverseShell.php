@@ -6,8 +6,11 @@ use GuzzleHttp\Client;
 
 class genericClientExecuteReverseShell extends Client
 {
-    public function __construct(array $config = [])
+    private array $revShellOpts;
+
+    public function __construct(array $config = [], array $revShellOpts = [])
     {
+        $this->revShellOpts = $revShellOpts;
         parent::__construct($config);
     }
 

