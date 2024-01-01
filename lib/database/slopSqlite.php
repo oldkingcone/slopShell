@@ -193,6 +193,9 @@ class slopSqlite extends \SQLite3
 
     private function updateBot(string $botId, string $newUri)
     {
+        if ($newUri === ""){
+            throw new \InvalidArgumentException("\033[0;31mnewURI was empty.\033[0m");
+        }
         $updateCall = $this->prepare("UPDATE sloppy_bots_main SET uri = :newUri WHERE id = :botId");
         $updateCall->bindValue(":newUri", $newUri);
         $updateCall->bindValue(":botId", $botId);
