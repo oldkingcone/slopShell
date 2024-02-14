@@ -1,16 +1,14 @@
 {
   "require": {
-    "ext-pdo": "*",
-    "ext-curl": "*",
-    "ext-readline": "*",
-    "ext-sqlite3": "*",
-    "ext-openssl": "*",
-    "ext-zip": "*",
     "defuse/php-encryption": "^2.4",
     "jenssegers/optimus": "^1.1",
     "fakerphp/faker": "^1.23",
     "guzzlehttp/guzzle": "^7.8",
-    "ext-zlib": "*",
-    "monolog/monolog": "^3.5"
+    "monolog/monolog": "^3.5",
+    "ext-readline": "*",
+    "ext-openssl": "*",
+    "ext-sqlite3": "*",
+    "ext-pdo": "*",
+    "ext-zip": "*"
   }
 }

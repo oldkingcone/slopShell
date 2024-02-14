@@ -202,7 +202,7 @@ class slopSqlite extends \SQLite3
         return $updateCall->execute();
     }
 
-    public function slopSqlite(array $data): mixed
+    public function insertData(array $data): mixed
     {
         if (empty($data['action'])) {
             print("Action is empty, cannot handle this.");

