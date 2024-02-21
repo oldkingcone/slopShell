@@ -105,6 +105,7 @@ while (true) {
             system(CLEAR);
             $m->enumSystemMenu();
             $a = new hereEatThis();
+            $a->chunkTransferFile();
             break;
         case str_starts_with($c, "rev") !== false:
             system(CLEAR);

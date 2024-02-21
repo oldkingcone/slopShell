@@ -37,11 +37,40 @@ use Faker\Factory;
         if (!is_dir($this->spoof_directory_name)){
             mkdir($this->spoof_directory_name);
         }
-        $pluginType = ['widget', 'SEO tool', 'security plugin', 'performance optimizer', 'image optimizer', 'cache module', 'analytics module', 'contact form', 'slider tool', 'page builder', 'menu organizer', 'language switcher', 'social share plugin', 'video player', 'comment manager', 'backup system', 'email marketing plugin', 'gallery tool', 'anti-spam plugin', 'captcha module', 'accordion creator', 'popup builder', 'privacy policy manager', 'cookie notice plugin', 'favicon tool', 'RSS feed manager', 'testimonial display', 'appointment scheduler', 'author box plugin', 'custom post type creator', 'breadcrumb enhancer', '404 error handler', 'AMP support', 'customizer tool', 'redirect manager', 'database tool', 'lazy load implementer', 'forum plugin', 'calendar plugin', 'membership management', 'payment gateway integration', 'webinar plugin', 'seo tag manager', 'responsive tables', 'FAQ module', 'document manager', 'logo showcase', 'portfolio module', 'recipe plugin', 'ecommerce integration', 'microdata module', 'real estate listing', 'Google Maps integration', 'PDF viewer', 'donation plugin', 'code snippet manager'];
+        $pluginType = [
+            'widget', 'SEO tool', 'security plugin', 'performance optimizer', 'image optimizer', 'cache module',
+            'analytics module', 'contact form', 'slider tool', 'page builder', 'menu organizer', 'language switcher',
+            'social share plugin', 'video player', 'comment manager', 'backup system', 'email marketing plugin',
+            'gallery tool', 'anti-spam plugin', 'captcha module', 'accordion creator', 'popup builder',
+            'privacy policy manager', 'cookie notice plugin', 'favicon tool', 'RSS feed manager', 'testimonial display',
+            'appointment scheduler', 'author box plugin', 'custom post type creator', 'breadcrumb enhancer',
+            '404 error handler', 'AMP support', 'customizer tool', 'redirect manager', 'database tool',
+            'lazy load implementer', 'forum plugin', 'calendar plugin', 'membership management',
+            'payment gateway integration', 'webinar plugin', 'seo tag manager', 'responsive tables', 'FAQ module',
+            'document manager', 'logo showcase', 'portfolio module', 'recipe plugin', 'ecommerce integration',
+            'microdata module', 'real estate listing', 'Google Maps integration', 'PDF viewer', 'donation plugin',
+            'code snippet manager'
+        ];
 
-        $operation = array_merge(['improve', 'optimize', 'boost', 'enhance', 'maximize', 'elevate', 'increase', 'amplify', 'advance', 'upgrade', 'intensify', 'magnify', 'strengthen', 'escalate', 'extend', 'expand', 'empower', 'enrich', 'upscale', 'multiply', 'raise', 'eases', 'streamline', 'simplify', 'fine-tune', 'revolutionize', 'modernize', 'redefine', 'facilitate', 'bolster', 'accelerate', 'augment', 'revamp', 'rejuvenate', 'reshape', 'refurbish', 'reinvent', 'invigorate', 'spark', 'fortify', 'realign', 'refine', 'renew', 'morph', 'enlarge', 'uplift', 'inspire', 'energize', 'reboot', 'revitalize', 'regenerate']);
+        $operation = array_merge(
+            ['improve', 'optimize', 'boost', 'enhance', 'maximize', 'elevate', 'increase',
+            'amplify', 'advance', 'upgrade', 'intensify', 'magnify', 'strengthen', 'escalate', 'extend', 'expand',
+            'empower', 'enrich', 'upscale', 'multiply', 'raise', 'eases', 'streamline', 'simplify', 'fine-tune',
+            'revolutionize', 'modernize', 'redefine', 'facilitate', 'bolster', 'accelerate', 'augment', 'revamp',
+            'rejuvenate', 'reshape', 'refurbish', 'reinvent', 'invigorate', 'spark', 'fortify', 'realign', 'refine',
+            'renew', 'morph', 'enlarge', 'uplift', 'inspire', 'energize', 'reboot', 'revitalize', 'regenerate'
+            ]
+        );
 
-        $aspect = array_merge(['performance', 'efficiency', 'load speed', 'user interface', 'security', 'SEO ranking', 'adaptability', 'accessibility', 'availability', 'usability', 'interoperability', 'flexibility', 'functionality', 'responsiveness', 'compatibility', 'customizability', 'portability', 'maintainability', 'reliability', 'intuitiveness', 'versatility', 'scalability', 'user experience', 'aesthetics', 'navigability', 'organizational structure', 'website architecture', 'information flow', 'design elements', 'content presentation', 'web standards conformity']);
+        $aspect = array_merge(
+            ['performance', 'efficiency', 'load speed', 'user interface', 'security', 'SEO ranking', 'adaptability',
+                'accessibility', 'availability', 'usability', 'interoperability', 'flexibility', 'functionality',
+                'responsiveness', 'compatibility', 'customizability', 'portability', 'maintainability', 'reliability',
+                'intuitiveness', 'versatility', 'scalability', 'user experience', 'aesthetics', 'navigability',
+                'organizational structure', 'website architecture', 'information flow', 'design elements',
+                'content presentation', 'web standards conformity'
+            ]
+        );
         $this->fake_description = [
             "a" => array_map(fn($i) => "A " . $this->faker->randomElement($pluginType) . " that " . $this->faker->randomElement($operation) . " your website's " . $this->faker->randomElement($aspect) . ".", range(1, 5)),
             "b" => array_map(fn($i) => "Boost your site with this " . $this->faker->randomElement($pluginType) . " that " . $this->faker->randomElement($operation) . " your website's " . $this->faker->randomElement($aspect) . ".", range(1, 5)),
@@ -97,8 +126,10 @@ use Faker\Factory;
         $base = '';
         $spoof_name = "{$this->spoof_directory_name}/{$this->random_name}.php";
         echo $spoof_name.PHP_EOL;
+        $longestKeyLength = max(array_map('strlen', array_keys($spoof)));
         foreach ($spoof as $key => $valu){
-            $base .= "* {$key} {$valu}\n";
+            $pads = str_repeat("\t", ceil(($longestKeyLength - strlen($key)) / 4) + 1);
+            $base .= "* {$key}{$pads}{$valu}\n";
         }
         $base .= "*/\n";
         $slop = file('slop.php');
