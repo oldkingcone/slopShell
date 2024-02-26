@@ -152,14 +152,14 @@ function chunkFileTransfer($fname, $data, $count, $chunk): array
     $sum = md5($data);
     $d = base64_decode($data);
     if (slopos === "WIN"){
-        $g = sprintf("%s\\%s\\%s.dat", sys_get_temp_dir(), bin2hex(openssl_random_pseudo_bytes(10)));
+        $g = sprintf("%s\\%s.dat", sys_get_temp_dir(), bin2hex(openssl_random_pseudo_bytes(10)));
         if (!is_dir(sprintf("%s\\%s", sys_get_temp_dir(), $fname))){
             mkdir(sprintf("%s\\%s", sys_get_temp_dir(), $fname));
         }
         file_put_contents($g, $d);
     }else {
         $g = sprintf("%s/%s", $fname, bin2hex(openssl_random_pseudo_bytes(10)));
-        file_put_contents(sprintf("%s/%s", $fname, bin2hex(openssl_random_pseudo_bytes(10))), $d);
+        file_put_contents(sprintf("%s/%s.%s", $fname, bin2hex(openssl_random_pseudo_bytes(10)), $count), $d);
     }
     if ($count === $chunk){
         foreach (glob(sprintf("%s/*", $g), GLOB_MARK) as $ff){
