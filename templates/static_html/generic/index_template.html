@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon</title>
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        .navbar {
+            background-color: #333;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .navbar a:hover {
+            background-color: #555;
+        }
+
+        .content {
+            text-align: center;
+            color: white;
+            margin-top: 50px; /* Adjust as needed */
+            position: relative; /* Required for absolute positioning */
+        }
+
+        .message {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        #countdown {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        .text-area {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: left;
+            display: none; /* Initially hidden */
+            position: absolute; /* Positioning relative to the parent */
+            transition: transform 0.3s ease;
+        }
+
+        .active {
+            display: block; /* Display when active */
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Artistic background */
+        .background {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #4b6cb7 20%, #182848 80%);
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <a href="#" onclick="showText('about')">About Us</a>
+    <a href="#" onclick="showText('services')">Our Services</a>
+    <a href="#" onclick="showText('testimonials')">Testimonials</a>
+    <a href="#" onclick="showText('contact')">Contact Us</a>
+    <a href="#" onclick="showText('faq')">FAQs</a>
+</div>
+
+<div class="background"></div>
+
+<div class="content">
+    <h1 class="message">Coming Soon!</h1>
+    <div id="countdown"><!--#countdown#--></div>
+
+    <!-- Markers for each area -->
+    <div class="text-area" id="about">
+        <h2>About Us</h2>
+        <p><!--#text-about#--></p>
+    </div>
+
+    <div class="text-area" id="services">
+        <h2>Our Services</h2>
+        <p><!--#text-services#--></p>
+    </div>
+
+    <div class="text-area" id="testimonials">
+        <h2>Testimonials</h2>
+        <p><!--#text-testimonials#--></p>
+    </div>
+
+    <div class="text-area" id="contact">
+        <h2>Contact Us</h2>
+        <p><!--#text-contact#--></p>
+    </div>
+
+    <div class="text-area" id="faq">
+        <h2>FAQs</h2>
+        <p><!--#text-faq#--></p>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<script>
+    // Function to show/hide text areas
+    function showText(areaId) {
+        var areas = document.querySelectorAll('.text-area');
+        areas.forEach(function (area) {
+            if (area.id === areaId) {
+                area.classList.toggle('active');
+            } else {
+                area.classList.remove('active');
+            }
+        });
+    }
+
+    // Function to enable draggable elements
+    $(document).ready(function() {
+        $(".text-area").draggable();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><!--#title#--></title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            background-size: cover;
+            background-position: 50% 50%;
+            z-index: -1;
+        }
+
+        .navbar {
+            background-color: #333;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .navbar a:hover {
+            background-color: #555;
+        }
+
+        .content {
+            text-align: center;
+            color: white;
+            margin-top: 50px;
+        }
+
+        .message {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        #countdown {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        .text-area {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: left;
+            display: none; /* Initially hidden */
+        }
+
+        .active {
+            display: block; /* Display when active */
+        }
+    </style>
+</head>
+<body>
+
+<div id="particles-js"></div>
+
+<div class="navbar">
+    <a href="#" onclick="showText('about')">About Us</a>
+    <a href="#" onclick="showText('services')">Our Services</a>
+    <a href="#" onclick="showText('testimonials')">Testimonials</a>
+    <a href="#" onclick="showText('contact')">Contact Us</a>
+    <a href="#" onclick="showText('faq')">FAQs</a>
+</div>
+
+<div class="content">
+    <h1 class="message"><!--#header#--></h1>
+    <div class="text-area" id="about">
+        <h2>About Us</h2>
+        <p><!--#text-about#--></p>
+    </div>
+
+    <div class="text-area" id="services">
+        <h2>Our Services</h2>
+        <p><!--#text-services#--></p>
+    </div>
+
+    <div class="text-area" id="testimonials">
+        <h2>Testimonials</h2>
+        <p><!--#text-testimonials#--></p>
+    </div>
+
+    <div class="text-area" id="contact">
+        <h2>Contact Us</h2>
+        <p><!--#text-contact#--></p>
+    </div>
+
+    <div class="text-area" id="faq">
+        <h2>FAQs</h2>
+        <p><!--#text-faq#--></p>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+<script>
+    particlesJS("particles-js", {
+        "particles": {
+            "number": {
+                "value": 80,
+                "density": {
+                    "enable": true,
+                    "value_area": 800
+                }
+            },
+            "color": {
+                "value": "#ffffff"
+            },
+            "shape": {
+                "type": "circle",
+                "stroke": {
+                    "width": 0,
+                    "color": "#000000"
+                },
+                "polygon": {
+                    "nb_sides": 5
+                },
+                "image": {
+                    "src": "img/github.svg",
+                    "width": 100,
+                    "height": 100
+                }
+            },
+            "opacity": {
+                "value": 0.5,
+                "random": true,
+                "anim": {
+                    "enable": false,
+                    "speed": 1,
+                    "opacity_min": 0.1,
+                    "sync": false
+                }
+            },
+            "size": {
+                "value": 3,
+                "random": true,
+                "anim": {
+                    "enable": false,
+                    "speed": 40,
+                    "size_min": 0.1,
+                    "sync": false
+                }
+            },
+            "line_linked": {
+                "enable": true,
+                "distance": 150,
+                "color": "#ffffff",
+                "opacity": 0.4,
+                "width": 1
+            },
+            "move": {
+                "enable": true,
+                "speed": 6,
+                "direction": "none",
+                "random": false,
+                "straight": false,
+                "out_mode": "out",
+                "bounce": false,
+                "attract": {
+                    "enable": false,
+                    "rotateX": 600,
+                    "rotateY": 1200
+                }
+            }
+        },
+        "interactivity": {
+            "detect_on": "canvas",
+            "events": {
+                "onhover": {
+                    "enable": true,
+                    "mode": "repulse"
+                },
+                "onclick": {
+                    "enable": true,
+                    "mode": "push"
+                },
+                "resize": true
+            },
+            "modes": {
+                "grab": {
+                    "distance": 400,
+                    "line_linked": {
+                        "opacity": 1
+                    }
+                },
+                "bubble": {
+                    "distance": 400,
+                    "size": 40,
+                    "duration": 2,
+                    "opacity": 8,
+                    "speed": 3
+                },
+                "repulse": {
+                    "distance": 200,
+                    "duration": 0.4
+                },
+                "push": {
+                    "particles_nb": 4
+                },
+                "remove": {
+                    "particles_nb": 2
+                }
+            }
+        },
+        "retina_detect": true
+    });
+
+    function showText(areaId) {
+        var areas = document.querySelectorAll('.text-area');
+        areas.forEach(function (area) {
+            if (area.id === areaId) {
+                area.classList.add('active');
+            } else {
+                area.classList.remove('active');
+            }
+        });
+    }
+</script>
+</body>
+</html>
