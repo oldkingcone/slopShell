@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title><!--#title#--></title>
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
     <style>
         body, html {
@@ -11,7 +11,7 @@
             padding: 0;
             height: 100%;
             font-family: Arial, sans-serif;
-            overflow: hidden; /* Prevent scrolling */
+            overflow: hidden;
         }
 
         .navbar {
@@ -36,8 +36,8 @@
         .content {
             text-align: center;
             color: white;
-            margin-top: 50px; /* Adjust as needed */
-            position: relative; /* Required for absolute positioning */
+            margin-top: 50px;
+            position: relative;
         }
 
         .message {
@@ -57,13 +57,13 @@
             max-width: 800px;
             margin: 0 auto;
             text-align: left;
-            display: none; /* Initially hidden */
-            position: absolute; /* Positioning relative to the parent */
+            display: none;
+            position: absolute;
             transition: transform 0.3s ease;
         }
 
         .active {
-            display: block; /* Display when active */
+            display: block;
             animation: slideIn 0.5s forwards;
         }
 
@@ -78,7 +78,6 @@
             }
         }
 
-        /* Artistic background */
         .background {
             position: fixed;
             width: 100%;
@@ -93,7 +92,6 @@
 <div class="navbar">
     <a href="#" onclick="showText('about')">About Us</a>
     <a href="#" onclick="showText('services')">Our Services</a>
-    <a href="#" onclick="showText('testimonials')">Testimonials</a>
     <a href="#" onclick="showText('contact')">Contact Us</a>
     <a href="#" onclick="showText('faq')">FAQs</a>
 </div>
@@ -101,10 +99,8 @@
 <div class="background"></div>
 
 <div class="content">
-    <h1 class="message">Coming Soon!</h1>
-    <div id="countdown"><!--#countdown#--></div>
+    <h1 class="message"><!--#title#--></h1>
 
-    <!-- Markers for each area -->
     <div class="text-area" id="about">
         <h2>About Us</h2>
         <p><!--#text-about#--></p>
@@ -113,11 +109,6 @@
     <div class="text-area" id="services">
         <h2>Our Services</h2>
         <p><!--#text-services#--></p>
-    </div>
-
-    <div class="text-area" id="testimonials">
-        <h2>Testimonials</h2>
-        <p><!--#text-testimonials#--></p>
     </div>
 
     <div class="text-area" id="contact">
@@ -134,7 +125,6 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 <script>
-    // Function to show/hide text areas
     function showText(areaId) {
         var areas = document.querySelectorAll('.text-area');
         areas.forEach(function (area) {
@@ -146,7 +136,6 @@
         });
     }
 
-    // Function to enable draggable elements
     $(document).ready(function() {
         $(".text-area").draggable();
     });
