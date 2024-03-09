@@ -109,6 +109,10 @@ Client script usage:
 Reverse Connection initiated from the client script:
 ![](https://github.com/oldkingcone/slopShell/blob/master/images/reverse_connection_client_script.png?raw=true)
 
+Randomized Landing Pages:
+![](https://github.com/oldkingcone/slopShell/blob/master/images/randomized_landing_page_particles.png?raw=true)
+![](https://github.com/oldkingcone/slopShell/blob/master/images/randomized_landing_page.png?raw=true)
+
 
 ---
 ## Additional
