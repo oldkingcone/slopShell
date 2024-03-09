@@ -138,8 +138,8 @@ use Faker\Factory;
             if (file_exists(sprintf("%s/%s", $this->serving_directory, "index.html"))){
                 unlink(sys_get_temp_dir()."/template.temp");
                 echo "Fake landing page set to: ".PHP_EOL;
-                echo sprintf("%s/%s", $this->serving_directory, "index.html").PHP_EOL;
-                echo implode("\n", file(sprintf("%s/%s", $this->serving_directory, "index.html"))).PHP_EOL;
+                echo "Make a symlink pointing to " . sprintf("%s/%s", $this->serving_directory, "index.html") . " so that the randomized landing page actually gets served.";
+                echo "For added stealth, keep the same favicon or download a random one. Just make sure you dont use the same favicon.".PHP_EOL;
 //                symlink();
             }
         } else {

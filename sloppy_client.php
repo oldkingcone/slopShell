@@ -35,6 +35,7 @@ use logos\menus\mainMenu;
 //end graphipcs and shit.
 
 $d = default_config;
+$randomize_landing = new randomDefaultPage();
 $configs = $d->exportConfigConstants();
 $l = new artisticStuff(true);
 $m = new mainMenu();
@@ -51,6 +52,7 @@ if (str_contains(SQL_USE, "PGSQL")) {
     define("database", new database\slopSqlite($choices['sqlite']['sqlite_db']));
 }
 var_dump(database->firstRun());
+$randomize_landing->whyNot();
 readline("Press enter to continue.");
 function pagination()
 {
