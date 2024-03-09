@@ -436,7 +436,8 @@ function slopp()
                     sprintf("slopShell: \033[0;32m%s\033[0m", sloppyshell),
                     sprintf("slopTor: %s", slopTor ? "\033[0;32mtrue\033[0m" : "\033[0;31mfalse\033[0m"),
                     sprintf("slopPGP: %s", slopPGP ? "\033[0;32mtrue\033[0m" : "\033[0;31mfalse\033[0m"),
-                    sprintf(".scache full path: %s", scache)
+                    sprintf(".scache full path: %s", scache),
+                    sprintf("Host PHP Version: %s", phpversion()),
                 ]);
                 $qs['configs'] = <<<INI
 Max file uploads: $fsize

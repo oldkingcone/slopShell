@@ -2,6 +2,7 @@
 
 namespace fake_the_landing;
 
+use AllowDynamicProperties;
 use config\defaultConfig;
 use Faker\Factory;
 
@@ -13,16 +14,16 @@ use Faker\Factory;
  * @property string $serving_directory
  * @property array|array[] $data
  */
-class randomDefaultPage
+#[AllowDynamicProperties] class randomDefaultPage
 {
     /**
      * @throws \Exception
      */
-    function __construct(string|null $target_link, string|null $serving_directory)
+    function __construct()
     {
         $this->fake_it = Factory::create();
         $this->data = [
-            'basic' =>
+            'title' =>
                 [
                     'Welcome to Our Website',
                     'Discover Our Services',
@@ -58,9 +59,9 @@ class randomDefaultPage
                     'Join us on our quest for innovation. We are constantly pushing the boundaries and exploring new possibilities to better serve our clients.',
                 ],
             'contact' => [
-                sprintf('Phone: %s. Our friendly customer support team is available to assist you with any inquiries or concerns.', $this->fake_it::$phoneNumber),
-                sprintf('Email: %s. Feel free to reach out to us via email, and we\'ll get back to you as soon as possible.', $this->fake_it::$safeEmail),
-                sprintf('Address: %s. Visit our office during business hours to speak with a representative in person.', $this->fake_it::$address),
+                sprintf('Phone: %s. Our friendly customer support team is available to assist you with any inquiries or concerns.', $this->fake_it->phoneNumber()),
+                sprintf('Email: %s. Feel free to reach out to us via email, and we\'ll get back to you as soon as possible.', $this->fake_it->safeEmail()),
+                sprintf('Address: %s. Visit our office during business hours to speak with a representative in person.', $this->fake_it->address()),
                 'Visit us during office hours. We welcome visitors to stop by and learn more about our products and services.',
                 'Connect with us on social media. Follow us on Facebook, Twitter, and Instagram for news, updates, and special offers.',
                 'Fill out the contact form for inquiries. Have a question? Fill out our online form, and we\'ll get back to you promptly.',
@@ -80,50 +81,98 @@ class randomDefaultPage
         ];
         $this->replacement_markers = [
             "all" => [
-                "<!--#title#-->",
-                "<!--#header#-->",
-                "<!--#text-about#-->",
-                "<!--#title-services#-->",
-                "<!--#title-contact#-->",
-                "<!--#title-faq#-->",
+                "title"=>"<!--#title#-->",
+                "header" =>"<!--#header#-->",
+                "about" => "<!--#text-about#-->",
+                "services" => "<!--#text-services#-->",
+                "contact" => "<!--#text-contact#-->",
+                "faq" => "<!--#text-faq#-->",
             ],
             "particles" => "/*pjs_config*/"
         ];
         $conf = new defaultConfig();
         $this->characters = (new defaultConfig())->getAllowedChars();
-        if (is_null($target_link)) {
-            for ($i = 0; $i < rand(8, 24); $i++) {
-                $this->target_link .= $this->characters[$i];
-            }
-        } else {
-            $this->target_link = $target_link;
-        }
-        if (is_null($serving_directory)) {
-            $this->serving_directory = sprintf("%s/servable", $conf->slop_home);
-        } else {
-            $this->serving_directory = $serving_directory;
-        }
+        $this->serving_directory = sprintf("%s/servable", $conf->slop_home);
         if (!is_dir($this->serving_directory)) {
             mkdir($this->serving_directory, 0777, true);
         }
     }
 
-    private function whyNot()
+    public function whyNot()
     {
-        echo "In order for this to work, you will need to create a symbolic link from the slop directory in /opt/slop/servable to the HTTP server's served directory.";
-        echo "Or w/e serving directory it is that you want to have the randomized home page be served from.";
-        echo "To reduce the chances for exploits against PHP itself, this random home page will be in HTML";
+        if (rand(2, 65535) %2 === 0){
+            $useParticles = false;
+            $template = "templates/static_html/generic/index_template.html";
+        }else{
+            $useParticles = true;
+            $template = "templates/static_html/particles/base_particles.html";
+        }
+        $originalFile = fopen($template, 'r');
+        $tempFile = fopen(sys_get_temp_dir()."/template.temp", 'w');
+        $replacements = $this->prepRandomPhrases();
+        if ($originalFile && $tempFile) {
+            $new_content = '';
+            while (($line = fgets($originalFile)) !== false) {
+                $line_to_write = $line;
+                foreach ($this->replacement_markers["all"] as $markerName => $marker) {
+                    if (str_contains($line, $marker)) {
+                        $line_to_write = str_replace($marker, $replacements[$markerName], $line);
+                        break;
+                    }
+                }
 
+                if ($useParticles && str_contains($line, $this->replacement_markers['particles'])) {
+                    $line_to_write = str_replace($this->replacement_markers["particles"], $this->particlesJS(), $line);
+                }
+
+                $new_content .= $line_to_write;
+            }
+            fwrite($tempFile, $new_content);
+
+            fclose($originalFile);
+            fclose($tempFile);
+            if (file_exists(sprintf("%s/%s", $this->serving_directory, "index.html"))){
+                unlink(sprintf("%s/%s", $this->serving_directory, "index.html"));
+            }
+            rename(sys_get_temp_dir()."/template.temp", sprintf("%s/%s", $this->serving_directory, "index.html"));
+            if (file_exists(sprintf("%s/%s", $this->serving_directory, "index.html"))){
+                unlink(sys_get_temp_dir()."/template.temp");
+                echo "Fake landing page set to: ".PHP_EOL;
+                echo sprintf("%s/%s", $this->serving_directory, "index.html").PHP_EOL;
+                echo implode("\n", file(sprintf("%s/%s", $this->serving_directory, "index.html"))).PHP_EOL;
+//                symlink();
+            }
+        } else {
+            // Error opening the file.
+            echo "Error processing the file.";
+        }
     }
 
-    private function prepRandomPhrases()
+    private function prepRandomPhrases(): array
     {
-
+        $title_and_header = $this->fake_it->randomElement($this->data['title']);
+        return [
+            "faq" => $this->fake_it->randomElement($this->data['faq']),
+            "services" => $this->fake_it->randomElement($this->data['services']),
+            "contact" => $this->fake_it->randomElement($this->data['contact']),
+            "about" => $this->fake_it->randomElement($this->data['about']),
+            "title" => $title_and_header,
+            "header" => $title_and_header,
+        ];
     }
 
-    private function flushToDisk()
-    {
 
+    private function particlesJS(): string
+    {
+        $particles_config_list = [
+            "basic",
+            "nyan_cat",
+            "polygon_shapes",
+            "snow",
+            "sus"
+        ];
+        return file_get_contents(sprintf("templates/static_html/particles/configs/%s", $this->fake_it->randomElement($particles_config_list)));
     }
+
 
 }

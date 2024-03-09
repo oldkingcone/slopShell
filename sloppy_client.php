@@ -1,12 +1,13 @@
 <?php
+
 require_once "lib/classes.inc.php";
 
 //crypto
 use crypto\decryptShellResponses\decryptor;
-
 //end crypto
 
 //pipe dream.
+use fake_the_landing\randomDefaultPage;
 //end pipe dream.
 
 // communications

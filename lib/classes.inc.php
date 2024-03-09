@@ -1,6 +1,14 @@
 <?php
+if (str_contains(sprintf("%s", phpversion()), "8.2") === false){
+    echo "This requires version 8.2 or greater.".PHP_EOL;
+    die();
+}
 
 // auto load
+if (!file_exists("lib/composer.lock") || !is_file("lib/vendor/autoload.php")){
+    echo "Dependencies not installed. Please change directory into ./lib/ and run composer install".PHP_EOL;
+    die();
+}
 include "lib/vendor/autoload.php";
 //curl stuff
 include "lib/curlStuff/defaultClient/genericClientExecuteCommands.php";
