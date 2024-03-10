@@ -296,15 +296,15 @@ HELPER.PHP_EOL;
             //@todo need to add pagination here.
             $m->grabToolsMenu();
             break;
-        case str_starts_with($c, "gp") !== false:
-            system(CLEAR);
-            //@todo need to add pagination here.
-            $m->grabProxyMenu();
-            break;
-        case str_starts_with($c, "r") !== false:
-            system(CLEAR);
-            $m->resetProxyMenu();
-            break;
+//        case str_starts_with($c, "gp") !== false:
+//            system(CLEAR);
+//            //@todo need to add pagination here.
+//            $m->grabProxyMenu();
+//            break;
+//        case str_starts_with($c, "r") !== false:
+//            system(CLEAR);
+//            $m->resetProxyMenu();
+//            break;
         case str_starts_with($c, "gc") !== false:
             system(CLEAR);
             $m->generateCertMenu();

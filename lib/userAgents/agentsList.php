@@ -2,10 +2,12 @@
 
 namespace userAgents;
 
+use AllowDynamicProperties;
+
 /**
  * @property string[] $agents_list
  */
-class agentsList
+#[AllowDynamicProperties] class agentsList
 {
     function __construct()
     {
