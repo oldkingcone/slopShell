@@ -24,7 +24,8 @@ class mainMenu
         \e[0;32m(L)ist (T)ools
         \e[0;32m(G)rab (P)roxy\e[0m
         \033[0;36m(Ac)tivate Dropper\033[0m
-        (G)enerate (C)ert                                            
+        (G)enerate (C)ert
+        (R)otate (L)anding                                            
         (M)ain menu                                                                 
         (Q)uit\e[0m                                                                      
 _MENU;

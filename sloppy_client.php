@@ -305,6 +305,11 @@ HELPER.PHP_EOL;
 //            system(CLEAR);
 //            $m->resetProxyMenu();
 //            break;
+        case str_starts_with($c, "rl") !== false:
+            system(CLEAR);
+            $randomize_landing->whyNot();
+            readline("Press enter to continue.");
+            break;
         case str_starts_with($c, "gc") !== false:
             system(CLEAR);
             $m->generateCertMenu();
