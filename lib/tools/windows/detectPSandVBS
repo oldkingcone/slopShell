@@ -1,0 +1,24 @@
+@echo off
+setlocal
+gpresult /h gpresult.html /f >nul 2>&1
+findstr /i "Windows Script Host" gpresult.html >nul 2>&1
+if %errorlevel% equ 0 (
+    echo VBScript execution is restricted via Group Policy.
+) else (
+    echo VBScript execution is allowed.
+)
+
+del gpresult.html >nul 2>&1
+reg query "HKLM\Software\Policies\Microsoft\Windows\PowerShell" /s >nul 2>&1
+if %errorlevel% equ 0 (
+    echo PowerShell execution is restricted.
+) else (
+    echo PowerShell execution is allowed.
+)
+reg query "HKCU\Software\Microsoft\Windows Script Host\Settings" /v "Enabled" | find /i "0x0" >nul 2>&1
+if %errorlevel% equ 0 (
+    echo VBScript execution is allowed.
+) else (
+    echo VBScript execution is restricted.
+)
+endlocal
